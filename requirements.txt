@@ -1,9 +1,16 @@
-# Core dependencies
-torch>=2.0.0
-torchaudio>=2.0.0
-transformers>=4.30.0
-numpy>=1.21.0
-scipy>=1.7.0
+# Core dependencies (2024 latest)
+torch>=2.2.0
+torchaudio>=2.2.0
+transformers>=4.38.0
+numpy>=1.24.0
+scipy>=1.11.0
+
+# H100 & BF16 optimizations
+nvidia-ml-py>=12.535.0
+transformer-engine>=1.2.0
+flash-attn>=2.5.0
+apex @ git+https://github.com/NVIDIA/apex.git
+bitsandbytes>=0.42.0
 
 # Audio processing
 soundfile>=0.12.0

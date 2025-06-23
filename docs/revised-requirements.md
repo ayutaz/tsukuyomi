@@ -226,10 +226,12 @@ class ONNXOptimizedTTS:
         
     def export_to_onnx(self, precision='fp32'):
         # 精度優先のため量子化は最小限
+        # 注: 学習はBF16だが、推論時はFP32で品質維持
         export_config = {
             'opset_version': 17,
             'optimization_level': 'BASIC_OPT',  # 品質維持
-            'quantization': None  # 量子化なし（品質優先）
+            'quantization': None,  # 量子化なし（品質優先）
+            'dtype': torch.float32  # BF16→FP32変換
         }
 ```
 

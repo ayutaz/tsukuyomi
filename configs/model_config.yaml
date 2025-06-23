@@ -1,0 +1,105 @@
+# Tsukuyomi Model Configuration
+
+# Model architecture settings
+model:
+  # Frontend settings
+  frontend:
+    type: "hybrid"  # xphonebert + f0bert
+    xphonebert:
+      model_name: "vinai/xphonebert-base"
+      freeze_base: false
+      use_bf16: true
+    f0bert:
+      model_name: "tohoku-bert-base-v3"
+      hidden_size: 768
+      f0_bins: 256
+      use_continuous_f0: true
+    
+  # Acoustic model settings
+  acoustic:
+    type: "conformer"  # Will upgrade to Matcha-TTS/F5-TTS
+    hidden_channels: 2048  # Large for quality
+    n_layers: 24  # Deep network
+    n_heads: 32
+    kernel_size: 31
+    dropout_rate: 0.1
+    use_flash_attention: true
+    use_gradient_checkpointing: true
+    
+  # Speaker settings
+  speaker:
+    n_speakers: 500  # Initial capacity
+    speaker_embed_dim: 512
+    use_external_embeddings: true
+    adapter_rank: 32  # For Residual Adapters
+    
+  # Vocoder settings
+  vocoder:
+    type: "bigvgan"
+    model_name: "nvidia/bigvgan_v2_22khz_80band"
+    use_universal: true
+    
+# Audio settings
+audio:
+  sample_rate: 48000  # High quality
+  n_mels: 256  # High resolution
+  n_fft: 4096
+  hop_length: 480  # 10ms at 48kHz
+  win_length: 1920  # 40ms at 48kHz
+  f_min: 0
+  f_max: 24000
+  
+# Training settings
+training:
+  # Optimization
+  use_bf16: true
+  optimizer: "FusedAdam"
+  learning_rate: 5e-4
+  warmup_steps: 2000
+  grad_clip_norm: 1.0
+  
+  # Batch settings
+  batch_size_per_gpu: 32
+  gradient_accumulation_steps: 8
+  num_workers: 8
+  
+  # Distributed training
+  use_fsdp: true
+  fsdp_sharding_strategy: "HYBRID_SHARD"
+  
+  # Checkpointing
+  save_every_n_steps: 1000
+  keep_last_n_checkpoints: 5
+  
+# Inference settings
+inference:
+  # Quality settings
+  use_fp32: true  # FP32 for inference quality
+  max_sequence_length: 2048
+  
+  # Performance
+  compile_model: true  # torch.compile
+  use_tf32: true  # For H100
+  
+  # ONNX export
+  onnx_opset: 17
+  onnx_optimization_level: "BASIC_OPT"
+  
+# Hardware-specific optimizations
+hardware:
+  h100:
+    use_transformer_engine: true
+    use_flash_attention_v2: true
+    tf32_matmul: true
+    tf32_cudnn: true
+    
+  cuda:
+    max_split_size_mb: 512
+    device_max_connections: 1
+    
+# Paths
+paths:
+  checkpoint_dir: "./checkpoints"
+  tensorboard_dir: "./logs"
+  cache_dir: "./data/cache"
+  onnx_export_dir: "./onnx_models"
