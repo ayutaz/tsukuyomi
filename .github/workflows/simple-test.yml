@@ -24,7 +24,7 @@ jobs:
       run: |
         uv venv
         source .venv/bin/activate
-        pip install pytest
+        pip install pytest pytest-cov
         pip install -e .
     
     - name: Run simple test

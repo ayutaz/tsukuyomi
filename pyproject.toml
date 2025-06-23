@@ -114,10 +114,6 @@ python_classes = "Test*"
 python_functions = "test_*"
 addopts = [
     "--verbose",
-    "--cov=src",
-    "--cov-report=term-missing",
-    "--cov-report=html",
-    "--cov-report=xml",
     "--strict-markers",
     "-p no:warnings",
 ]
