@@ -1,0 +1,186 @@
+# Training configuration for 100-hour dataset
+# Optimized for initial model development
+
+model:
+  name: tsukuyomi_100h
+  type: ultimate_acoustic_model
+  checkpoint: null  # Start from scratch
+  
+  # Model architecture
+  params:
+    # Phoneme encoder (XPhoneBERT)
+    phoneme_encoder:
+      model_name: vinai/xphonebert-base
+      hidden_size: 768
+      use_lora: true
+      lora_rank: 16
+      lora_alpha: 32.0
+      dropout: 0.1
+    
+    # Acoustic model
+    acoustic_model:
+      hidden_size: 512
+      num_layers: 12
+      num_heads: 8
+      ff_expansion: 4
+      conv_kernel_size: 9
+      dropout: 0.1
+      use_flash_attention: true
+    
+    # Vocoder
+    vocoder:
+      type: bigvgan_v2
+      input_size: 512
+      upsample_rates: [8, 8, 2, 2, 2]
+      upsample_kernel_sizes: [16, 16, 4, 4, 4]
+      resblock_kernel_sizes: [3, 7, 11]
+      resblock_dilations: [[1, 3, 5], [1, 3, 5], [1, 3, 5]]
+    
+    # Speaker encoder
+    speaker_encoder:
+      num_speakers: 200
+      embedding_dim: 256
+      hidden_size: 512
+
+data:
+  # Dataset paths
+  train_path: data/processed/train_100h
+  val_path: data/processed/val_100h
+  
+  # Data loading
+  batch_size: 32  # Per GPU
+  num_workers: 8
+  pin_memory: true
+  persistent_workers: true
+  
+  # Data filtering
+  max_duration: 15.0  # seconds
+  min_duration: 0.5   # seconds
+  max_text_length: 200
+  
+  # Data augmentation
+  augmentation:
+    speed_perturb: [0.9, 1.0, 1.1]
+    pitch_shift: [-2, 2]  # semitones
+    add_noise: true
+    noise_snr: [20, 40]  # dB
+
+training:
+  # Training schedule
+  num_epochs: 300
+  steps_per_epoch: null  # Auto-calculated
+  gradient_accumulation_steps: 4
+  
+  # Optimization
+  optimizer:
+    type: AdamW
+    lr: 0.0002
+    betas: [0.9, 0.999]
+    eps: 1e-8
+    weight_decay: 0.01
+  
+  # Learning rate schedule
+  scheduler:
+    type: cosine_with_warmup
+    warmup_steps: 4000
+    min_lr: 1e-6
+  
+  # Mixed precision
+  mixed_precision: bf16  # For H100/A100
+  gradient_clipping: 1.0
+  
+  # Checkpointing
+  save_steps: 1000
+  save_total_limit: 10
+  eval_steps: 500
+  logging_steps: 100
+  
+  # Early stopping
+  early_stopping:
+    patience: 20
+    metric: val_loss
+    mode: min
+
+# Loss weights
+loss:
+  acoustic_weight: 1.0
+  duration_weight: 0.1
+  pitch_weight: 0.1
+  energy_weight: 0.1
+  mel_weight: 45.0
+  feature_matching_weight: 2.0
+  discriminator_weight: 1.0
+  kl_weight: 1.0
+
+# Evaluation metrics
+evaluation:
+  metrics:
+    - mel_cepstral_distortion
+    - pitch_correlation
+    - voice_similarity
+    - pronunciation_accuracy
+  
+  # Synthesis parameters for evaluation
+  synthesis:
+    temperature: 0.8
+    length_scale: 1.0
+
+# Hardware optimization
+optimization:
+  # Flash Attention 2 (CUDA 12.1+)
+  use_flash_attention: true
+  
+  # Gradient checkpointing (saves memory)
+  gradient_checkpointing: false
+  
+  # torch.compile (PyTorch 2.0+)
+  compile_model: true
+  compile_mode: default  # or "reduce-overhead", "max-autotune"
+  
+  # CUDA settings
+  cuda_graphs: false  # Enable for inference
+  tf32: true  # Use TF32 on Ampere+
+  
+  # Memory optimization
+  find_unused_parameters: false
+  empty_cache_steps: 1000
+
+# Distributed training
+distributed:
+  backend: nccl
+  init_method: env://
+  find_unused_parameters: false
+
+# Logging and monitoring
+logging:
+  log_level: INFO
+  
+  # TensorBoard
+  tensorboard:
+    enabled: true
+    log_dir: logs/tensorboard/100h
+    log_images: true
+    log_audio: true
+    log_gradients: false
+  
+  # Weights & Biases
+  wandb:
+    enabled: true
+    project: tsukuyomi-tts
+    name: 100h-training
+    tags: ["100h", "japanese", "tts"]
+  
+  # Save samples
+  save_samples:
+    enabled: true
+    num_samples: 5
+    steps: 1000
+
+# Random seed for reproducibility
+seed: 42
+
+# Environment variables
+env:
+  OMP_NUM_THREADS: 8
+  TOKENIZERS_PARALLELISM: false
+  PYTORCH_CUDA_ALLOC_CONF: max_split_size_mb:512

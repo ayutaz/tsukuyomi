@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  tsukuyomi-tts:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tsukuyomi-tts:latest
+    container_name: tsukuyomi-tts
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - CUDA_VISIBLE_DEVICES=0
+      - OMP_NUM_THREADS=8
+      - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
+      - CUDA_LAUNCH_BLOCKING=0
+      - TF_CPP_MIN_LOG_LEVEL=2
+    volumes:
+      # Model cache
+      - ./models:/app/models
+      # Training data
+      - ./data:/app/data
+      # Output directory
+      - ./outputs:/app/outputs
+      # Logs
+      - ./logs:/app/logs
+      # Config files
+      - ./configs:/app/configs
+      # For development - mount source code
+      - ./src:/app/src:ro
+    ports:
+      # Inference server
+      - "8000:8000"
+      # Gradio demo UI
+      - "7860:7860"
+      # Monitoring (if enabled)
+      - "8080:8080"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - tsukuyomi-network
+
+  # Optional: Jupyter notebook for experimentation
+  jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile.jupyter
+    image: tsukuyomi-jupyter:latest
+    container_name: tsukuyomi-jupyter
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - JUPYTER_ENABLE_LAB=yes
+    volumes:
+      - ./:/app
+      - ./notebooks:/app/notebooks
+    ports:
+      - "8888:8888"
+    command: jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token=''
+    networks:
+      - tsukuyomi-network
+    profiles:
+      - dev
+
+  # Optional: TensorBoard for monitoring
+  tensorboard:
+    image: tensorflow/tensorflow:latest-gpu
+    container_name: tsukuyomi-tensorboard
+    volumes:
+      - ./logs:/logs:ro
+    ports:
+      - "6006:6006"
+    command: tensorboard --logdir=/logs --bind_all
+    networks:
+      - tsukuyomi-network
+    profiles:
+      - monitoring
+
+  # Optional: Redis for caching (production)
+  redis:
+    image: redis:7-alpine
+    container_name: tsukuyomi-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - tsukuyomi-network
+    profiles:
+      - production
+
+networks:
+  tsukuyomi-network:
+    driver: bridge
+
+volumes:
+  redis-data:

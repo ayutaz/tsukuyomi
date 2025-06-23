@@ -78,7 +78,28 @@
 - 8x NVIDIA H100 GPU（フル学習用）
 - 10,000時間の高品質音声データ
 
-### UV使用（推奨）
+### オプション1: Docker（学習環境推奨）
+
+```bash
+# リポジトリのクローン
+git clone https://github.com/ayutaz/tsukuyomi.git
+cd tsukuyomi
+
+# Dockerでビルドと実行
+./scripts/docker_run.sh build  # Linux/macOS
+# または
+.\scripts\docker_run.bat build  # Windows
+
+# 推論サーバーの起動
+./scripts/docker_run.sh run
+
+# 学習の開始
+./scripts/docker_run.sh train
+```
+
+Windows環境を含む詳細なDocker手順については、[Docker ガイド](docs/docker_guide.md)を参照してください。
+
+### オプション2: UV使用（ローカル開発）
 
 ```bash
 # UVのインストール

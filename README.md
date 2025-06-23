@@ -79,7 +79,28 @@ Tsukuyomi is an ultimate Text-to-Speech (TTS) system designed to achieve world-c
 - 8x NVIDIA H100 GPUs (for full training)
 - 10,000 hours of high-quality audio data
 
-### Using UV (Recommended)
+### Option 1: Docker (Recommended for Training)
+
+```bash
+# Clone repository
+git clone https://github.com/ayutaz/tsukuyomi.git
+cd tsukuyomi
+
+# Build and run with Docker
+./scripts/docker_run.sh build  # Linux/macOS
+# or
+.\scripts\docker_run.bat build  # Windows
+
+# Start inference server
+./scripts/docker_run.sh run
+
+# Start training
+./scripts/docker_run.sh train
+```
+
+For detailed Docker instructions including Windows support, see [Docker Guide](docs/docker_guide.md).
+
+### Option 2: Using UV (Local Development)
 
 ```bash
 # Install UV

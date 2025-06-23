@@ -1,0 +1,54 @@
+# Windows Container Support for Tsukuyomi TTS
+# Note: GPU support in Windows containers requires Windows Server 2019 or later
+
+# Base image - Windows Server Core with Python
+FROM mcr.microsoft.com/windows/servercore:ltsc2022
+
+# Install Chocolatey
+RUN powershell -NoProfile -ExecutionPolicy Bypass -Command \
+    "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; \
+    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))"
+
+# Install Python 3.11 and Git
+RUN choco install -y python311 git
+
+# Install Visual C++ Build Tools
+RUN choco install -y visualstudio2022buildtools --package-parameters \
+    "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
+
+# Install CUDA Toolkit (if GPU support is available)
+RUN choco install -y cuda --version=12.1.0
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PATH="C:\\Python311;C:\\Python311\\Scripts;C:\\Program Files\\Git\\bin;C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.1\\bin;%PATH%"
+
+# Create working directory
+WORKDIR C:\\app
+
+# Install uv package manager
+RUN powershell -Command \
+    "Invoke-WebRequest -Uri 'https://astral.sh/uv/install.ps1' -OutFile 'install_uv.ps1'; \
+    .\\install_uv.ps1"
+
+# Copy project files
+COPY pyproject.toml uv.lock* .\\
+COPY src\\ .\\src\\
+COPY scripts\\ .\\scripts\\
+COPY configs\\ .\\configs\\
+
+# Install Python dependencies
+RUN uv pip install --system -e . --no-cache
+
+# Create directories
+RUN mkdir models data outputs logs
+
+# Expose ports
+EXPOSE 8000 7860 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD powershell -Command "Invoke-WebRequest -Uri http://localhost:8000/health -UseBasicParsing"
+
+# Default command
+CMD ["python", "-m", "src.server.inference_server"]

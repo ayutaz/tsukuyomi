@@ -1,0 +1,140 @@
+# Training configuration optimized for Windows
+# Adjusted for Windows-specific paths and compatibility
+
+model:
+  name: tsukuyomi_windows
+  type: ultimate_acoustic_model
+  checkpoint: null
+  
+  params:
+    # Phoneme encoder
+    phoneme_encoder:
+      model_name: vinai/xphonebert-base
+      hidden_size: 768
+      use_lora: true
+      lora_rank: 16
+      dropout: 0.1
+    
+    # Acoustic model - smaller for Windows compatibility
+    acoustic_model:
+      hidden_size: 384  # Reduced for better Windows performance
+      num_layers: 8
+      num_heads: 6
+      ff_expansion: 4
+      conv_kernel_size: 9
+      dropout: 0.1
+      use_flash_attention: false  # Disable if not supported on Windows
+    
+    # Vocoder
+    vocoder:
+      type: hifigan  # Use HiFiGAN for better Windows compatibility
+      input_size: 384
+      upsample_rates: [8, 8, 2, 2]
+      upsample_kernel_sizes: [16, 16, 4, 4]
+      resblock_kernel_sizes: [3, 7, 11]
+    
+    # Speaker encoder
+    speaker_encoder:
+      num_speakers: 100
+      embedding_dim: 128
+      hidden_size: 384
+
+data:
+  # Windows-style paths
+  train_path: data\\processed\\train
+  val_path: data\\processed\\val
+  
+  # Smaller batch size for Windows
+  batch_size: 16
+  num_workers: 0  # Set to 0 to avoid multiprocessing issues on Windows
+  pin_memory: false  # Disable for compatibility
+  persistent_workers: false
+  
+  # Data filtering
+  max_duration: 10.0
+  min_duration: 0.5
+  max_text_length: 150
+  
+  # Simplified augmentation
+  augmentation:
+    speed_perturb: [0.95, 1.0, 1.05]
+    pitch_shift: [-1, 1]
+    add_noise: false  # Disable to reduce CPU load
+
+training:
+  # Training schedule
+  num_epochs: 200
+  gradient_accumulation_steps: 8  # Compensate for smaller batch size
+  
+  # Optimization
+  optimizer:
+    type: AdamW
+    lr: 0.0001
+    betas: [0.9, 0.999]
+    eps: 1e-8
+    weight_decay: 0.01
+  
+  # Learning rate schedule
+  scheduler:
+    type: cosine_with_warmup
+    warmup_steps: 2000
+    min_lr: 1e-6
+  
+  # Mixed precision - use fp16 for older GPUs
+  mixed_precision: fp16
+  gradient_clipping: 1.0
+  
+  # Checkpointing - Windows paths
+  checkpoint_dir: models\\checkpoints
+  save_steps: 500
+  save_total_limit: 5
+  eval_steps: 250
+  logging_steps: 50
+
+# Simplified loss configuration
+loss:
+  acoustic_weight: 1.0
+  duration_weight: 0.1
+  mel_weight: 45.0
+  discriminator_weight: 0.5
+
+# Windows-compatible optimization
+optimization:
+  use_flash_attention: false
+  gradient_checkpointing: true  # Save memory
+  compile_model: false  # Disable torch.compile on Windows
+  cuda_graphs: false
+  tf32: false
+  
+  # Memory optimization
+  empty_cache_steps: 500
+
+# Logging for Windows
+logging:
+  log_level: INFO
+  log_dir: logs\\training
+  
+  # TensorBoard with Windows paths
+  tensorboard:
+    enabled: true
+    log_dir: logs\\tensorboard
+    log_images: true
+    log_audio: true
+  
+  # Disable wandb by default on Windows
+  wandb:
+    enabled: false
+  
+  # Save samples with Windows paths
+  save_samples:
+    enabled: true
+    output_dir: outputs\\samples
+    num_samples: 3
+    steps: 500
+
+# Environment variables for Windows
+env:
+  OMP_NUM_THREADS: 4
+  KMP_DUPLICATE_LIB_OK: "TRUE"  # Prevent OpenMP errors
+  CUDA_LAUNCH_BLOCKING: 0
+  PYTORCH_CUDA_ALLOC_CONF: max_split_size_mb:256

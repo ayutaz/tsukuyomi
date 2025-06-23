@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  tsukuyomi-tts:
+    build:
+      context: .
+      dockerfile: Dockerfile.windows
+    image: tsukuyomi-tts:windows
+    container_name: tsukuyomi-tts-windows
+    isolation: process
+    environment:
+      - PYTHONUNBUFFERED=1
+      - OMP_NUM_THREADS=8
+      - TF_CPP_MIN_LOG_LEVEL=2
+    volumes:
+      # Model cache
+      - .\\models:C:\\app\\models
+      # Training data
+      - .\\data:C:\\app\\data
+      # Output directory
+      - .\\outputs:C:\\app\\outputs
+      # Logs
+      - .\\logs:C:\\app\\logs
+      # Config files
+      - .\\configs:C:\\app\\configs
+      # For development
+      - .\\src:C:\\app\\src:ro
+    ports:
+      # Inference server
+      - "8000:8000"
+      # Gradio demo UI
+      - "7860:7860"
+      # Monitoring
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "powershell", "-Command", "Invoke-WebRequest -Uri http://localhost:8000/health -UseBasicParsing"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - tsukuyomi-network
+
+  # Training container with additional resources
+  tsukuyomi-train:
+    build:
+      context: .
+      dockerfile: Dockerfile.windows
+    image: tsukuyomi-train:windows
+    container_name: tsukuyomi-train-windows
+    isolation: process
+    environment:
+      - PYTHONUNBUFFERED=1
+      - OMP_NUM_THREADS=16
+      - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
+    volumes:
+      - .\\models:C:\\app\\models
+      - .\\data:C:\\app\\data
+      - .\\outputs:C:\\app\\outputs
+      - .\\logs:C:\\app\\logs
+      - .\\configs:C:\\app\\configs
+      - .\\src:C:\\app\\src
+      - .\\scripts:C:\\app\\scripts
+    command: ["python", "scripts/train.py", "--config", "configs/train_100h.yaml"]
+    networks:
+      - tsukuyomi-network
+    profiles:
+      - training
+
+  # Optional: Redis for caching (Windows version)
+  redis:
+    image: redis:7-windowsservercore
+    container_name: tsukuyomi-redis-windows
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:C:\\data
+    networks:
+      - tsukuyomi-network
+    profiles:
+      - production
+
+networks:
+  tsukuyomi-network:
+    driver: nat
+
+volumes:
+  redis-data:

@@ -1,0 +1,46 @@
+# Jupyter notebook environment for Tsukuyomi TTS development
+FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    curl \
+    build-essential \
+    libsndfile1-dev \
+    ffmpeg \
+    python3.11 \
+    python3.11-dev \
+    python3-pip \
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Set working directory
+WORKDIR /app
+
+# Copy project files
+COPY pyproject.toml uv.lock* ./
+
+# Install Python dependencies
+RUN uv pip install --system -e . jupyter jupyterlab ipywidgets matplotlib --no-cache
+
+# Install JupyterLab extensions
+RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager
+
+# Create notebook directory
+RUN mkdir -p /app/notebooks
+
+# Expose Jupyter port
+EXPOSE 8888
+
+# Default command
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root"]
