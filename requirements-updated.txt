@@ -1,0 +1,66 @@
+# Core dependencies (2024 latest) - UPDATED for actual implementation
+torch>=2.2.0
+torchaudio>=2.2.0
+transformers>=4.38.0
+numpy>=1.24.0
+scipy>=1.11.0
+
+# Phonemization (replacing text2phonemesequence)
+phonemizer>=3.2.1
+espeak-phonemizer>=1.0.1
+pypinyin>=0.49.0  # For Chinese
+g2p-en>=2.1.0  # For English
+
+# Vocoder (replacing mock bigvgan)
+# We'll use HiFi-GAN as it's more stable and available
+hifi-gan @ git+https://github.com/jik876/hifi-gan.git
+# Alternative: vocos for neural vocoding
+vocos>=0.1.0
+
+# Japanese text processing
+mecab-python3>=1.0.5; sys_platform != 'win32'
+unidic-lite>=1.0.8
+jaconv>=0.3.0
+pykakasi>=2.2.1
+pyopenjtalk>=0.3.0  # For Japanese G2P
+
+# Audio processing
+soundfile>=0.12.0
+librosa>=0.10.0
+matplotlib>=3.5.0
+webrtcvad>=2.0.10  # For voice activity detection
+pydub>=0.25.1
+
+# ML utilities
+einops>=0.7.0
+rotary-embedding-torch>=0.3.0
+vector-quantize-pytorch>=1.14.0
+
+# Optimization
+onnx>=1.14.0
+onnxruntime>=1.15.0
+onnx-simplifier>=0.4.36
+
+# Development tools
+pytest>=7.0.0
+pytest-cov>=4.1.0
+black>=23.0.0
+ruff>=0.1.0
+mypy>=1.5.0
+pre-commit>=3.5.0
+
+# API and deployment
+fastapi>=0.104.0
+uvicorn>=0.24.0
+pydantic>=2.5.0
+
+# Monitoring
+tensorboard>=2.15.0
+wandb>=0.16.0
+tqdm>=4.65.0
+
+# H100 optimizations (optional)
+# nvidia-ml-py>=12.535.0
+# transformer-engine>=1.2.0
+# flash-attn>=2.5.0
+# apex @ git+https://github.com/NVIDIA/apex.git
