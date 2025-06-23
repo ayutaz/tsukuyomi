@@ -83,7 +83,7 @@ jobs:
       
       - name: Run quick tests
         run: |
-          pytest tests/test_basic.py tests/test_utils.py -v --no-header
+          pytest tests/test_basic.py tests/test_utils.py -v --no-header --no-cov
       
       - name: Check imports
         run: |
