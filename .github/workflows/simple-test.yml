@@ -1,0 +1,38 @@
+name: Simple Test
+
+on:
+  push:
+    branches: [ dev ]
+
+jobs:
+  simple-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install uv
+      run: |
+        pip install uv
+    
+    - name: Create venv and install minimal deps
+      run: |
+        uv venv
+        source .venv/bin/activate
+        pip install pytest
+        pip install -e .
+    
+    - name: Run simple test
+      run: |
+        source .venv/bin/activate
+        python -m pytest tests/test_basic.py -v
+    
+    - name: Check imports
+      run: |
+        source .venv/bin/activate
+        python -c "import src; print('Import successful')"
