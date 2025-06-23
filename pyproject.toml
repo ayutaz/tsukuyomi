@@ -1,5 +1,5 @@
 [project]
-name = "tsukuyomi-tts"
+name = "tsukuyomi"
 version = "0.1.0"
 description = "State-of-the-art Japanese Text-to-Speech system with multilingual support"
 readme = "README.md"
@@ -35,11 +35,11 @@ dependencies = [
     "matplotlib>=3.5.0",
     
     # TTS specific
-    "text2phonemesequence",
-    "bigvgan",
+    # "text2phonemesequence",  # Not available on PyPI
+    # "bigvgan",  # Not available on PyPI
     
     # Japanese text processing
-    "mecab-python3>=1.0.5",
+    "mecab-python3>=1.0.5; sys_platform != 'win32'",
     "unidic-lite>=1.0.8",
     "jaconv>=0.3.0",
     "pykakasi>=2.2.1",
@@ -92,6 +92,9 @@ Issues = "https://github.com/yourusername/tsukuyomi/issues"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
 
 [tool.uv]
 dev-dependencies = [

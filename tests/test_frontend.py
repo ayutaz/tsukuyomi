@@ -3,10 +3,23 @@ Tests for frontend text processing modules
 """
 
 import pytest
+import sys
 import numpy as np
 from unittest.mock import Mock, patch
 
 from src.frontend.text_normalizer import JapaneseTextNormalizer
+
+# Skip all tests if MeCab is not available (e.g., on Windows CI)
+try:
+    import MeCab
+    MECAB_AVAILABLE = True
+except ImportError:
+    MECAB_AVAILABLE = False
+
+pytestmark = pytest.mark.skipif(
+    not MECAB_AVAILABLE,
+    reason="MeCab not available (common on Windows)"
+)
 
 
 class TestJapaneseTextNormalizer:

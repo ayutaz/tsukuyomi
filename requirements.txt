@@ -18,8 +18,8 @@ librosa>=0.10.0
 matplotlib>=3.5.0
 
 # TTS specific
-text2phonemesequence
-bigvgan
+# text2phonemesequence  # Not available on PyPI - install from source
+# bigvgan  # Not available on PyPI - install from source
 
 # Japanese text processing
 mecab-python3>=1.0.5
