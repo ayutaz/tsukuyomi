@@ -140,11 +140,20 @@ class JapaneseG2P:
                 # Test enhanced features if available
                 test_result = pyopenjtalk.g2p("テスト", kana=False, join=False)
                 self.supports_detailed_output = True
+                # Check for marine support (DNN accent prediction)
+                try:
+                    test_marine = pyopenjtalk.g2p("テスト", run_marine=True)
+                    self.supports_marine = True
+                    self.logger.info("Marine DNN accent prediction available")
+                except:
+                    self.supports_marine = False
             except:
                 self.supports_detailed_output = False
+                self.supports_marine = False
         else:
             self.logger.info("Using standard pyopenjtalk for Japanese G2P")
             self.supports_detailed_output = False
+            self.supports_marine = False
         
         # Set dictionary path if needed
         try:
@@ -216,7 +225,15 @@ class JapaneseG2P:
             if self.config.phoneme_type == "kana":
                 phonemes = pyopenjtalk.g2p(text, kana=True)
             else:
-                phonemes = pyopenjtalk.g2p(text, kana=False)
+                # Use marine DNN if available for better accuracy
+                if hasattr(self, 'supports_marine') and self.supports_marine:
+                    try:
+                        phonemes = pyopenjtalk.g2p(text, kana=False, run_marine=True)
+                        self.logger.debug("Using marine DNN for G2P")
+                    except:
+                        phonemes = pyopenjtalk.g2p(text, kana=False)
+                else:
+                    phonemes = pyopenjtalk.g2p(text, kana=False)
                 
             return self._postprocess_phonemes(phonemes)
             
