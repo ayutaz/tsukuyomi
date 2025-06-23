@@ -190,6 +190,87 @@ texts = ["文1", "文2", "文3"]
 audios = tts.batch_synthesize(texts, speaker_ids=[0, 1, 2])
 ```
 
+### 🎭 新機能：感情制御とスタイル転送
+
+```python
+# 感情制御（10種類の感情）
+emotions = ["neutral", "happy", "sad", "angry", "fearful", 
+           "surprised", "disgusted", "excited", "calm", "confident"]
+
+audio = tts.synthesize(
+    text="感情豊かな音声合成",
+    speaker_id=0,
+    emotion="excited",
+    emotion_intensity=1.5  # 感情の強度を調整
+)
+
+# 連続感情値（VAD: Valence-Arousal-Dominance）
+audio = tts.synthesize(
+    text="細かな感情表現",
+    speaker_id=0,
+    emotion_vad=[0.8, 0.9, 0.7]  # ポジティブ、高活性、支配的
+)
+
+# スタイル転送
+reference_audio = load_audio("style_reference.wav")
+audio = tts.synthesize(
+    text="スタイルを転送した音声",
+    speaker_id=0,
+    reference_mel=reference_audio,  # 参照音声のスタイル
+    style_mix_ratio=0.7  # スタイルの混合比率
+)
+```
+
+### 🎪 音声モーフィング
+
+```python
+# 複数話者の音声をモーフィング
+audio = tts.morph_voices(
+    text="複数の話者をブレンド",
+    speaker_ids=[0, 5, 10],  # 3人の話者
+    weights=[0.5, 0.3, 0.2],  # ブレンド比率
+    pitch_shift=1.0,  # ピッチシフト（半音単位）
+    time_stretch=1.1  # 時間伸縮
+)
+
+# 連続的な話者遷移
+audio = tts.continuous_morphing(
+    text="話者が滑らかに変化する長いテキスト",
+    source_speaker=0,
+    target_speakers=[5, 10, 15],  # 遷移先の話者
+    transition_points=[100, 300, 500],  # 遷移開始位置（文字数）
+    transition_lengths=[50, 50, 50]  # 遷移の長さ
+)
+
+# 声質変換
+audio = tts.voice_conversion(
+    source_audio=load_audio("source.wav"),
+    target_speaker=42,
+    preserve_content=True  # 内容を保持して声質のみ変換
+)
+```
+
+### ⚡ リアルタイムストリーミング
+
+```python
+# 低レイテンシストリーミング合成
+async def stream_tts():
+    async for audio_chunk in tts.stream_synthesis(
+        text_stream=async_text_generator(),
+        speaker_id=0,
+        chunk_size=256,  # 文字単位のチャンクサイズ
+        max_latency_ms=100  # 最大許容レイテンシ
+    ):
+        # 音声チャンクを順次再生
+        play_audio_chunk(audio_chunk)
+
+# WebSocketストリーミング
+from tsukuyomi.streaming import WebSocketStreaming
+
+ws_server = WebSocketStreaming(tts, sample_rate=48000)
+await ws_server.start_server(host="localhost", port=8765)
+```
+
 ## 🏋️ 学習
 
 詳細な学習手順については[train.md](train.md)を参照してください。
