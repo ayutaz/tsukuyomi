@@ -276,9 +276,25 @@ class TsukuyomiTTS:
         )
         
         # Apply pitch shift if needed
-        if pitch_shift != 0:
-            # This is a simplified pitch shift - in practice would modify F0
-            pass
+        if pitch_shift != 0 and hasattr(outputs, 'f0'):
+            # Shift F0 by semitones
+            f0 = outputs['f0']
+            # Convert semitones to frequency ratio
+            shift_ratio = 2.0 ** (pitch_shift / 12.0)
+            shifted_f0 = f0 * shift_ratio
+            
+            # Re-synthesize with shifted F0
+            outputs = self.acoustic_model.synthesize(
+                phone_ids=phone_ids,
+                phone_lengths=phone_lengths,
+                f0=shifted_f0,
+                speaker_ids=speaker_ids_tensor,
+                speaker_weights=speaker_weights_tensor,
+                emotion_ids=emotion_ids_tensor,
+                emotion_weights=emotion_weights_tensor,
+                length_scale=1.0 / speed,
+                temperature=1.0
+            )
             
         # Generate waveform
         audio = self.vocoder.inference(mel)
@@ -351,17 +367,51 @@ class TsukuyomiTTS:
         
     def _audio_to_mel(self, audio: torch.Tensor) -> torch.Tensor:
         """Convert audio to mel-spectrogram."""
-        # Simplified - in practice would use proper STFT parameters
-        # This is a placeholder implementation
-        n_fft = 2048
-        hop_length = self.acoustic_model.config.hop_length
-        win_length = self.acoustic_model.config.win_length
-        n_mels = self.acoustic_model.config.n_mel_channels
+        import torchaudio
         
-        # Would use torchaudio.transforms.MelSpectrogram in practice
-        # For now, return dummy mel
-        mel_length = audio.shape[-1] // hop_length
-        mel = torch.randn(n_mels, mel_length).to(self.device)
+        # Get acoustic model config
+        if hasattr(self.acoustic_model, 'config'):
+            n_fft = getattr(self.acoustic_model.config, 'n_fft', 2048)
+            hop_length = getattr(self.acoustic_model.config, 'hop_length', 256)
+            win_length = getattr(self.acoustic_model.config, 'win_length', 1024)
+            n_mels = getattr(self.acoustic_model.config, 'n_mel_channels', 80)
+            sample_rate = getattr(self.acoustic_model.config, 'sample_rate', 22050)
+            f_min = getattr(self.acoustic_model.config, 'f_min', 0)
+            f_max = getattr(self.acoustic_model.config, 'f_max', 8000)
+        else:
+            # Default values
+            n_fft = 2048
+            hop_length = 256
+            win_length = 1024
+            n_mels = 80
+            sample_rate = 22050
+            f_min = 0
+            f_max = 8000
+        
+        # Create mel spectrogram transform
+        mel_transform = torchaudio.transforms.MelSpectrogram(
+            sample_rate=sample_rate,
+            n_fft=n_fft,
+            win_length=win_length,
+            hop_length=hop_length,
+            f_min=f_min,
+            f_max=f_max,
+            n_mels=n_mels,
+            power=1.0,
+            normalized=False,
+            center=True,
+            pad_mode="reflect",
+        ).to(self.device)
+        
+        # Convert to mel spectrogram
+        mel = mel_transform(audio)
+        
+        # Convert to log scale
+        mel = torch.log(torch.clamp(mel, min=1e-5))
+        
+        # Remove batch dimension if present
+        if mel.dim() == 3 and mel.shape[0] == 1:
+            mel = mel.squeeze(0)
         
         return mel
         

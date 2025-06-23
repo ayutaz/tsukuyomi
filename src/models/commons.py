@@ -109,37 +109,71 @@ def kl_divergence(
     return kl
 
 
-# Monotonic alignment search (placeholder - actual implementation needs Cython/C++)
+# Monotonic alignment search
 class MonotonicAlign:
-    """Monotonic alignment search for duration extraction"""
+    """Monotonic alignment search for duration extraction
+    
+    Pure PyTorch implementation that's slower than Cython but functional.
+    """
     
     @staticmethod
     def maximum_path(neg_cent: torch.Tensor, x_mask: torch.Tensor, y_mask: torch.Tensor) -> torch.Tensor:
-        """Find maximum path through cost matrix
+        """Find maximum path through cost matrix using dynamic programming
         
-        Note: This is a placeholder. The actual implementation requires
-        Cython or C++ for efficiency. For now, we use a simple diagonal path.
+        Args:
+            neg_cent: Negative log-likelihood matrix [B, T_y, T_x]
+            x_mask: Text mask [B, T_x]
+            y_mask: Mel mask [B, T_y]
+            
+        Returns:
+            Path matrix [B, T_y, T_x]
         """
         b, t_y, t_x = neg_cent.shape
         path = torch.zeros(b, t_y, t_x, dtype=torch.float32, device=neg_cent.device)
         
-        # Simple diagonal alignment (placeholder)
         for b_idx in range(b):
             # Get valid lengths
-            x_len = x_mask[b_idx].sum().long()
-            y_len = y_mask[b_idx].sum().long()
+            x_len = int(x_mask[b_idx].sum().item())
+            y_len = int(y_mask[b_idx].sum().item())
             
             if x_len > 0 and y_len > 0:
-                # Create a simple diagonal path
-                ratio = y_len.float() / x_len.float()
+                # Extract valid region
+                cost = neg_cent[b_idx, :y_len, :x_len]
                 
-                for x_idx in range(x_len):
-                    y_start = int(x_idx * ratio)
-                    y_end = int((x_idx + 1) * ratio)
-                    y_end = min(y_end, y_len)
+                # Dynamic programming to find maximum path
+                # Initialize DP table
+                value = torch.zeros(y_len, x_len, device=neg_cent.device)
+                value[0, 0] = cost[0, 0]
+                
+                # Forward pass
+                for y in range(1, y_len):
+                    value[y, 0] = value[y-1, 0] + cost[y, 0]
                     
-                    if y_start < y_len and y_end > y_start:
-                        path[b_idx, y_start:y_end, x_idx] = 1.0 / (y_end - y_start)
+                for x in range(1, x_len):
+                    value[0, x] = value[0, x-1] + cost[0, x]
+                    
+                for y in range(1, y_len):
+                    for x in range(1, x_len):
+                        value[y, x] = torch.max(
+                            value[y-1, x] + cost[y, x],  # vertical
+                            value[y, x-1] + cost[y, x]   # horizontal
+                        )
+                
+                # Backward pass to reconstruct path
+                x_idx = x_len - 1
+                for y_idx in range(y_len - 1, -1, -1):
+                    path[b_idx, y_idx, x_idx] = 1.0
+                    
+                    if x_idx > 0 and y_idx > 0:
+                        # Check which direction we came from
+                        if value[y_idx-1, x_idx] > value[y_idx, x_idx-1]:
+                            y_idx = y_idx - 1
+                        else:
+                            x_idx = x_idx - 1
+                    elif y_idx > 0:
+                        y_idx = y_idx - 1
+                    elif x_idx > 0:
+                        x_idx = x_idx - 1
                         
         return path
 

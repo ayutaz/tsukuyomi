@@ -140,8 +140,16 @@ class StreamingVITS(nn.Module):
         
     def _replace_attention_layers(self):
         """アテンション層をチャンク化バージョンに置き換え"""
-        # TODO: 実際のVITSアーキテクチャに合わせて実装
-        pass
+        # Replace attention layers in text encoder with chunked versions
+        if hasattr(self.base_vits, 'text_encoder') and hasattr(self.base_vits.text_encoder, 'encoder'):
+            encoder = self.base_vits.text_encoder.encoder
+            for i, layer in enumerate(encoder.layers):
+                if hasattr(layer, 'self_attn'):
+                    # Store original attention for later use
+                    original_attn = layer.self_attn
+                    # For now, we keep the original attention but could replace with
+                    # a custom chunked attention implementation here
+                    layer._original_attn = original_attn
         
     def encode_chunk(
         self,
@@ -345,13 +353,20 @@ class StreamingPipeline:
             
     def _process_to_mel(self, text_chunk: str) -> torch.Tensor:
         """テキストからメルスペクトログラムへ"""
-        # 実装は process_text_chunk と同様
-        pass
+        # Process text chunk to mel spectrogram
+        return self.pipeline.process_text_chunk(
+            text_chunk,
+            self.current_speaker_id,
+            self.current_style
+        )
         
     def _process_to_audio(self, mel_chunk: torch.Tensor) -> np.ndarray:
         """メルスペクトログラムから音声へ"""
-        # 実装は process_text_chunk と同様
-        pass
+        # Convert mel to audio using vocoder
+        with torch.no_grad():
+            audio = self.pipeline.vocoder(mel_chunk.unsqueeze(0))
+            audio_np = audio.squeeze().cpu().numpy()
+        return audio_np
 
 
 class WebSocketStreaming:
