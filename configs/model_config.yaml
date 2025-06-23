@@ -89,13 +89,17 @@ inference:
 hardware:
   h100:
     use_transformer_engine: true
-    use_flash_attention_v2: true
+    use_flash_attention_v2: true  # Requires CUDA 12.1+
     tf32_matmul: true
     tf32_cudnn: true
+    use_cuda_graphs: true  # CUDA 12.1+ for inference optimization
+    use_fused_kernels: true  # CUDA 12.1+ fused operations
     
   cuda:
     max_split_size_mb: 512
     device_max_connections: 1
+    min_version: "12.1"  # Minimum CUDA version required
+    use_cudnn_frontend: true  # CUDA 12.1+ CuDNN frontend API
     
 # Paths
 paths:

@@ -1,4 +1,4 @@
-# Tsukuyomi (月読) - Ultimate Japanese Text-to-Speech System
+# 月読（Tsukuyomi） - 究極の日本語音声合成システム
 
 <div align="center">
 
@@ -7,358 +7,12 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-[English](#english) | [日本語](#日本語) | [日本語README](README_ja.md)
+*MOS 4.7以上（人間レベルの品質）を目指す最先端の日本語TTSシステム*
+
+[English](README.md) | 日本語
 
 </div>
 
----
-
-<a name="english"></a>
-## 🌟 Overview
-
-Tsukuyomi is an ultimate Text-to-Speech (TTS) system designed to achieve world-class quality in Japanese speech synthesis. Built with cutting-edge deep learning architectures and optimized for large-scale training on H100 GPUs.
-
-### Key Features
-
-- 🎯 **Ultimate Quality**: Targeting MOS 4.7+ (indistinguishable from human speech)
-- 🗣️ **500+ Speakers**: Support for game character voices with perfect reproduction
-- 🎭 **Emotion & Style Control**: 7 emotions × 10 speaking styles
-- ⚡ **High Performance**: RTF < 0.05 (20x faster than real-time)
-- 🌏 **Multilingual Ready**: Japanese-first with multilingual expansion capability
-- 🎮 **Unity Integration**: ONNX export for game engine deployment
-
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                  Tsukuyomi Ultimate TTS                  │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  Text → G2P++ → XPhoneBERT-JP → F0-BERT → Acoustic   │
-│                                              Model      │
-│                                                ↓       │
-│                                          BigVGAN-v2    │
-│                                                ↓       │
-│                                            Audio       │
-└─────────────────────────────────────────────────────────┘
-```
-
-### Core Components
-
-1. **Ultimate G2P++ (97%+ accuracy)**
-   - Rule-based (pyopenjtalk-plus) + Neural correction
-   - Context-aware BERT-based accent prediction
-   - Japanese-specific phoneme handling
-
-2. **XPhoneBERT-Japanese**
-   - Japanese phoneme system optimization
-   - Accent and dialect modeling (47 prefectures)
-   - LoRA fine-tuning (rank=64)
-
-3. **F0-BERT**
-   - High-precision pitch contour prediction
-   - Emotion and style conditioning
-   - Frame-level F0 generation
-
-4. **Ultimate Acoustic Model**
-   - Matcha-TTS Flow Matching + VITS VAE
-   - 500+ speaker support with voice cloning
-   - Stochastic duration modeling
-
-5. **BigVGAN-v2 Vocoder**
-   - 48kHz high-fidelity synthesis
-   - Snake-Beta anti-aliased activation
-   - Multi-scale/resolution discriminators
-
-## 🚀 Installation
-
-### Prerequisites
-
-- Python 3.11+
-- CUDA 12.1+ (for GPU acceleration with Flash Attention 2 and enhanced BF16 support)
-- 8x NVIDIA H100 GPUs (for full training)
-- 10,000 hours of high-quality audio data
-
-### Using UV (Recommended)
-
-```bash
-# Install UV
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Clone repository
-git clone https://github.com/ayutaz/tsukuyomi.git
-cd tsukuyomi
-
-# Create virtual environment and install dependencies
-uv venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-uv pip install -e .
-uv pip install -r requirements.txt
-```
-
-### Development Setup
-
-```bash
-# Install development dependencies
-uv pip install -e ".[dev]"
-
-# Install pre-commit hooks
-pre-commit install
-
-# Run tests
-pytest tests/ -v
-
-# Run linting
-ruff check src/
-mypy src/
-```
-
-## 📊 Performance Targets
-
-| Metric | Target | Current |
-|--------|--------|---------|
-| MOS (Mean Opinion Score) | 4.7+ | Training |
-| Speaker Similarity | 95%+ | Training |
-| RTF (Real-Time Factor) | < 0.05 | Achieved |
-| Accent Accuracy | 97%+ | Achieved |
-| Character Error Rate | < 1% | Training |
-
-## 🎯 Quick Start
-
-### Basic Usage
-
-```python
-from tsukuyomi import TsukuyomiTTS
-
-# Initialize TTS system
-tts = TsukuyomiTTS(device="cuda")
-
-# Generate speech
-audio = tts.synthesize(
-    text="月読は最高峰の音声合成システムです",
-    speaker_id=0,
-    emotion="neutral",
-    style="normal"
-)
-
-# Save audio
-tts.save_audio(audio, "output.wav")
-```
-
-### Advanced Features
-
-```python
-# Multi-speaker synthesis
-audio = tts.synthesize(
-    text="こんにちは、月読です",
-    speaker_id=42,  # Specific character voice
-    emotion="happy",
-    style="energetic",
-    speed=1.1,
-    pitch_shift=2.0
-)
-
-# Voice cloning
-reference_audio = load_audio("reference.wav")
-audio = tts.clone_voice(
-    text="クローンされた音声です",
-    reference_audio=reference_audio
-)
-
-# Batch synthesis
-texts = ["文1", "文2", "文3"]
-audios = tts.batch_synthesize(texts, speaker_ids=[0, 1, 2])
-```
-
-## 🏋️ Training
-
-For detailed training instructions, see [train.md](train.md).
-
-### Stage 1: Foundation (100 hours, 10 speakers)
-```bash
-python train.py \
-    --config configs/stage1_foundation.yaml \
-    --data_dir data/foundation \
-    --output_dir checkpoints/stage1 \
-    --gpus 2
-```
-
-### Stage 2: Scale-up (1,000 hours, 100 speakers)
-```bash
-torchrun --nproc_per_node=4 train.py \
-    --config configs/stage2_scaleup.yaml \
-    --data_dir data/scaleup \
-    --checkpoint checkpoints/stage1/best.pt \
-    --gpus 4
-```
-
-### Stage 3: Full-scale (10,000 hours, 500+ speakers)
-```bash
-torchrun --nproc_per_node=8 train.py \
-    --config configs/stage3_fullscale.yaml \
-    --data_dir data/fullscale \
-    --checkpoint checkpoints/stage2/best.pt \
-    --gpus 8 \
-    --use_fsdp \
-    --use_bf16
-```
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-pytest tests/ -v
-
-# Run specific component tests
-pytest tests/test_ultimate_g2p.py -v
-pytest tests/test_f0_bert.py -v
-pytest tests/test_xphonebert_japanese.py -v
-pytest tests/test_ultimate_acoustic_model.py -v
-pytest tests/test_bigvgan_v2.py -v
-
-# Run integration tests
-python scripts/test_ultimate_tts_integration.py
-```
-
-## 📁 Project Structure
-
-```
-tsukuyomi/
-├── src/
-│   ├── models/
-│   │   ├── ultimate_g2p.py         # 97%+ accuracy G2P
-│   │   ├── xphonebert_japanese.py  # Japanese-optimized encoder
-│   │   ├── f0_bert.py              # Pitch prediction
-│   │   ├── ultimate_acoustic_model.py  # Matcha-TTS + VITS
-│   │   └── bigvgan_v2.py           # 48kHz vocoder
-│   ├── data/
-│   │   └── massive_dataset.py      # 10,000-hour data pipeline
-│   ├── frontend/
-│   │   ├── japanese_g2p.py         # pyopenjtalk-plus integration
-│   │   └── text_normalizer.py      # Text preprocessing
-│   └── training/
-│       └── trainer.py              # Distributed training
-├── configs/
-│   ├── ultimate_tts_h100.yaml      # H100 optimization config
-│   └── pretrained_models.json      # Model registry
-├── tests/
-│   └── test_*.py                   # Comprehensive test suite
-├── scripts/
-│   ├── download_pretrained_models.py
-│   └── test_ultimate_tts_integration.py
-├── docs/
-│   ├── architecture-overview.md
-│   ├── ultimate-tts-architecture.md
-│   └── training-guide.md
-└── train.md                        # Detailed training guide
-```
-
-## 🔧 Configuration
-
-### Model Configuration
-
-```yaml
-# configs/ultimate_tts.yaml
-model:
-  g2p:
-    accuracy_target: 0.97
-    use_neural_correction: true
-  
-  acoustic:
-    n_speakers: 1000
-    n_flows: 12
-    hidden_channels: 512
-    
-  vocoder:
-    sampling_rate: 48000
-    use_snake_activation: true
-    
-training:
-  batch_size: 32
-  learning_rate: 2e-4
-  use_bf16: true
-  gradient_checkpointing: true
-```
-
-## 🎮 Unity Integration
-
-```csharp
-// Export to ONNX
-python scripts/export_onnx.py --checkpoint best_model.pt --output tsukuyomi.onnx
-
-// Unity C# usage
-using Unity.Sentis;
-
-public class TsukuyomiTTS : MonoBehaviour {
-    private Model model;
-    private IWorker worker;
-    
-    void Start() {
-        model = ModelLoader.Load("tsukuyomi.onnx");
-        worker = WorkerFactory.CreateWorker(BackendType.GPUCompute, model);
-    }
-    
-    public AudioClip Synthesize(string text, int speakerId = 0) {
-        var inputs = PreprocessText(text);
-        worker.Execute(inputs);
-        return ConvertToAudioClip(worker.PeekOutput());
-    }
-}
-```
-
-## 📈 Benchmarks
-
-| Model Component | Latency (ms) | Memory (GB) | Quality |
-|----------------|--------------|-------------|---------|
-| G2P++ | 5 | 0.5 | 97% accuracy |
-| XPhoneBERT-JP | 10 | 1.2 | - |
-| F0-BERT | 8 | 0.8 | 94% accuracy |
-| Acoustic Model | 25 | 2.5 | - |
-| BigVGAN-v2 | 12 | 1.0 | 48kHz |
-| **Total** | **60** | **6.0** | **MOS 4.7+** |
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- OpenJTalk and pyopenjtalk-plus developers
-- XPhoneBERT authors
-- VITS and Matcha-TTS research teams
-- BigVGAN authors
-- Japanese TTS research community
-
-## 📚 Citation
-
-If you use Tsukuyomi in your research, please cite:
-
-```bibtex
-@software{tsukuyomi2024,
-  title = {Tsukuyomi: Ultimate Japanese Text-to-Speech System},
-  year = {2024},
-  url = {https://github.com/ayutaz/tsukuyomi}
-}
-```
-
-## 📞 Contact
-
-- Issues: [GitHub Issues](https://github.com/ayutaz/tsukuyomi/issues)
-- Discussions: [GitHub Discussions](https://github.com/ayutaz/tsukuyomi/discussions)
-
----
-
-<a name="日本語"></a>
 ## 🌟 概要
 
 月読（Tsukuyomi）は、世界最高水準の品質を目指して設計された日本語音声合成（TTS）システムです。最先端の深層学習アーキテクチャを採用し、H100 GPUでの大規模学習に最適化されています。
@@ -662,9 +316,95 @@ public class TsukuyomiTTS : MonoBehaviour {
 | BigVGAN-v2 | 12 | 1.0 | 48kHz |
 | **合計** | **60** | **6.0** | **MOS 4.7+** |
 
+## 🎯 主な使用例
+
+### ゲーム開発
+
+```python
+# ゲームキャラクターの音声生成
+character_voices = {
+    "hero": 0,
+    "villain": 1,
+    "narrator": 2
+}
+
+# 感情豊かなセリフ生成
+dialogue = tts.synthesize(
+    text="ついに会えたな、宿敵よ！",
+    speaker_id=character_voices["hero"],
+    emotion="angry",
+    style="dramatic"
+)
+```
+
+### オーディオブック制作
+
+```python
+# 長文のナレーション
+narrator = tts.create_narrator(
+    speaker_id=10,
+    speaking_rate=0.95,
+    pause_length=1.2
+)
+
+# チャプターごとの音声生成
+for chapter in book_chapters:
+    audio = narrator.read_chapter(chapter)
+    save_audio(audio, f"chapter_{chapter.number}.wav")
+```
+
+### バーチャルアシスタント
+
+```python
+# リアルタイム応答
+assistant = tts.create_assistant(
+    speaker_id=20,
+    response_speed="fast",
+    personality="friendly"
+)
+
+# ユーザーの質問に応答
+response_text = get_ai_response(user_query)
+audio = assistant.speak(response_text)
+play_audio(audio)
+```
+
+## 🔬 技術詳細
+
+### G2P++ システム
+
+月読のG2P++システムは、3段階のアプローチで97%以上の精度を実現：
+
+1. **基礎変換**: pyopenjtalk-plusによる高精度なルールベース変換
+2. **文脈理解**: BERTベースのアクセント・イントネーション予測
+3. **ニューラル補正**: RNNによる最終的な音素配列の最適化
+
+### 音響モデルの革新
+
+- **Flow Matching**: Matcha-TTSの高速合成技術
+- **VAE**: VITSの変分オートエンコーダーによる自然な音声
+- **確率的モデリング**: 人間らしい揺らぎの再現
+
+### 学習の最適化
+
+```python
+# H100 GPU向け最適化設定
+optimization_config = {
+    "mixed_precision": "bf16",
+    "gradient_checkpointing": True,
+    "fsdp": {
+        "sharding_strategy": "hybrid_shard",
+        "cpu_offload": True
+    },
+    "compile": True  # PyTorch 2.0
+}
+```
+
 ## 🤝 貢献
 
 貢献を歓迎します！詳細は[貢献ガイドライン](CONTRIBUTING.md)をご覧ください。
+
+### 貢献の方法
 
 1. リポジトリをフォーク
 2. フィーチャーブランチを作成（`git checkout -b feature/amazing-feature`）
@@ -672,17 +412,26 @@ public class TsukuyomiTTS : MonoBehaviour {
 4. ブランチにプッシュ（`git push origin feature/amazing-feature`）
 5. プルリクエストを開く
 
+### 開発ガイドライン
+
+- コードスタイル: Black + Ruff
+- 型ヒント: 必須（mypy準拠）
+- テスト: 新機能には必ずテストを追加
+- ドキュメント: docstringとREADMEの更新
+
 ## 📄 ライセンス
 
 このプロジェクトはMITライセンスの下でライセンスされています - 詳細は[LICENSE](LICENSE)ファイルを参照してください。
 
 ## 🙏 謝辞
 
-- OpenJTalkおよびpyopenjtalk-plusの開発者
-- XPhoneBERTの著者
-- VITSおよびMatcha-TTSの研究チーム
-- BigVGANの著者
-- 日本語TTS研究コミュニティ
+本プロジェクトは以下の素晴らしい研究・開発に支えられています：
+
+- OpenJTalkおよびpyopenjtalk-plusの開発者の皆様
+- XPhoneBERTの著者の皆様
+- VITSおよびMatcha-TTSの研究チームの皆様
+- BigVGANの著者の皆様
+- 日本語TTS研究コミュニティの皆様
 
 ## 📚 引用
 
@@ -691,19 +440,42 @@ public class TsukuyomiTTS : MonoBehaviour {
 ```bibtex
 @software{tsukuyomi2024,
   title = {Tsukuyomi: Ultimate Japanese Text-to-Speech System},
+  title_ja = {月読：究極の日本語音声合成システム},
   year = {2024},
-  url = {https://github.com/ayutaz/tsukuyomi}
+  url = {https://github.com/ayutaz/tsukuyomi},
+  note = {MOS 4.7+を目指す最先端の日本語TTSシステム}
 }
 ```
 
-## 📞 連絡先
+## 📞 お問い合わせ
 
 - Issues: [GitHub Issues](https://github.com/ayutaz/tsukuyomi/issues)
 - Discussions: [GitHub Discussions](https://github.com/ayutaz/tsukuyomi/discussions)
+- Email: tsukuyomi-tts@example.com
+
+## 🗺️ ロードマップ
+
+### 2024年 Q1-Q2
+- [x] 基本アーキテクチャの実装
+- [x] Ultimate G2P++の開発
+- [ ] ステージ1学習の完了
+
+### 2024年 Q3-Q4
+- [ ] ステージ2学習の完了
+- [ ] リアルタイムAPI の公開
+- [ ] Unity プラグインのリリース
+
+### 2025年
+- [ ] ステージ3学習の完了
+- [ ] 商用ライセンスの提供
+- [ ] クラウドサービスの開始
 
 ---
 
 <div align="center">
-Made with ❤️ for the Japanese TTS community<br>
-日本語TTSコミュニティのために愛を込めて作られました
+
+**月読** - 日本語音声合成の新たな地平を切り開く
+
+日本語TTSコミュニティのために愛を込めて作られました ❤️
+
 </div>

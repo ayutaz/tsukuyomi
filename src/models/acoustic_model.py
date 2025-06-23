@@ -8,7 +8,7 @@ H100-optimized BF16 support and efficient training/inference capabilities.
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Any
+from typing import Optional, Any, Dict
 import numpy as np
 from dataclasses import dataclass
 
@@ -77,8 +77,8 @@ class ConformerBlock(nn.Module):
         self.attn_norm = nn.LayerNorm(config.hidden_dim)
         
         # Convolution module
+        self.conv_norm = nn.LayerNorm(config.hidden_dim)
         self.conv = nn.Sequential(
-            nn.LayerNorm(config.hidden_dim),
             nn.Conv1d(config.hidden_dim, config.hidden_dim * 2, kernel_size=1),
             nn.GLU(dim=1),
             nn.Conv1d(config.hidden_dim, config.hidden_dim, kernel_size=9, padding=4, groups=config.hidden_dim),
@@ -131,7 +131,8 @@ class ConformerBlock(nn.Module):
         x = x + attn_out
         
         # Convolution (need to transpose for Conv1d)
-        conv_in = x.transpose(1, 2)  # (B, C, T)
+        conv_norm = self.conv_norm(x)  # Apply LayerNorm on (B, T, C)
+        conv_in = conv_norm.transpose(1, 2)  # (B, C, T)
         conv_out = self.conv(conv_in)
         x = x + conv_out.transpose(1, 2)
         
@@ -261,7 +262,12 @@ class AcousticModel(nn.Module):
         else:
             # Inference: use predicted durations
             predicted_durations = torch.round(torch.exp(duration_output) - 1).long()
-            predicted_durations = predicted_durations.clamp(min=0, max=100)  # Prevent extreme values
+            predicted_durations = predicted_durations.clamp(min=1, max=100)  # Ensure minimum duration of 1
+            
+            # Apply mask to set padding positions to 0
+            if phoneme_mask is not None:
+                predicted_durations = predicted_durations.masked_fill(~phoneme_mask, 0)
+            
             expanded_hidden = self._expand_states(hidden, predicted_durations)
         
         # Decode to mel-spectrogram
@@ -336,21 +342,20 @@ class DurationPredictor(nn.Module):
     def __init__(self, hidden_dim: int, filter_size: int = 256, n_layers: int = 2):
         super().__init__()
         
-        self.layers = nn.ModuleList()
+        self.conv_layers = nn.ModuleList()
+        self.norm_layers = nn.ModuleList()
+        
         for i in range(n_layers):
-            self.layers.append(
-                nn.Sequential(
-                    nn.Conv1d(
-                        hidden_dim if i == 0 else filter_size,
-                        filter_size,
-                        kernel_size=3,
-                        padding=1
-                    ),
-                    nn.ReLU(),
-                    nn.LayerNorm(filter_size),
-                    nn.Dropout(0.1)
+            in_channels = hidden_dim if i == 0 else filter_size
+            self.conv_layers.append(
+                nn.Conv1d(
+                    in_channels,
+                    filter_size,
+                    kernel_size=3,
+                    padding=1
                 )
             )
+            self.norm_layers.append(nn.LayerNorm(filter_size))
         
         self.projection = nn.Linear(filter_size, 1)
         
@@ -365,13 +370,22 @@ class DurationPredictor(nn.Module):
         Returns:
             Log-durations (B, T)
         """
-        # Transpose for conv layers
-        x = x.transpose(1, 2)  # (B, C, T)
+        # Process through conv layers
+        for i, (conv, norm) in enumerate(zip(self.conv_layers, self.norm_layers)):
+            if i == 0:
+                # First layer: transpose for conv
+                x = x.transpose(1, 2)  # (B, C, T)
+            
+            x = conv(x)
+            x = torch.relu(x)
+            
+            # Apply LayerNorm in the correct dimension
+            x = x.transpose(1, 2)  # (B, T, C)
+            x = norm(x)
+            x = torch.dropout(x, p=0.1, train=self.training)
+            x = x.transpose(1, 2)  # Back to (B, C, T)
         
-        for layer in self.layers:
-            x = layer(x)
-        
-        x = x.transpose(1, 2)  # (B, T, C)
+        x = x.transpose(1, 2)  # Final transpose to (B, T, C)
         duration = self.projection(x).squeeze(-1)  # (B, T)
         
         if mask is not None:

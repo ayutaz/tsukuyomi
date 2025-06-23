@@ -5,12 +5,15 @@ transformers>=4.38.0
 numpy>=1.24.0
 scipy>=1.11.0
 
-# H100 & BF16 optimizations
+# H100 & BF16 optimizations (CUDA 12.1+ required)
 nvidia-ml-py>=12.535.0
-transformer-engine>=1.2.0
-flash-attn>=2.5.0
-apex @ git+https://github.com/NVIDIA/apex.git
+transformer-engine>=1.5.0  # CUDA 12.1+ for better H100 support
+flash-attn>=2.5.6  # CUDA 12.1+ for Flash Attention 2
+apex @ git+https://github.com/NVIDIA/apex.git  # Build with CUDA 12.1+
 bitsandbytes>=0.42.0
+# CUDA 12.1+ specific optimizations
+triton>=2.2.0  # For custom kernels
+xformers>=0.0.23  # Memory efficient transformers
 
 # Audio processing
 soundfile>=0.12.0

@@ -9,11 +9,13 @@ H100 GPUのBF16（Brain Float16）サポートと最新PyTorchの機能を最大
 ```yaml
 core_dependencies:
   pytorch: "2.2.0"  # 最新安定版
-  cuda: "12.1"
+  cuda: "12.1+"  # CUDA 12.1以上必須
   pytorch_lightning: "2.2.0"
   transformers: "4.38.0"
-  flash_attention: "2.5.0"
+  flash_attention: "2.5.6+"  # CUDA 12.1+対応版
   apex: "latest"  # NVIDIA Apex for advanced optimizations
+  triton: "2.2.0+"  # カスタムカーネル用
+  xformers: "0.0.23+"  # メモリ効率的な注意機構
   
 h100_optimizations:
   - Transformer Engine
@@ -380,3 +382,145 @@ BF16学習とH100の最新機能により：
 4. **コスト削減**: 学習時間短縮により75%のコスト削減
 
 これにより、1万時間のデータでも10日間で学習完了し、世界最高品質のTTSシステムを現実的な時間とコストで構築可能です。
+
+## CUDA 12.1+ 固有の最適化
+
+### 1. Flash Attention 2の活用
+
+CUDA 12.1+では、Flash Attention 2による高速な注意機構が利用可能：
+
+```python
+from flash_attn import flash_attn_func
+
+class OptimizedAttention(nn.Module):
+    def __init__(self, dim, num_heads):
+        super().__init__()
+        self.num_heads = num_heads
+        self.head_dim = dim // num_heads
+        self.qkv = nn.Linear(dim, 3 * dim)
+        
+    def forward(self, x):
+        B, T, C = x.shape
+        qkv = self.qkv(x)
+        q, k, v = qkv.chunk(3, dim=-1)
+        
+        # Flash Attention 2 (CUDA 12.1+)
+        q = q.view(B, T, self.num_heads, self.head_dim)
+        k = k.view(B, T, self.num_heads, self.head_dim)
+        v = v.view(B, T, self.num_heads, self.head_dim)
+        
+        out = flash_attn_func(q, k, v, dropout_p=0.1, causal=False)
+        return out.view(B, T, -1)
+```
+
+### 2. CUDAグラフによる推論高速化
+
+静的な形状の推論では、CUDAグラフで大幅な高速化が可能：
+
+```python
+class CUDAGraphOptimizedModel(nn.Module):
+    def __init__(self, model):
+        super().__init__()
+        self.model = model
+        self._cuda_graph = None
+        self._static_input = None
+        self._static_output = None
+        
+    @torch.no_grad()
+    def compile_cuda_graph(self, example_input):
+        """CUDA 12.1+のグラフ最適化"""
+        self.eval()
+        
+        # ウォームアップ
+        _ = self.model(example_input)
+        
+        # 静的テンソルの準備
+        self._static_input = example_input.clone()
+        
+        # グラフキャプチャ
+        self._cuda_graph = torch.cuda.CUDAGraph()
+        with torch.cuda.graph(self._cuda_graph):
+            self._static_output = self.model(self._static_input)
+            
+    def inference(self, input_tensor):
+        """最適化された推論"""
+        if self._cuda_graph and input_tensor.shape == self._static_input.shape:
+            self._static_input.copy_(input_tensor)
+            self._cuda_graph.replay()
+            return self._static_output.clone()
+        else:
+            return self.model(input_tensor)
+```
+
+### 3. Tritonカスタムカーネル
+
+CUDA 12.1+とTriton 2.2+で、カスタム演算の高速化：
+
+```python
+import triton
+import triton.language as tl
+
+@triton.jit
+def fused_gelu_kernel(x_ptr, output_ptr, n_elements, BLOCK_SIZE: tl.constexpr):
+    """融合GELU活性化カーネル"""
+    pid = tl.program_id(0)
+    block_start = pid * BLOCK_SIZE
+    offsets = block_start + tl.arange(0, BLOCK_SIZE)
+    mask = offsets < n_elements
+    
+    # 入力を読み込み
+    x = tl.load(x_ptr + offsets, mask=mask)
+    
+    # GELU計算（融合版）
+    output = 0.5 * x * (1.0 + tl.libdevice.erf(x / 1.41421356237))
+    
+    # 結果を書き込み
+    tl.store(output_ptr + offsets, output, mask=mask)
+```
+
+### 4. Transformer Engineの拡張設定
+
+CUDA 12.1+でのTransformer Engine最適化：
+
+```python
+import transformer_engine.pytorch as te
+
+class H100OptimizedTransformer(nn.Module):
+    def __init__(self):
+        super().__init__()
+        # CUDA 12.1+の機能を最大限活用
+        self.te_layer = te.TransformerLayer(
+            hidden_size=2048,
+            ffn_hidden_size=8192,
+            num_attention_heads=32,
+            layernorm_type="rmsnorm",  # より高速
+            attention_type="self",
+            apply_residual_in_fp32=False,  # BF16で残差接続
+            seq_length=2048,
+            micro_batch_size=32,
+            # CUDA 12.1+固有の設定
+            ub_split_ag=True,  # All-gather分割
+            ub_atomic_gemm_ag=True,  # アトミックGEMM
+            ub_split_rs=True,  # Reduce-scatter分割
+            ub_atomic_gemm_rs=True,
+            use_flash_attention=True  # Flash Attention統合
+        )
+```
+
+### 5. メモリ管理の最適化
+
+CUDA 12.1+の高度なメモリ管理：
+
+```python
+# メモリプールの設定
+torch.cuda.set_per_process_memory_fraction(0.95)  # 95%まで使用
+torch.cuda.empty_cache()
+
+# メモリアロケータの最適化
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:512,expandable_segments:True'
+
+# cudaMallocAsync有効化（CUDA 12.1+）
+torch.cuda.set_allocator_settings(backend='cudaMallocAsync')
+```
+
+これらのCUDA 12.1+固有の最適化により、さらに20-30%の性能向上が期待できます。

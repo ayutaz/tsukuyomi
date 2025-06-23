@@ -7,7 +7,7 @@ all components for end-to-end text-to-speech synthesis.
 
 import torch
 import numpy as np
-from typing import Optional, Union
+from typing import Optional, Union, List, Dict
 from collections.abc import Sequence
 import os
 import json

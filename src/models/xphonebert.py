@@ -54,8 +54,23 @@ class XPhoneBERTEncoder(nn.Module):
         self.max_length = max_length
         
         # Load tokenizer and model
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModel.from_pretrained(model_name)
+        # Try to load without authentication first
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=False)
+            self.model = AutoModel.from_pretrained(model_name, use_auth_token=False)
+        except Exception as e:
+            # If that fails, try with trust_remote_code
+            try:
+                self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+                self.model = AutoModel.from_pretrained(model_name, trust_remote_code=True)
+            except Exception as e2:
+                # If both fail, raise informative error
+                raise RuntimeError(
+                    f"Failed to load XPhoneBERT model '{model_name}'. "
+                    f"Error: {e}. "
+                    f"The model should be publicly available. "
+                    f"You can try: pip install --upgrade transformers"
+                )
         
         # Move to device and set precision
         self.model = self.model.to(self.device)

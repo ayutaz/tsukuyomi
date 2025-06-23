@@ -9,6 +9,20 @@ echo "Checking CUDA version..."
 nvidia-smi
 nvcc --version
 
+# Verify CUDA 12.1+ requirement
+cuda_version=$(nvcc --version | grep "release" | awk '{print $6}' | cut -d',' -f1)
+cuda_major=$(echo $cuda_version | cut -d'.' -f1)
+cuda_minor=$(echo $cuda_version | cut -d'.' -f2)
+
+if [ "$cuda_major" -lt 12 ] || ([ "$cuda_major" -eq 12 ] && [ "$cuda_minor" -lt 1 ]); then
+    echo "ERROR: CUDA 12.1+ is required for optimal H100 performance and Flash Attention 2"
+    echo "Current CUDA version: $cuda_version"
+    echo "Please install CUDA 12.1 or higher"
+    exit 1
+fi
+
+echo "CUDA version $cuda_version detected - OK"
+
 # Create virtual environment
 echo "Creating Python virtual environment..."
 python3.11 -m venv venv_h100
@@ -25,10 +39,18 @@ pip install torch==2.2.0 torchvision==0.17.0 torchaudio==2.2.0 --index-url https
 echo "Installing NVIDIA Transformer Engine..."
 pip install transformer-engine
 
-# Install Flash Attention v2
-echo "Installing Flash Attention v2..."
+# Install Flash Attention v2 (requires CUDA 12.1+)
+echo "Installing Flash Attention v2 (CUDA 12.1+ optimized)..."
 pip install ninja
-pip install flash-attn --no-build-isolation
+pip install flash-attn>=2.5.6 --no-build-isolation
+
+# Install Triton for custom kernels
+echo "Installing Triton for CUDA 12.1+ custom kernels..."
+pip install triton>=2.2.0
+
+# Install xFormers for additional memory-efficient operations
+echo "Installing xFormers..."
+pip install xformers>=0.0.23
 
 # Install NVIDIA Apex from source (for latest optimizations)
 echo "Installing NVIDIA Apex..."

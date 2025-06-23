@@ -299,12 +299,14 @@ class UnifiedVocoder:
         if device:
             self.config.device = device
             
+        # Initialize logger first
+        self.logger = logging.getLogger(__name__)
+            
         # Auto-select vocoder if not specified
         if vocoder_type is None:
             vocoder_type = self._auto_select_vocoder()
             
         self.vocoder_type = vocoder_type
-        self.logger = logging.getLogger(__name__)
         
         # Initialize selected vocoder
         self._init_vocoder()

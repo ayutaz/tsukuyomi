@@ -115,7 +115,7 @@ def test_acoustic_model():
         # Forward pass
         with torch.no_grad():
             outputs = model(
-                phoneme_features=phoneme_features,
+                phoneme_embeddings=phoneme_features,
                 phoneme_mask=phoneme_mask
             )
             
@@ -203,7 +203,7 @@ def test_end_to_end():
         # Step 3: Generate mel-spectrogram
         with torch.no_grad():
             outputs = acoustic_model(
-                phoneme_features=phoneme_embeddings,
+                phoneme_embeddings=phoneme_embeddings,
                 phoneme_mask=torch.ones(1, phoneme_embeddings.shape[1], dtype=torch.bool)
             )
         
@@ -224,7 +224,7 @@ def test_end_to_end():
         
         # Normalize waveform
         waveform = np.clip(waveform, -1.0, 1.0)
-        save_audio(waveform, output_path, sample_rate=24000)
+        save_audio(str(output_path), waveform, sample_rate=24000)
         print(f"\nSaved audio to: {output_path}")
         
         print("\n✅ End-to-end test passed!")

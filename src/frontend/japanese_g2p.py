@@ -19,30 +19,22 @@ import torch.nn as nn
 
 # Core Japanese processing
 try:
-    # Try to import the improved version first
-    import pyopenjtalk_plus as pyopenjtalk
-    OPENJTALK_PLUS = True
+    import pyopenjtalk
     OPENJTALK_AVAILABLE = True
-    logging.info("Using pyopenjtalk-plus (improved version)")
+    # Check if this is the plus version by version string
+    if hasattr(pyopenjtalk, '__version__') and 'post' in str(pyopenjtalk.__version__):
+        OPENJTALK_PLUS = True
+        logging.info("Using pyopenjtalk-plus (improved version)")
+    else:
+        OPENJTALK_PLUS = False
+        logging.warning("Using standard pyopenjtalk. For better accuracy, install: pip install pyopenjtalk-plus")
 except ImportError:
-    try:
-        # Fallback to standard pyopenjtalk
-        import pyopenjtalk
-        OPENJTALK_PLUS = False
-        OPENJTALK_AVAILABLE = True
-        logging.warning("pyopenjtalk-plus not available, using standard pyopenjtalk")
-    except ImportError:
-        OPENJTALK_AVAILABLE = False
-        OPENJTALK_PLUS = False
-        logging.warning("No OpenJTalk variant installed. Install with: pip install pyopenjtalk-plus")
+    OPENJTALK_AVAILABLE = False
+    OPENJTALK_PLUS = False
+    logging.warning("No OpenJTalk variant installed. Install with: pip install pyopenjtalk-plus")
 
-# Advanced processing with ESPnet (optional)
-try:
-    from espnet2.text.phoneme_tokenizer import PhonemeTokenizer
-    ESPNET_AVAILABLE = True
-except ImportError:
-    ESPNET_AVAILABLE = False
-    logging.info("ESPnet not available. For highest accuracy, install espnet")
+# ESPnet2は使用しない（ユーザー要望により除外）
+ESPNET_AVAILABLE = False
 
 # MeCab for morphological analysis
 try:
@@ -114,16 +106,12 @@ class JapaneseG2P:
         backend = self.config.backend
         
         if backend == "auto":
-            # Choose best available backend
-            if ESPNET_AVAILABLE:
-                self._init_espnet()
-            elif OPENJTALK_AVAILABLE:
+            # Choose best available backend (ESPnet2除外)
+            if OPENJTALK_AVAILABLE:
                 self._init_openjtalk()
             else:
-                raise RuntimeError("No Japanese G2P backend available. Install pyopenjtalk or espnet2")
+                raise RuntimeError("No Japanese G2P backend available. Install pyopenjtalk-plus")
                 
-        elif backend == "espnet" and ESPNET_AVAILABLE:
-            self._init_espnet()
         elif backend == "openjtalk" and OPENJTALK_AVAILABLE:
             self._init_openjtalk()
         else:
@@ -163,16 +151,6 @@ class JapaneseG2P:
             self.logger.error(f"OpenJTalk initialization failed: {e}")
             raise
             
-    def _init_espnet(self) -> None:
-        """Initialize ESPnet backend for higher accuracy."""
-        self.backend_name = "espnet"
-        self.logger.info("Using ESPnet for Japanese G2P (highest accuracy)")
-        
-        # Use prosody variant for accent information
-        self.tokenizer = PhonemeTokenizer(
-            g2p_type="pyopenjtalk_prosody",
-            non_linguistic_symbols=None
-        )
         
     def _init_neural_model(self) -> None:
         """Initialize neural accent prediction model."""
@@ -203,8 +181,6 @@ class JapaneseG2P:
         
         if self.backend_name == "openjtalk":
             return self._g2p_openjtalk(text, return_accent, return_prosody)
-        elif self.backend_name == "espnet":
-            return self._g2p_espnet(text, return_accent, return_prosody)
         else:
             raise ValueError(f"Unknown backend: {self.backend_name}")
             
@@ -237,25 +213,6 @@ class JapaneseG2P:
                 
             return self._postprocess_phonemes(phonemes)
             
-    def _g2p_espnet(
-        self, 
-        text: str, 
-        return_accent: bool,
-        return_prosody: bool
-    ) -> str | tuple[str, list[AccentPhrase]]:
-        """G2P using ESPnet backend for higher accuracy."""
-        # Tokenize with prosody information
-        tokens = self.tokenizer.text2tokens(text)
-        
-        if return_accent:
-            # Parse prosody tags to extract accent information
-            accent_phrases = self._parse_espnet_prosody(tokens)
-            phonemes = self._extract_phonemes_from_tokens(tokens)
-            return phonemes, accent_phrases
-        else:
-            # Just return phonemes
-            phonemes = self._extract_phonemes_from_tokens(tokens)
-            return phonemes
             
     def _parse_fullcontext_labels(
         self, 
@@ -437,7 +394,7 @@ class AccentPredictorBERT(nn.Module):
 
 
 def create_japanese_g2p(
-    backend: str = "auto",
+    backend: str = "openjtalk",
     use_neural: bool = False,
     model_path: Optional[Path] = None
 ) -> JapaneseG2P:

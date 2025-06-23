@@ -113,8 +113,9 @@
 ### 必須ライブラリ
 ```bash
 # 基本環境
-python >= 3.8
-pytorch >= 2.0 (CUDA対応)
+python >= 3.11
+pytorch >= 2.2.0 (CUDA 12.1+対応)
+cuda >= 12.1 (Flash Attention 2, CUDA Graphs対応)
 
 # 音声処理
 transformers
@@ -133,9 +134,9 @@ onnxruntime
 ```
 
 ### ハードウェア要件
-- **開発**: NVIDIA GPU（8GB以上のVRAM）
-- **学習**: A100 80GB × 8（推奨）
-- **推論**: CPU or GPU（ONNXランタイム）
+- **開発**: NVIDIA GPU（8GB以上のVRAM、CUDA 12.1+）
+- **学習**: H100 80GB × 8（推奨）またはA100 80GB × 8
+- **推論**: CPU or GPU（ONNXランタイム、CUDA 12.1+で最適化）
 
 ## 8. 評価指標
 
