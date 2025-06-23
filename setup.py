@@ -10,7 +10,8 @@ setup(
     author="Tsukuyomi Development Team",
     description="State-of-the-art Japanese Text-to-Speech system with multilingual support",
     url="https://github.com/ayutaz/tsukuyomi",
-    packages=find_packages(),
+    packages=find_packages(include=["src", "src.*"]),
+    package_dir={"": "."},
     python_requires=">=3.11",
     install_requires=[
         # Core dependencies only
