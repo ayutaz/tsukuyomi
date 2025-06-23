@@ -7,7 +7,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-[English](#english) | [日本語](#日本語) | [日本語README](README_ja.md)
+[English](#english) | [日本語](#日本語) | [日本語README](README_ja.md) | [Quick Start](QUICK_START.md) | [Status](STATUS.md)
 
 </div>
 
@@ -191,6 +191,43 @@ texts = ["文1", "文2", "文3"]
 audios = tts.batch_synthesize(texts, speaker_ids=[0, 1, 2])
 ```
 
+### Web UI Demo
+
+```bash
+# Launch interactive web interface
+streamlit run app.py
+
+# Access at http://localhost:8501
+```
+
+### Additional Tools
+
+```bash
+# Audio preprocessing pipeline
+python scripts/preprocess_audio.py \
+    --input-dir raw_audio/ \
+    --output-dir processed_data/ \
+    --sample-rate 24000 \
+    --num-workers 8
+
+# MOS evaluation tool
+python scripts/mos_evaluation.py \
+    --mode evaluate \
+    --audio-dir test_samples/
+
+# Model compression for deployment
+python scripts/model_compression.py \
+    --model-path checkpoints/best_model.pt \
+    --compression-methods quantize prune \
+    --export-format onnx
+
+# Edge device optimization
+python scripts/edge_optimization.py \
+    --model-path model.onnx \
+    --target mobile \
+    --precision int8
+```
+
 ## 🏋️ Training
 
 For detailed training instructions, see [train.md](train.md).
@@ -251,25 +288,40 @@ tsukuyomi/
 │   │   ├── xphonebert_japanese.py  # Japanese-optimized encoder
 │   │   ├── f0_bert.py              # Pitch prediction
 │   │   ├── ultimate_acoustic_model.py  # Matcha-TTS + VITS
-│   │   └── bigvgan_v2.py           # 48kHz vocoder
+│   │   ├── bigvgan_v2.py           # 48kHz vocoder
+│   │   ├── vits.py                 # VITS implementation
+│   │   └── hifigan.py              # HiFi-GAN vocoder
 │   ├── data/
-│   │   └── massive_dataset.py      # 10,000-hour data pipeline
+│   │   ├── massive_dataset.py      # 10,000-hour data pipeline
+│   │   └── ljspeech_dataset.py     # LJSpeech data loading
 │   ├── frontend/
 │   │   ├── japanese_g2p.py         # pyopenjtalk-plus integration
-│   │   └── text_normalizer.py      # Text preprocessing
-│   └── training/
-│       └── trainer.py              # Distributed training
+│   │   ├── text_normalizer.py      # Text preprocessing
+│   │   └── text2phonemesequence.py # Phoneme conversion
+│   ├── training/
+│   │   ├── trainer.py              # Distributed training
+│   │   ├── losses.py               # Multi-task losses
+│   │   ├── metrics.py              # Evaluation metrics
+│   │   └── finetune.py             # Fine-tuning utilities
+│   └── tsukuyomi_tts.py            # Main TTS interface
+├── scripts/
+│   ├── download_pretrained_models.py
+│   ├── test_ultimate_tts_integration.py
+│   ├── preprocess_audio.py         # Audio preprocessing pipeline
+│   ├── mos_evaluation.py           # MOS evaluation tool
+│   ├── model_compression.py        # Model compression utilities
+│   └── edge_optimization.py        # Edge device optimization
+├── app.py                          # Streamlit web interface
+├── train.py                        # Main training script
 ├── configs/
 │   ├── ultimate_tts_h100.yaml      # H100 optimization config
 │   └── pretrained_models.json      # Model registry
 ├── tests/
 │   └── test_*.py                   # Comprehensive test suite
-├── scripts/
-│   ├── download_pretrained_models.py
-│   └── test_ultimate_tts_integration.py
 ├── docs/
 │   ├── architecture-overview.md
 │   ├── ultimate-tts-architecture.md
+│   ├── docker_guide.md             # Docker usage guide
 │   └── training-guide.md
 └── train.md                        # Detailed training guide
 ```

@@ -1,0 +1,148 @@
+# JVSデータセットを使用したRTX 4070 Ti Super向け実験設定
+
+# データ設定
+data:
+  dataset: "jvs"  # JVS (Japanese versatile speech) コーパス
+  train_dir: "data/jvs_ver1/parallel100/wav24kHz16bit"
+  val_dir: "data/jvs_ver1/parallel100/wav24kHz16bit"
+  test_dir: "data/jvs_ver1/nonpara30/wav24kHz16bit"
+  
+  # JVS設定
+  use_speakers: [
+    "jvs001", "jvs002", "jvs003", "jvs004", "jvs005",  # 最初の10話者で実験
+    "jvs006", "jvs007", "jvs008", "jvs009", "jvs010"
+  ]
+  
+  # 音声設定（JVSは24kHz）
+  sample_rate: 24000  # JVSのサンプリングレート
+  hop_length: 240     # 10ms
+  n_mels: 80         # メモリ節約のため80次元
+  n_fft: 1024
+  win_length: 1024
+  
+  # キャッシュ設定
+  use_cache: true
+  cache_dir: "data/jvs_cache"
+  num_workers: 4  # 4070 Ti Superに最適化
+
+# モデル設定（4070 Ti Super: 16GB VRAM向け）
+models:
+  # 軽量化設定
+  acoustic_model: "vits"  # VITSの方が軽量
+  
+  # XPhoneBERT設定（メモリ節約）
+  xphonebert:
+    enabled: true
+    model_name: "vinai/xphonebert-base"
+    hidden_size: 384  # 小さくしてメモリ節約
+    num_layers: 6     # レイヤー数削減
+    num_heads: 6
+    
+  # F0-BERT設定（軽量化）
+  f0_bert:
+    enabled: true
+    hidden_size: 128
+    num_layers: 3
+    num_heads: 4
+    pitch_bins: 128
+    
+  # VITS設定（4070 Ti Super最適化）
+  vits:
+    n_vocab: 256
+    n_speakers: 10  # JVSの10話者
+    hidden_channels: 96   # 小さくしてメモリ節約
+    inter_channels: 96
+    filter_channels: 384
+    n_heads: 2
+    n_layers: 3  # レイヤー数削減
+    kernel_size: 3
+    p_dropout: 0.1
+    
+  # BigVGAN設定（軽量版）
+  bigvgan:
+    num_mels: 80
+    upsample_initial_channel: 512  # 小さくする
+    resblock_kernel_sizes: [3, 7, 11]
+    resblock_dilation_sizes: [[1, 3, 5], [1, 3, 5], [1, 3, 5]]
+    upsample_rates: [5, 4, 3, 2]  # 24kHz用
+    upsample_kernel_sizes: [10, 8, 6, 4]
+
+# 学習設定（4070 Ti Super最適化）
+training:
+  num_epochs: 100  # 短期実験
+  batch_size: 8    # 16GB VRAMに合わせて調整
+  gradient_accumulation_steps: 4  # 実効バッチサイズ32
+  gradient_clip: 5.0
+  mixed_precision: "fp16"  # fp16で高速化（4070 Ti Superはfp16が高速）
+  save_interval: 10
+  
+  # チェックポイント設定
+  checkpoint_dir: "checkpoints/jvs_experiment"
+  resume_from: null
+  
+  # 損失重み
+  loss_weights:
+    xphonebert: 0.5  # 実験では低めに
+    f0_bert: 0.5
+    acoustic: 1.0
+    vocoder: 1.0
+    kl: 0.1
+    duration: 1.0
+    
+  # オプティマイザー設定
+  optimizers:
+    default:
+      lr: 2e-4
+      beta1: 0.8
+      beta2: 0.99
+      eps: 1e-9
+      weight_decay: 0.01
+      
+  # スケジューラー設定
+  schedulers:
+    default:
+      type: "cosine_annealing_warm_restarts"
+      T_0: 20
+      T_mult: 2
+      eta_min: 1e-6
+      
+  # ロギング設定
+  logging:
+    log_interval: 50
+    trackers: ["tensorboard"]
+    
+  # メモリ最適化
+  memory_optimization:
+    gradient_checkpointing: true  # メモリ節約
+    find_unused_parameters: false
+    clear_cache_interval: 100  # 定期的にキャッシュクリア
+
+# パス設定
+paths:
+  checkpoints: "checkpoints/jvs_experiment"
+  tensorboard: "logs/jvs_experiment/tensorboard"
+  model_registry: "models/jvs_experiment/registry.db"
+  
+# 評価設定
+evaluation:
+  metrics:
+    - "mcd"
+    - "pitch_correlation"
+    - "speaker_similarity"
+  save_samples: true
+  num_samples: 5
+  
+# 高度な機能（実験用の軽量設定）
+advanced_features:
+  emotion_control:
+    enabled: false  # 初期実験では無効
+    
+  style_transfer:
+    enabled: false  # 初期実験では無効
+    
+  voice_morphing:
+    enabled: true   # JVSは複数話者なので有効
+    interpolation_type: "linear"  # 軽量な線形補間
+    
+  streaming:
+    enabled: false  # 実験では無効

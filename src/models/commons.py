@@ -1,0 +1,162 @@
+"""Common utilities for VITS and other models"""
+
+import torch
+import torch.nn.functional as F
+from typing import Optional, Tuple
+
+
+def sequence_mask(lengths: torch.Tensor, max_length: Optional[int] = None) -> torch.Tensor:
+    """Generate sequence mask"""
+    if max_length is None:
+        max_length = lengths.max()
+        
+    x = torch.arange(max_length, dtype=lengths.dtype, device=lengths.device)
+    return x.unsqueeze(0) < lengths.unsqueeze(1)
+
+
+def generate_path(duration: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
+    """Generate monotonic alignment path from duration"""
+    b, t_x, t_y = mask.shape
+    cum_duration = torch.cumsum(duration, dim=1)
+    
+    path = torch.zeros(b, t_x, t_y, dtype=mask.dtype, device=mask.device)
+    
+    for b_idx in range(b):
+        cum_dur = cum_duration[b_idx]
+        for t_idx in range(t_x):
+            if t_idx == 0:
+                start = 0
+            else:
+                start = int(cum_dur[t_idx-1].item())
+            end = int(cum_dur[t_idx].item())
+            
+            if end > start and start < t_y and end <= t_y:
+                path[b_idx, t_idx, start:end] = 1
+                
+    return path * mask
+
+
+def rand_slice_segments(
+    x: torch.Tensor,
+    x_lengths: torch.Tensor,
+    segment_size: int
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Randomly slice segments from batch"""
+    b, d, t = x.size()
+    ids_str_max = x_lengths - segment_size + 1
+    ids_str_max = ids_str_max.clamp(min=0)
+    
+    ids_str = (torch.rand([b], device=x.device) * ids_str_max).long()
+    ret = torch.zeros(b, d, segment_size, device=x.device)
+    
+    for i in range(b):
+        idx_str = ids_str[i]
+        idx_end = idx_str + segment_size
+        ret[i] = x[i, :, idx_str:idx_end]
+        
+    return ret, ids_str
+
+
+def convert_pad_shape(pad_shape: list) -> list:
+    """Convert padding shape for compatibility"""
+    l = pad_shape[::-1]
+    pad_shape = [item for sublist in l for item in sublist]
+    return pad_shape
+
+
+def slice_segments(
+    x: torch.Tensor,
+    ids_str: torch.Tensor,
+    segment_size: int
+) -> torch.Tensor:
+    """Slice segments from batch with given start indices"""
+    b, d, t = x.size()
+    ret = torch.zeros(b, d, segment_size, device=x.device)
+    
+    for i in range(b):
+        idx_str = ids_str[i]
+        idx_end = idx_str + segment_size
+        ret[i] = x[i, :, idx_str:idx_end]
+        
+    return ret
+
+
+def init_weights(m, mean=0.0, std=0.01):
+    """Initialize weights"""
+    classname = m.__class__.__name__
+    if classname.find("Conv") != -1:
+        m.weight.data.normal_(mean, std)
+
+
+def get_padding(kernel_size: int, dilation: int = 1) -> int:
+    """Calculate padding for 'same' convolution"""
+    return int((kernel_size * dilation - dilation) / 2)
+
+
+def kl_divergence(
+    m_p: torch.Tensor,
+    logs_p: torch.Tensor, 
+    m_q: torch.Tensor,
+    logs_q: torch.Tensor,
+    z_mask: torch.Tensor
+) -> torch.Tensor:
+    """Compute KL divergence between two normal distributions"""
+    kl = logs_p - logs_q - 0.5
+    kl += 0.5 * ((m_p - m_q) ** 2) * torch.exp(-2.0 * logs_p)
+    kl += 0.5 * (torch.exp(2.0 * logs_q) - 1.0) * torch.exp(-2.0 * logs_p)
+    kl = torch.sum(kl * z_mask)
+    kl = kl / torch.sum(z_mask)
+    return kl
+
+
+# Monotonic alignment search (placeholder - actual implementation needs Cython/C++)
+class MonotonicAlign:
+    """Monotonic alignment search for duration extraction"""
+    
+    @staticmethod
+    def maximum_path(neg_cent: torch.Tensor, x_mask: torch.Tensor, y_mask: torch.Tensor) -> torch.Tensor:
+        """Find maximum path through cost matrix
+        
+        Note: This is a placeholder. The actual implementation requires
+        Cython or C++ for efficiency. For now, we use a simple diagonal path.
+        """
+        b, t_y, t_x = neg_cent.shape
+        path = torch.zeros(b, t_y, t_x, dtype=torch.float32, device=neg_cent.device)
+        
+        # Simple diagonal alignment (placeholder)
+        for b_idx in range(b):
+            # Get valid lengths
+            x_len = x_mask[b_idx].sum().long()
+            y_len = y_mask[b_idx].sum().long()
+            
+            if x_len > 0 and y_len > 0:
+                # Create a simple diagonal path
+                ratio = y_len.float() / x_len.float()
+                
+                for x_idx in range(x_len):
+                    y_start = int(x_idx * ratio)
+                    y_end = int((x_idx + 1) * ratio)
+                    y_end = min(y_end, y_len)
+                    
+                    if y_start < y_len and y_end > y_start:
+                        path[b_idx, y_start:y_end, x_idx] = 1.0 / (y_end - y_start)
+                        
+        return path
+
+
+monotonic_align = MonotonicAlign()
+
+
+def f0_to_coarse(f0: torch.Tensor, f0_bin: int = 256, f0_min: float = 50.0, f0_max: float = 1100.0) -> torch.Tensor:
+    """Convert F0 to coarse F0"""
+    f0_mel_min = 1127 * torch.log(1 + torch.tensor(f0_min) / 700)
+    f0_mel_max = 1127 * torch.log(1 + torch.tensor(f0_max) / 700)
+    
+    f0_mel = 1127 * torch.log(1 + f0 / 700)
+    f0_mel[f0_mel > 0] = (f0_mel[f0_mel > 0] - f0_mel_min) * (f0_bin - 2) / (f0_mel_max - f0_mel_min) + 1
+    f0_mel[f0_mel <= 1] = 1
+    f0_mel[f0_mel > f0_bin - 1] = f0_bin - 1
+    
+    f0_coarse = torch.round(f0_mel).long()
+    
+    return f0_coarse

@@ -9,13 +9,15 @@
 
 *MOS 4.7以上（人間レベルの品質）を目指す最先端の日本語TTSシステム*
 
-[English](README.md) | 日本語
+[English](README.md) | 日本語 | [クイックスタート](QUICK_START.md) | [ステータス](STATUS.md)
 
 </div>
 
 ## 🌟 概要
 
 月読（Tsukuyomi）は、世界最高水準の品質を目指して設計された日本語音声合成（TTS）システムです。最先端の深層学習アーキテクチャを採用し、H100 GPUでの大規模学習に最適化されています。
+
+> **注意**: 本プロジェクトは現在開発中です。一部の機能はまだ実装されていない場合があります。
 
 ### 主な特徴
 
@@ -78,28 +80,7 @@
 - 8x NVIDIA H100 GPU（フル学習用）
 - 10,000時間の高品質音声データ
 
-### オプション1: Docker（学習環境推奨）
-
-```bash
-# リポジトリのクローン
-git clone https://github.com/ayutaz/tsukuyomi.git
-cd tsukuyomi
-
-# Dockerでビルドと実行
-./scripts/docker_run.sh build  # Linux/macOS
-# または
-.\scripts\docker_run.bat build  # Windows
-
-# 推論サーバーの起動
-./scripts/docker_run.sh run
-
-# 学習の開始
-./scripts/docker_run.sh train
-```
-
-Windows環境を含む詳細なDocker手順については、[Docker ガイド](docs/docker_guide.md)を参照してください。
-
-### オプション2: UV使用（ローカル開発）
+### オプション1: UV使用（推奨）
 
 ```bash
 # UVのインストール
@@ -113,7 +94,31 @@ cd tsukuyomi
 uv venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 uv pip install -e .
-uv pip install -r requirements.txt
+```
+
+### オプション2: Docker（学習環境）
+
+```bash
+# Dockerでビルドと実行
+./scripts/docker_run.sh build  # Linux/macOS
+# または
+.\scripts\docker_run.bat build  # Windows
+
+# 推論サーバーの起動
+./scripts/docker_run.sh run
+```
+
+Windows環境を含む詳細なDocker手順については、[Docker ガイド](docs/docker_guide.md)を参照してください。
+
+### オプション3: pip使用（シンプル）
+
+```bash
+# 仮想環境の作成
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# インストール
+pip install -e .
 ```
 
 ### 開発環境のセットアップ
@@ -137,15 +142,28 @@ mypy src/
 
 | 指標 | 目標 | 現状 |
 |------|------|------|
-| MOS（平均意見スコア） | 4.7以上 | 学習中 |
-| 話者類似度 | 95%以上 | 学習中 |
-| RTF（リアルタイム係数） | < 0.05 | 達成済み |
-| アクセント精度 | 97%以上 | 達成済み |
-| 文字誤り率 | < 1% | 学習中 |
+| MOS（平均意見スコア） | 4.7以上 | 開発中 |
+| 話者類似度 | 95%以上 | 開発中 |
+| RTF（リアルタイム係数） | < 0.05 | 開発中 |
+| アクセント精度 | 97%以上 | 開発中 |
+| 文字誤り率 | < 1% | 開発中 |
 
 ## 🎯 クイックスタート
 
-### 基本的な使用方法
+### CLIの使用
+
+```bash
+# 基本的な音声合成
+tsukuyomi "こんにちは、月読です" -o output.wav
+
+# 話者とエモーションの指定
+tsukuyomi "今日はいい天気ですね" -s 1 -e happy -o happy_voice.wav
+
+# APIサーバーの起動
+tsukuyomi --serve --port 8080
+```
+
+### Pythonでの使用
 
 ```python
 from tsukuyomi import TsukuyomiTTS
@@ -274,6 +292,47 @@ await ws_server.start_server(host="localhost", port=8765)
 ## 🏋️ 学習
 
 詳細な学習手順については[train.md](train.md)を参照してください。
+
+### データセット準備
+
+#### LJSpeech形式のデータセットでの学習
+```bash
+# LJSpeech形式のデータセットで学習
+python scripts/train_ljspeech.py \
+    --config configs/ljspeech_base.yaml \
+    --data-dir /path/to/your/ljspeech_dataset
+
+# 分散学習（マルチGPU）
+torchrun --nproc_per_node=4 scripts/train_ljspeech.py \
+    --config configs/ljspeech_base.yaml \
+    --data-dir /path/to/your/ljspeech_dataset \
+    --distributed
+
+# カスタム設定での学習
+python scripts/train_ljspeech.py \
+    --config configs/ljspeech_base.yaml \
+    --data-dir /path/to/your/ljspeech_dataset \
+    --batch-size 16 \
+    --learning-rate 1e-4 \
+    --num-epochs 300
+```
+
+#### JVSデータセットの使用（実験用）
+```bash
+# JVSデータセットのダウンロードと準備
+python scripts/prepare_jvs_data.py --data-dir data
+
+# LJSpeech形式への変換
+python scripts/convert_jvs_to_ljspeech.py \
+    --jvs-dir data/jvs_ver1 \
+    --output-dir data/jvs_ljspeech \
+    --speakers jvs001 jvs002 jvs003 jvs004 jvs005
+
+# RTX 4070 Ti Superでの実験
+python scripts/train_jvs_experiment.py \
+    --config configs/experiment_jvs_4070ti.yaml \
+    --data-dir data/jvs_ljspeech
+```
 
 ### ステージ1：基礎（100時間、10話者）
 ```bash

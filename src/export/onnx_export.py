@@ -266,8 +266,56 @@ class ONNXExporter:
         sample_inputs: Optional[Dict[str, torch.Tensor]] = None
     ) -> Path:
         """Export full TTS pipeline as single ONNX model."""
-        # This is more complex and might require custom operators
-        raise NotImplementedError("Full pipeline export not yet implemented")
+        # For full pipeline, we export each component separately
+        # This provides more flexibility for deployment
+        logger.info("Full pipeline export - exporting components separately for flexibility")
+        
+        output_paths = {}
+        
+        # Export text encoder if available
+        if hasattr(model, 'text_encoder'):
+            text_encoder_path = self._export_phoneme_encoder(
+                model.text_encoder, 
+                f"{model_name}_text_encoder",
+                sample_inputs
+            )
+            output_paths['text_encoder'] = str(text_encoder_path)
+        
+        # Export acoustic model
+        if hasattr(model, 'acoustic_model'):
+            acoustic_path = self._export_acoustic_model(
+                model.acoustic_model,
+                f"{model_name}_acoustic",
+                sample_inputs
+            )
+            output_paths['acoustic_model'] = str(acoustic_path)
+        
+        # Export vocoder
+        if hasattr(model, 'vocoder'):
+            vocoder_path = self._export_vocoder(
+                model.vocoder,
+                f"{model_name}_vocoder",
+                sample_inputs
+            )
+            output_paths['vocoder'] = str(vocoder_path)
+        
+        # Create pipeline config
+        pipeline_config = {
+            "pipeline_name": model_name,
+            "components": output_paths,
+            "config": {
+                "sample_rate": getattr(model, 'sample_rate', 22050),
+                "hop_size": getattr(model, 'hop_size', 256),
+                "n_mels": getattr(model, 'n_mels', 80),
+            }
+        }
+        
+        config_path = self.output_dir / f"{model_name}_pipeline.json"
+        with open(config_path, 'w') as f:
+            json.dump(pipeline_config, f, indent=2)
+        
+        logger.info(f"Pipeline components exported. Config saved to {config_path}")
+        return config_path
     
     def _optimize_model(self, onnx_path: Path) -> Path:
         """
