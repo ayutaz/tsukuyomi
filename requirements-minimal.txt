@@ -1,0 +1,20 @@
+# Minimal requirements for CI/CD
+torch>=2.2.0
+torchaudio>=2.2.0
+numpy>=1.24.0
+scipy>=1.11.0
+soundfile>=0.12.0
+librosa>=0.10.0
+pyyaml>=6.0
+tqdm>=4.65.0
+pandas>=1.5.0
+
+# Test requirements
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+
+# Server requirements (optional)
+fastapi>=0.104.0
+uvicorn>=0.24.0
+gradio>=4.0.0

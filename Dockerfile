@@ -35,7 +35,7 @@ RUN apt-get update && apt-get install -y \
 
 # Install uv package manager
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.cargo/bin:${PATH}"
+ENV PATH="/root/.local/bin:${PATH}"
 
 # Set working directory
 WORKDIR /app
@@ -46,19 +46,25 @@ COPY src/ ./src/
 COPY scripts/ ./scripts/
 COPY configs/ ./configs/
 
-# Install Python dependencies with uv
-RUN uv pip install --system -e . --no-cache
+# Create Python virtual environment
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
-# Install additional dependencies for Windows compatibility
-RUN uv pip install --system \
-    pywin32-ctypes \
-    colorama \
-    --no-cache || true
+# Install Python dependencies with uv
+RUN uv pip install --upgrade pip setuptools wheel
+RUN uv pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
+RUN uv pip install -e . || echo "Some dependencies failed to install"
+
+# Install optional dependencies
+RUN uv pip install \
+    fastapi uvicorn gradio \
+    redis python-multipart \
+    || echo "Optional dependencies failed"
 
 # Install Flash Attention 2 (if available)
-RUN uv pip install --system \
+RUN uv pip install \
     flash-attn>=2.0.0 \
-    --no-cache || echo "Flash Attention not available for this platform"
+    --no-deps || echo "Flash Attention not available for this platform"
 
 # Create directories for models and data
 RUN mkdir -p /app/models /app/data /app/outputs /app/logs
