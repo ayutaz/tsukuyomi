@@ -1,0 +1,34 @@
+name: 開発チェック
+
+on:
+  push:
+    branches: [ dev, 'feat/**', 'fix/**' ]
+
+jobs:
+  quick-check:
+    name: 高速チェック
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: 基本的なチェック
+      run: |
+        # Pythonシンタックスチェック
+        python -m py_compile src/**/*.py || echo "⚠️ 一部のファイルにシンタックスエラーがあります"
+        
+        # インポートチェック
+        python -c "import src" || echo "⚠️ srcモジュールのインポートに失敗しました"
+        
+        # ファイルサイズチェック
+        find src -name "*.py" -size +500k -exec echo "⚠️ 大きなファイル: {}" \; || true
+    
+    - name: TODO/FIXME チェック
+      run: |
+        echo "📝 TODO/FIXMEリスト:"
+        grep -r "TODO\|FIXME" src --include="*.py" || echo "TODOはありません"

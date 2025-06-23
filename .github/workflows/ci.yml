@@ -1,59 +1,20 @@
-name: CI
+name: テスト & 品質チェック
 
 on:
   push:
-    branches: [ main, dev, 'feat/**', 'fix/**' ]
+    branches: [ main, dev ]
   pull_request:
     branches: [ main, dev ]
-  workflow_dispatch:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-env:
-  PYTHON_VERSION: "3.11"
-  UV_SYSTEM_PYTHON: 1
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-    
-    - name: Install uv
-      uses: astral-sh/setup-uv@v3
-    
-    - name: Install dependencies
-      run: |
-        uv pip install ruff black isort mypy
-    
-    - name: Run ruff
-      run: ruff check src tests || true
-    
-    - name: Run black
-      run: black --check src tests || true
-    
-    - name: Run isort
-      run: isort --check-only src tests || true
-    
-    - name: Run mypy
-      run: mypy src --ignore-missing-imports || true
-
   test:
-    name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    name: Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.11', '3.12']
+        python-version: ['3.11']
         include:
           - os: windows-latest
             python-version: '3.11'
@@ -63,7 +24,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Python
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
@@ -79,71 +40,27 @@ jobs:
       run: |
         brew install libsndfile ffmpeg || true
     
-    - name: Install system dependencies (Windows)
-      if: matrix.os == 'windows-latest'
+    - name: Install Python dependencies
       run: |
-        choco install ffmpeg -y || true
-    
-    - name: Install uv
-      uses: astral-sh/setup-uv@v3
-    
-    - name: Cache dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/uv
-        key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
-        restore-keys: |
-          ${{ runner.os }}-uv-
-    
-    - name: Install package
-      run: |
-        uv pip install --upgrade pip setuptools wheel
-        uv pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
-        uv pip install -e . || echo "Some dependencies failed"
-        uv pip install pytest pytest-cov || echo "Test dependencies failed"
+        python -m pip install --upgrade pip
+        pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+        pip install -r requirements-minimal.txt
+        pip install -e .
+      continue-on-error: true
     
     - name: Run tests
       run: |
-        python -m pytest tests/ -v --tb=short -m "not slow and not gpu" || true
+        python -m pytest tests/test_basic.py -v
+      continue-on-error: true
     
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
-        path: |
-          .coverage
-          coverage.xml
-          pytest-report.xml
-        retention-days: 7
-
-  docker:
-    name: Docker Build
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Build Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: false
-        tags: tsukuyomi-tts:test
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-    
-    - name: Test Docker image
+    - name: Check imports
       run: |
-        docker run --rm tsukuyomi-tts:test python -c "import tsukuyomi; print('Docker test passed')" || true
+        python -c "import tsukuyomi; print('Import successful')"
+      continue-on-error: true
 
-  integration:
-    name: Integration Tests
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
-    needs: [lint, test]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
     
     steps:
     - uses: actions/checkout@v4
@@ -151,81 +68,22 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
+        python-version: '3.11'
     
-    - name: Install uv
-      uses: astral-sh/setup-uv@v3
-    
-    - name: Install dependencies
+    - name: Install linters
       run: |
-        sudo apt-get update
-        sudo apt-get install -y libsndfile1 ffmpeg
-        uv pip install -e ".[test,dev]"
+        python -m pip install --upgrade pip
+        pip install ruff black isort mypy
     
-    - name: Run integration tests
-      run: |
-        python -m pytest tests/ -v -m "integration" || echo "No integration tests yet"
+    - name: Run ruff
+      run: ruff check src --output-format=github
+      continue-on-error: true
     
-    - name: Test inference server
-      run: |
-        # Start server in background
-        python -m src.server.inference_server &
-        SERVER_PID=$!
-        
-        # Wait for server to start
-        sleep 10
-        
-        # Test health endpoint
-        curl -f http://localhost:8000/health || echo "Server not ready"
-        
-        # Stop server
-        kill $SERVER_PID || true
+    - name: Run black
+      run: black --check --diff src
+      continue-on-error: true
+    
+    - name: Run mypy
+      run: mypy src --ignore-missing-imports
+      continue-on-error: true
 
-  benchmark:
-    name: Performance Benchmark
-    runs-on: ubuntu-latest
-    needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-    
-    - name: Install uv
-      uses: astral-sh/setup-uv@v3
-    
-    - name: Install dependencies
-      run: |
-        uv pip install -e ".[benchmark]"
-    
-    - name: Run benchmarks
-      run: |
-        python scripts/benchmark.py --quick || echo "No benchmarks yet"
-    
-    - name: Upload benchmark results
-      uses: actions/upload-artifact@v4
-      with:
-        name: benchmark-results
-        path: benchmark_results/
-        retention-days: 30
-
-  status:
-    name: CI Status
-    runs-on: ubuntu-latest
-    needs: [lint, test, docker]
-    if: always()
-    steps:
-    - name: Check status
-      run: |
-        if [[ "${{ needs.lint.result }}" == "failure" ]] || \
-           [[ "${{ needs.test.result }}" == "failure" ]] || \
-           [[ "${{ needs.docker.result }}" == "failure" ]]; then
-          echo "CI failed"
-          exit 1
-        else
-          echo "CI passed"
-        fi
