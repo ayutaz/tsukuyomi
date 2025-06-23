@@ -11,10 +11,13 @@ from typing import Optional, Union, Tuple
 import numpy as np
 
 # Import bigvgan from src directory
-import sys
-from pathlib import Path
-sys.path.append(str(Path(__file__).parent.parent))
-import bigvgan
+try:
+    import bigvgan
+except ImportError:
+    import sys
+    from pathlib import Path
+    sys.path.append(str(Path(__file__).parent.parent))
+    import bigvgan
 import warnings
 
 

@@ -151,7 +151,8 @@ target-version = ['py38', 'py39', 'py310', 'py311']
 include = '\.pyi?$'
 
 [tool.ruff]
-select = ["E", "F", "I", "W"]
+select = ["E", "F", "W"]
+ignore = ["E501", "W503"]
 line-length = 88
 target-version = "py38"
 exclude = [
@@ -159,6 +160,8 @@ exclude = [
     "__pycache__",
     "build",
     "dist",
+    ".venv",
+    "venv",
 ]
 
 [tool.mypy]
@@ -173,3 +176,5 @@ profile = "black"
 line_length = 88
 multi_line_output = 3
 include_trailing_comma = true
+skip = [".venv", "venv", "build", "dist"]
+known_first_party = ["src"]
