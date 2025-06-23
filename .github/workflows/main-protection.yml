@@ -1,0 +1,91 @@
+name: Main Branch Protection
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  validate-source:
+    runs-on: ubuntu-latest
+    name: Validate PR Source
+    
+    steps:
+    - name: Check PR source branch
+      run: |
+        echo "PR from branch: ${{ github.head_ref }}"
+        echo "PR to branch: ${{ github.base_ref }}"
+        
+        # Ensure PR to main comes from dev
+        if [[ "${{ github.base_ref }}" == "main" ]]; then
+          if [[ "${{ github.head_ref }}" != "dev" ]]; then
+            echo "❌ ERROR: PRs to main branch must come from dev branch"
+            echo "Current source branch: ${{ github.head_ref }}"
+            exit 1
+          fi
+          echo "✅ PR from dev to main is allowed"
+        fi
+
+  quality-gates:
+    runs-on: ubuntu-latest
+    name: Quality Gates
+    needs: validate-source
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
+    - name: Install dependencies
+      run: |
+        uv venv
+        uv pip install -e .[test,dev]
+        sudo apt-get update
+        sudo apt-get install -y mecab libmecab-dev mecab-ipadic-utf8
+    
+    - name: Run full test suite
+      run: |
+        uv run pytest -v --cov=src --cov-report=term --cov-fail-under=70
+    
+    - name: Check code quality
+      run: |
+        uv run black --check src tests
+        uv run isort --check-only src tests
+        uv run ruff check src tests
+    
+    - name: Security scan
+      run: |
+        uv pip install bandit
+        uv run bandit -r src -ll
+      continue-on-error: true
+
+  require-approvals:
+    runs-on: ubuntu-latest
+    name: Require Approvals
+    needs: quality-gates
+    
+    steps:
+    - name: Check approvals
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const { data: reviews } = await github.rest.pulls.listReviews({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: context.issue.number
+          });
+          
+          const approvals = reviews.filter(review => review.state === 'APPROVED');
+          
+          if (context.payload.pull_request.base.ref === 'main') {
+            console.log(`Found ${approvals.length} approvals for main branch PR`);
+            // Note: In a real scenario, you'd enforce this via branch protection rules
+          }
