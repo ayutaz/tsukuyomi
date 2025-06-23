@@ -14,10 +14,7 @@ setup(
     package_dir={"": "."},
     python_requires=">=3.11",
     install_requires=[
-        # Core dependencies only
-        "torch>=2.0.0",
-        "numpy>=1.21.0",
-        "transformers>=4.30.0",
+        # Core dependencies only - full list in pyproject.toml
     ],
     extras_require={
         "test": [
