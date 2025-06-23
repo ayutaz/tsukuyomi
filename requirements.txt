@@ -22,7 +22,7 @@ matplotlib>=3.5.0
 # bigvgan  # Not available on PyPI - install from source
 
 # Japanese text processing
-mecab-python3>=1.0.5
+# mecab-python3>=1.0.5  # Platform-specific, install separately
 unidic-lite>=1.0.8
 jaconv>=0.3.0
 pykakasi>=2.2.1
