@@ -16,7 +16,7 @@ def test_import_main_package():
     # For now, just check that we can import built-in modules
     import sys
     import os
-    assert sys.version_info >= (3, 8)
+    assert sys.version_info >= (3, 11)
     assert os.path.exists(__file__)
 
 

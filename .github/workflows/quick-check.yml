@@ -90,7 +90,7 @@ jobs:
         run: |
           # Run most stable test first
           echo "::group::Basic Import Test"
-          python -m pytest tests/test_basic.py::test_import -v --no-header -p no:warnings || echo "::warning::Import test failed"
+          python -m pytest tests/test_basic.py::test_basic_assertion -v --no-header -p no:warnings || echo "::warning::Basic assertion test failed"
           echo "::endgroup::"
           
           # Run other basic tests
