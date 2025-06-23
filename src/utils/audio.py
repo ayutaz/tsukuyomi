@@ -16,7 +16,8 @@ import warnings
 
 def load_audio(
     path: str,
-    sample_rate: int = 22050,
+    sr: Optional[int] = None,
+    sample_rate: Optional[int] = None,
     mono: bool = True,
     normalize: bool = True
 ) -> Tuple[np.ndarray, int]:
@@ -25,6 +26,7 @@ def load_audio(
     
     Args:
         path: Path to audio file
+        sr: Target sample rate (None to keep original) - for compatibility
         sample_rate: Target sample rate (None to keep original)
         mono: Convert to mono
         normalize: Normalize to [-1, 1]
@@ -32,17 +34,20 @@ def load_audio(
     Returns:
         Tuple of (audio_array, sample_rate)
     """
+    # Handle both sr and sample_rate parameters for compatibility
+    target_sr = sr if sr is not None else sample_rate
+    
     # Load with soundfile for better format support
-    audio, sr = sf.read(path, dtype='float32')
+    audio, orig_sr = sf.read(path, dtype='float32')
     
     # Convert to mono if needed
     if mono and audio.ndim > 1:
         audio = audio.mean(axis=1)
     
     # Resample if needed
-    if sample_rate is not None and sr != sample_rate:
-        audio = librosa.resample(audio, orig_sr=sr, target_sr=sample_rate)
-        sr = sample_rate
+    if target_sr is not None and orig_sr != target_sr:
+        audio = librosa.resample(audio, orig_sr=orig_sr, target_sr=target_sr)
+        orig_sr = target_sr
     
     # Normalize
     if normalize:
@@ -50,7 +55,7 @@ def load_audio(
         if max_val > 0:
             audio = audio / max_val * 0.95
     
-    return audio, sr
+    return audio, orig_sr
 
 
 def save_audio(
@@ -181,7 +186,7 @@ def denormalize_mel(
 def trim_silence(
     audio: Union[np.ndarray, torch.Tensor],
     sample_rate: int = 22050,
-    threshold_db: float = 30.0,
+    threshold_db: float = -40.0,
     frame_length: int = 2048,
     hop_length: int = 512,
     margin: float = 0.1
@@ -208,10 +213,10 @@ def trim_silence(
     else:
         audio_np = audio
     
-    # Trim silence
+    # Trim silence (convert threshold_db to positive top_db)
     trimmed, _ = librosa.effects.trim(
         audio_np,
-        top_db=threshold_db,
+        top_db=abs(threshold_db),
         frame_length=frame_length,
         hop_length=hop_length
     )
@@ -226,3 +231,123 @@ def trim_silence(
         trimmed = torch.from_numpy(trimmed).to(audio.device)
     
     return trimmed
+
+
+def normalize_audio(
+    audio: Union[np.ndarray, torch.Tensor],
+    target_db: float = -20.0,
+    eps: float = 1e-8
+) -> Union[np.ndarray, torch.Tensor]:
+    """
+    Normalize audio to target dB.
+    
+    Args:
+        audio: Audio waveform
+        target_db: Target dB level
+        eps: Small value to avoid log(0)
+        
+    Returns:
+        Normalized audio
+    """
+    is_tensor = isinstance(audio, torch.Tensor)
+    
+    if is_tensor:
+        audio_np = audio.cpu().numpy()
+    else:
+        audio_np = audio.copy()
+    
+    # Find maximum absolute value
+    max_val = np.abs(audio_np).max()
+    
+    if max_val > eps:
+        # Normalize to [-1, 1] range with headroom
+        audio_np = audio_np / max_val * 0.95
+    
+    if is_tensor:
+        return torch.from_numpy(audio_np).to(audio.device)
+    
+    return audio_np
+
+
+def compute_mel_spectrogram(
+    audio: Union[np.ndarray, torch.Tensor],
+    sample_rate: int = 22050,
+    n_fft: int = 1024,
+    hop_length: int = 256,
+    win_length: int = 1024,
+    n_mels: int = 80,
+    fmin: float = 0.0,
+    fmax: float = 8000.0,
+    center: bool = False,
+    normalized: bool = False
+) -> torch.Tensor:
+    """
+    Compute mel-spectrogram from audio (alias for mel_spectrogram).
+    
+    Args:
+        audio: Audio waveform
+        sample_rate: Sample rate
+        n_fft: FFT size
+        hop_length: Hop length
+        win_length: Window length
+        n_mels: Number of mel bins
+        fmin: Minimum frequency
+        fmax: Maximum frequency
+        center: Whether to center pad
+        normalized: Whether to normalize mel-spectrogram
+        
+    Returns:
+        Mel-spectrogram tensor of shape (n_mels, time)
+    """
+    return mel_spectrogram(
+        audio=audio,
+        sample_rate=sample_rate,
+        n_fft=n_fft,
+        hop_length=hop_length,
+        win_length=win_length,
+        n_mels=n_mels,
+        fmin=fmin,
+        fmax=fmax,
+        center=center,
+        normalized=normalized
+    )
+
+
+def audio_to_mel(
+    audio: Union[np.ndarray, torch.Tensor],
+    sample_rate: int = 22050,
+    n_fft: int = 1024,
+    hop_length: int = 256,
+    win_length: int = 1024,
+    n_mels: int = 80,
+    fmin: float = 0.0,
+    fmax: float = 8000.0
+) -> torch.Tensor:
+    """
+    Convert audio to mel-spectrogram (simplified interface).
+    
+    Args:
+        audio: Audio waveform
+        sample_rate: Sample rate
+        n_fft: FFT size
+        hop_length: Hop length
+        win_length: Window length
+        n_mels: Number of mel bins
+        fmin: Minimum frequency
+        fmax: Maximum frequency
+        
+    Returns:
+        Mel-spectrogram tensor of shape (n_mels, time)
+    """
+    return mel_spectrogram(
+        audio=audio,
+        sample_rate=sample_rate,
+        n_fft=n_fft,
+        hop_length=hop_length,
+        win_length=win_length,
+        n_mels=n_mels,
+        fmin=fmin,
+        fmax=fmax,
+        center=False,
+        normalized=False
+    )

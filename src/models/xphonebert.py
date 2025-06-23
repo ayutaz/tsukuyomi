@@ -13,14 +13,8 @@ from typing import Optional, Union
 from collections.abc import Sequence
 import numpy as np
 
-# Import text2phonemesequence from src directory
-try:
-    from text2phonemesequence import Text2PhonemeSequence
-except ImportError:
-    import sys
-    from pathlib import Path
-    sys.path.append(str(Path(__file__).parent.parent))
-    from text2phonemesequence import Text2PhonemeSequence
+# Import text2phonemesequence from frontend directory
+from ..frontend.text2phonemesequence import Text2PhonemeSequence
 
 
 class XPhoneBERTEncoder(nn.Module):

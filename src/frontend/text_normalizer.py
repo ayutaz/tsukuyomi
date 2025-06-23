@@ -33,7 +33,7 @@ except ImportError:
     warnings.warn("pykakasi not available. Kanji reading conversion will be limited.")
 
 try:
-    from text2phonemesequence import Text2PhonemeSequence
+    from .text2phonemesequence import Text2PhonemeSequence
     TEXT2PHONEME_AVAILABLE = True
 except ImportError:
     TEXT2PHONEME_AVAILABLE = False
