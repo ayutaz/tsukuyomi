@@ -57,6 +57,13 @@ Tsukuyomi TTSは、最高峰の日本語音声合成システムです。XPhoneB
 - [x] OpenAPI/Swagger ドキュメント
 - [x] クライアントSDK生成（Python、TypeScript）
 
+#### 高度な機能
+- [x] 感情制御（10種類の感情 + VADモデル）
+- [x] スタイル転送（参照音声、スタイルミキシング）
+- [x] 音声モーフィング（複数話者ブレンド、連続遷移）
+- [x] リアルタイムストリーミング（低レイテンシ、WebSocket）
+- [x] 統合AdvancedTTSモデル
+
 ### 🔧 開発コマンド
 
 ```bash
@@ -85,6 +92,9 @@ pytest tests/ -v
 # リント
 ruff check src
 black src tests
+
+# 高度な機能のデモ
+python scripts/demo_advanced_features.py --model-path checkpoints/best_model.pt --demo-type all
 ```
 
 ### 📁 プロジェクト構造
@@ -93,27 +103,67 @@ black src tests
 tsukuyomi/
 ├── src/
 │   ├── models/          # コアモデル実装
+│   │   ├── xphonebert.py
+│   │   ├── f0_bert.py
+│   │   ├── vits.py
+│   │   ├── matcha_tts.py
+│   │   ├── bigvgan.py
+│   │   ├── emotion_controller.py  # 感情制御
+│   │   ├── style_transfer.py      # スタイル転送
+│   │   ├── voice_morphing.py      # 音声モーフィング
+│   │   └── advanced_tts.py        # 統合モデル
 │   ├── data/            # データ処理
 │   ├── training/        # 学習関連
 │   ├── inference/       # 推論最適化
+│   │   ├── optimized_inference.py
+│   │   └── realtime_streaming.py  # ストリーミング
 │   ├── serving/         # モデルサービング
 │   ├── server/          # APIサーバー
 │   ├── evaluation/      # 評価メトリクス
 │   ├── export/          # モデル変換
 │   └── utils/           # ユーティリティ
 ├── scripts/             # 実行スクリプト
+│   ├── train.py
+│   ├── benchmark_inference.py
+│   └── demo_advanced_features.py  # 高度な機能デモ
 ├── configs/             # 設定ファイル
 ├── tests/               # テストコード
 ├── docker/              # Docker関連
 └── docs/                # ドキュメント
 ```
 
+## 高度な機能の詳細
+
+### 🎭 感情制御
+- **10種類の基本感情**: neutral, happy, sad, angry, fearful, surprised, disgusted, excited, calm, confident
+- **VADモデル**: Valence（感情価）、Arousal（覚醒度）、Dominance（支配性）による連続的な感情表現
+- **感情予測**: テキストから自動的に感情を推定
+- **感情強度制御**: 0.0〜2.0の範囲で感情の強さを調整
+
+### 🎨 スタイル転送
+- **参照音声からのスタイル抽出**: 任意の音声からスタイルを学習
+- **スタイルミキシング**: 複数のスタイルをブレンド
+- **適応的スタイル転送**: コンテンツに応じて転送強度を自動調整
+- **スタイルバンク**: 事前定義された50種類のスタイル
+
+### 🔀 音声モーフィング
+- **球面線形補間（SLERP）**: 滑らかな話者間の遷移
+- **多点モーフィング**: 3人以上の話者を同時にブレンド
+- **連続モーフィング**: 時間軸に沿った動的な話者変化
+- **声質変換**: コンテンツを保持したまま声質のみ変更
+
+### ⚡ リアルタイムストリーミング
+- **低レイテンシ**: 100ms以下の遅延
+- **チャンク処理**: 256文字単位での逐次生成
+- **CUDAストリーム**: 並列処理による高速化
+- **WebSocketサーバー**: リアルタイム双方向通信
+
 ## 今後の拡張案
 
 1. **追加の前処理・拡張**
    - より高度なテキスト正規化
-   - 感情制御機能
-   - 声質変換
+   - ~~感情制御機能~~ ✅ 実装済み
+   - ~~声質変換~~ ✅ 実装済み
 
 2. **モデル改良**
    - より大規模な事前学習
