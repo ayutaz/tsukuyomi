@@ -12,9 +12,9 @@ Tsukuyomi（月読）は、最先端の深層学習技術を活用した高品�
 
 ## システム要件
 
-- Python 3.8以上
+- Python 3.11以上
 - CUDA対応GPU（推奨: 8GB以上のVRAM）
-- Ubuntu 20.04 / Windows 10 / macOS（開発環境）
+- Ubuntu 20.04+ / Windows 10+ / macOS 11+（開発環境）
 
 ## クイックスタート
 

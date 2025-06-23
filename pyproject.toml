@@ -3,7 +3,7 @@ name = "tsukuyomi"
 version = "0.1.0"
 description = "State-of-the-art Japanese Text-to-Speech system with multilingual support"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
     {name = "Tsukuyomi Development Team"},
@@ -15,10 +15,9 @@ classifiers = [
     "Topic :: Multimedia :: Sound/Audio :: Speech",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 
 dependencies = [
@@ -143,7 +142,7 @@ exclude_lines = [
 
 [tool.black]
 line-length = 88
-target-version = ['py38', 'py39', 'py310', 'py311']
+target-version = ['py311', 'py312', 'py313']
 include = '\.pyi?$'
 
 [tool.ruff]
@@ -182,7 +181,7 @@ ignore = [
     "PLR2004", # magic value comparison
 ]
 line-length = 88
-target-version = "py38"
+target-version = "py311"
 exclude = [
     ".git",
     "__pycache__",
@@ -198,7 +197,7 @@ exclude = [
 "__init__.py" = ["F401"]  # Allow unused imports in __init__
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

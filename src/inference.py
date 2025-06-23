@@ -7,7 +7,8 @@ all components for end-to-end text-to-speech synthesis.
 
 import torch
 import numpy as np
-from typing import Dict, List, Optional, Union, Tuple
+from typing import Optional, Union
+from collections.abc import Sequence
 import os
 import json
 import warnings
@@ -29,9 +30,9 @@ class TsukuyomiTTS:
     
     def __init__(
         self,
-        config_path: Optional[str] = None,
-        checkpoint_path: Optional[str] = None,
-        device: Optional[str] = None,
+        config_path: str | None = None,
+        checkpoint_path: str | None = None,
+        device: str | None = None,
         use_bf16: bool = True,
         enable_h100_optimizations: bool = True
     ):

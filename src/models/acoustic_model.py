@@ -8,7 +8,7 @@ H100-optimized BF16 support and efficient training/inference capabilities.
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, Optional, Tuple, Any
+from typing import Optional, Any
 import numpy as np
 from dataclasses import dataclass
 
@@ -98,7 +98,7 @@ class ConformerBlock(nn.Module):
             nn.Dropout(0.1)
         )
         
-    def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
         """
         Forward pass through Conformer block.
         
@@ -354,7 +354,7 @@ class DurationPredictor(nn.Module):
         
         self.projection = nn.Linear(filter_size, 1)
         
-    def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
         """
         Predict log-durations for input sequence.
         

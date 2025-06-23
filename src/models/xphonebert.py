@@ -9,7 +9,8 @@ other languages.
 import torch
 import torch.nn as nn
 from transformers import AutoModel, AutoTokenizer
-from typing import List, Optional, Union, Tuple
+from typing import Optional, Union
+from collections.abc import Sequence
 import numpy as np
 
 # Import text2phonemesequence from src directory
@@ -69,9 +70,9 @@ class XPhoneBERTEncoder(nn.Module):
         
     def forward(
         self,
-        phoneme_sequences: Union[str, List[str]],
+        phoneme_sequences: str | Sequence[str],
         return_pooled: bool = True
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         """
         Extract phoneme embeddings from input sequences.
         
@@ -113,8 +114,8 @@ class XPhoneBERTEncoder(nn.Module):
     
     def extract_frame_level_features(
         self,
-        phoneme_sequences: Union[str, List[str]],
-        phoneme_durations: Optional[List[List[int]]] = None
+        phoneme_sequences: str | Sequence[str],
+        phoneme_durations: Sequence[Sequence[int]] | None = None
     ) -> torch.Tensor:
         """
         Extract frame-level features by expanding phoneme embeddings

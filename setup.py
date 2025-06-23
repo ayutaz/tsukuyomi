@@ -11,7 +11,7 @@ setup(
     description="State-of-the-art Japanese Text-to-Speech system with multilingual support",
     url="https://github.com/ayutaz/tsukuyomi",
     packages=find_packages(),
-    python_requires=">=3.8",
+    python_requires=">=3.11",
     install_requires=[
         # Core dependencies only
         "torch>=2.0.0",
