@@ -82,11 +82,26 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest pytest-cov pytest-benchmark
           pip install torch --index-url https://download.pytorch.org/whl/cpu
+          # Install test dependencies
+          pip install -r requirements-test.txt || true
           pip install -e ".[test]"
       
       - name: Run quick tests
         run: |
-          python -m pytest tests/test_basic.py tests/test_utils.py -v --no-header -p no:warnings || echo "::warning::Some tests failed"
+          # Run most stable test first
+          echo "::group::Basic Import Test"
+          python -m pytest tests/test_basic.py::test_import -v --no-header -p no:warnings || echo "::warning::Import test failed"
+          echo "::endgroup::"
+          
+          # Run other basic tests
+          echo "::group::Other Basic Tests"
+          python -m pytest tests/test_basic.py -v --no-header -p no:warnings || echo "::warning::Some basic tests failed"
+          echo "::endgroup::"
+          
+          # Run utils tests
+          echo "::group::Utils Tests"
+          python -m pytest tests/test_utils.py -v --no-header -p no:warnings || echo "::warning::Some utils tests failed"
+          echo "::endgroup::"
       
       - name: Check imports
         run: |

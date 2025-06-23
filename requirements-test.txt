@@ -1,0 +1,16 @@
+# Test-specific dependencies
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+pytest-benchmark>=4.0.0
+pytest-asyncio>=0.21.0
+
+# Missing dependencies required by tests
+PyJWT>=2.8.0
+onnx>=1.14.0
+onnxruntime>=1.15.0
+streamlit>=1.28.0
+
+# Optional test dependencies
+pesq>=0.0.4  # For MOS evaluation tests
+pystoi>=0.3.3  # For audio quality tests

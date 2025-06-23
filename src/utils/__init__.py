@@ -9,7 +9,10 @@ from .audio import (
     save_audio,
     mel_spectrogram,
     denormalize_mel,
-    trim_silence
+    trim_silence,
+    normalize_audio,
+    compute_mel_spectrogram,
+    audio_to_mel
 )
 
 __all__ = [
@@ -17,5 +20,8 @@ __all__ = [
     "save_audio", 
     "mel_spectrogram",
     "denormalize_mel",
-    "trim_silence"
+    "trim_silence",
+    "normalize_audio",
+    "compute_mel_spectrogram",
+    "audio_to_mel"
 ]
