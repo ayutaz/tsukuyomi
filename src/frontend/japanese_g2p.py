@@ -19,11 +19,22 @@ import torch.nn as nn
 
 # Core Japanese processing
 try:
-    import pyopenjtalk
+    # Try to import the improved version first
+    import pyopenjtalk_plus as pyopenjtalk
+    OPENJTALK_PLUS = True
     OPENJTALK_AVAILABLE = True
+    logging.info("Using pyopenjtalk-plus (improved version)")
 except ImportError:
-    OPENJTALK_AVAILABLE = False
-    logging.warning("pyopenjtalk not installed. Install with: pip install pyopenjtalk")
+    try:
+        # Fallback to standard pyopenjtalk
+        import pyopenjtalk
+        OPENJTALK_PLUS = False
+        OPENJTALK_AVAILABLE = True
+        logging.warning("pyopenjtalk-plus not available, using standard pyopenjtalk")
+    except ImportError:
+        OPENJTALK_AVAILABLE = False
+        OPENJTALK_PLUS = False
+        logging.warning("No OpenJTalk variant installed. Install with: pip install pyopenjtalk-plus")
 
 # Advanced processing with ESPnet (optional)
 try:
@@ -121,7 +132,19 @@ class JapaneseG2P:
     def _init_openjtalk(self) -> None:
         """Initialize OpenJTalk backend."""
         self.backend_name = "openjtalk"
-        self.logger.info("Using OpenJTalk for Japanese G2P")
+        
+        if OPENJTALK_PLUS:
+            self.logger.info("Using pyopenjtalk-plus for Japanese G2P (improved accuracy)")
+            # pyopenjtalk-plus specific features
+            try:
+                # Test enhanced features if available
+                test_result = pyopenjtalk.g2p("テスト", kana=False, join=False)
+                self.supports_detailed_output = True
+            except:
+                self.supports_detailed_output = False
+        else:
+            self.logger.info("Using standard pyopenjtalk for Japanese G2P")
+            self.supports_detailed_output = False
         
         # Set dictionary path if needed
         try:
