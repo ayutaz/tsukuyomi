@@ -1,0 +1,147 @@
+# Tsukuyomi TTS 学習設定ファイル
+
+# データ設定
+data:
+  train_dir: "data/train"
+  val_dir: "data/val"
+  test_dir: "data/test"
+  preprocessor: "japanese"  # japanese, english, multilingual
+  sample_rate: 48000
+  hop_length: 480
+  n_mels: 128
+  n_fft: 2048
+  win_length: 2048
+  use_cache: true
+  cache_dir: "data/cache"
+  num_workers: 8
+
+# モデル設定
+models:
+  # 音響モデルの選択
+  acoustic_model: "vits"  # vits or matcha
+  vocoder: "bigvgan"      # bigvgan
+  
+  # XPhoneBERT設定
+  xphonebert:
+    enabled: true
+    model_name: "vinai/xphonebert-base"
+    hidden_size: 768
+    num_layers: 12
+    num_heads: 12
+    
+  # F0-BERT設定
+  f0_bert:
+    enabled: true
+    hidden_size: 256
+    num_layers: 6
+    num_heads: 8
+    pitch_bins: 256
+    
+  # VITS設定
+  vits:
+    n_vocab: 256
+    n_speakers: 100
+    hidden_channels: 192
+    inter_channels: 192
+    filter_channels: 768
+    n_heads: 2
+    n_layers: 6
+    kernel_size: 3
+    p_dropout: 0.1
+    
+  # Matcha-TTS設定
+  matcha:
+    n_vocab: 256
+    n_speakers: 100
+    hidden_channels: 256
+    filter_channels: 1024
+    filter_channels_dp: 256
+    n_heads: 4
+    n_layers: 6
+    kernel_size: 3
+    p_dropout: 0.1
+    
+  # BigVGAN設定
+  bigvgan:
+    num_mels: 128
+    upsample_initial_channel: 1536
+    resblock_kernel_sizes: [3, 7, 11]
+    resblock_dilation_sizes: [[1, 3, 5], [1, 3, 5], [1, 3, 5]]
+    upsample_rates: [10, 8, 2, 2]
+    upsample_kernel_sizes: [20, 16, 4, 4]
+
+# 学習設定
+training:
+  num_epochs: 1000
+  batch_size: 32
+  gradient_accumulation_steps: 4
+  gradient_clip: 5.0
+  mixed_precision: "bf16"  # fp16, bf16, or null
+  save_interval: 10
+  
+  # 損失重み
+  loss_weights:
+    xphonebert: 1.0
+    f0_bert: 1.0
+    acoustic: 1.0
+    vocoder: 1.0
+    kl: 0.1
+    duration: 1.0
+    
+  # オプティマイザー設定
+  optimizers:
+    default:
+      lr: 2e-4
+      beta1: 0.8
+      beta2: 0.99
+      eps: 1e-9
+      weight_decay: 0.01
+      
+    xphonebert:
+      lr: 1e-5  # 事前学習済みモデルは低い学習率
+      
+    f0_bert:
+      lr: 5e-5
+      
+  # スケジューラー設定
+  schedulers:
+    default:
+      type: "cosine_annealing_warm_restarts"
+      T_0: 50
+      T_mult: 2
+      eta_min: 1e-6
+      
+    vocoder:
+      type: "exponential"
+      gamma: 0.999
+      
+  # ロギング設定
+  logging:
+    log_interval: 100
+    trackers: ["tensorboard"]  # tensorboard, wandb, etc.
+    
+  # 早期終了
+  early_stopping:
+    patience: 50
+    min_delta: 0.001
+
+# パス設定
+paths:
+  checkpoints: "checkpoints"
+  tensorboard: "logs/tensorboard"
+  model_registry: "models/registry.db"
+  
+# 分散学習設定
+distributed:
+  backend: "nccl"
+  find_unused_parameters: true
+  
+# 評価設定
+evaluation:
+  metrics:
+    - "mcd"  # Mel Cepstral Distortion
+    - "pitch_correlation"
+    - "speaker_similarity"
+    - "mos_prediction"
+  save_samples: true
+  num_samples: 10

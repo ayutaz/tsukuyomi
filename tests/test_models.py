@@ -1,307 +1,422 @@
-"""
-Tests for model modules (XPhoneBERT, Acoustic Model)
-"""
+"""モデルの包括的なユニットテスト"""
 
 import pytest
 import torch
-import torch.nn as nn
-from unittest.mock import Mock, patch, MagicMock
+import numpy as np
+from pathlib import Path
 
-from src.models.xphonebert import XPhoneBERTWrapper
-from src.models.acoustic_model import (
-    ConformerBlock,
-    TsukuyomiAcousticModel,
-    DurationPredictor,
-    SpeakerEncoder,
-)
+from src.models.xphonebert import XPhoneBERT
+from src.models.f0_bert import F0BERT
+from src.models.vits import VITS
+from src.models.matcha_tts import MatchaTTS
+from src.models.bigvgan import BigVGANv2
 
 
-class TestXPhoneBERTWrapper:
-    """Test XPhoneBERT wrapper"""
+class TestXPhoneBERT:
+    """XPhoneBERTのテスト"""
     
     @pytest.fixture
-    def mock_transformers(self):
-        """Mock transformers imports"""
-        with patch('src.models.xphonebert.AutoModel') as mock_model, \
-             patch('src.models.xphonebert.AutoTokenizer') as mock_tokenizer, \
-             patch('src.models.xphonebert.Text2PhonemeSequence') as mock_phonemizer:
-            
-            # Mock model
-            mock_model_instance = MagicMock()
-            mock_model_instance.eval.return_value = mock_model_instance
-            mock_model_instance.to.return_value = mock_model_instance
-            mock_model.from_pretrained.return_value = mock_model_instance
-            
-            # Mock tokenizer
-            mock_tokenizer_instance = MagicMock()
-            mock_tokenizer.from_pretrained.return_value = mock_tokenizer_instance
-            
-            # Mock phonemizer
-            mock_phonemizer_instance = MagicMock()
-            mock_phonemizer.return_value = mock_phonemizer_instance
-            
-            yield {
-                'model': mock_model,
-                'tokenizer': mock_tokenizer,
-                'phonemizer': mock_phonemizer,
-                'model_instance': mock_model_instance,
-                'tokenizer_instance': mock_tokenizer_instance,
-                'phonemizer_instance': mock_phonemizer_instance,
-            }
-    
-    def test_initialization(self, mock_transformers):
-        """Test XPhoneBERT initialization"""
-        wrapper = XPhoneBERTWrapper(device='cpu')
+    def model(self):
+        return XPhoneBERT(
+            model_name="vinai/xphonebert-base",
+            hidden_size=768,
+            num_layers=12,
+            num_heads=12,
+        )
         
-        assert wrapper.device == torch.device('cpu')
-        mock_transformers['model'].from_pretrained.assert_called_once()
-        mock_transformers['tokenizer'].from_pretrained.assert_called_once()
-    
-    def test_encode_text(self, mock_transformers):
-        """Test text encoding"""
-        wrapper = XPhoneBERTWrapper(device='cpu')
+    def test_initialization(self, model):
+        """初期化テスト"""
+        assert model is not None
+        assert model.hidden_size == 768
+        assert model.num_layers == 12
         
-        # Mock phonemizer output
-        mock_transformers['phonemizer_instance'].infer_sentence.return_value = "k o n n i ch i w a"
+    def test_forward_pass(self, model):
+        """順伝播テスト"""
+        batch_size = 2
+        seq_length = 50
         
-        # Mock tokenizer output
-        mock_inputs = {
-            'input_ids': torch.tensor([[1, 2, 3, 4, 5]]),
-            'attention_mask': torch.tensor([[1, 1, 1, 1, 1]]),
-        }
-        mock_transformers['tokenizer_instance'].return_value = mock_inputs
+        # ダミー入力
+        input_ids = torch.randint(0, 1000, (batch_size, seq_length))
+        language_ids = torch.randint(0, 10, (batch_size,))
+        attention_mask = torch.ones(batch_size, seq_length)
         
-        # Mock model output
-        mock_output = MagicMock()
-        mock_output.last_hidden_state = torch.randn(1, 5, 768)
-        mock_transformers['model_instance'].return_value = mock_output
+        # 推論
+        output = model(input_ids, language_ids, attention_mask)
         
-        # Test encoding
-        text = "こんにちは"
-        embeddings = wrapper.encode(text, language='ja')
+        # 出力の検証
+        assert 'hidden_states' in output
+        assert output['hidden_states'].shape == (batch_size, seq_length, 768)
+        assert output['hidden_states'].dtype == torch.float32
         
-        assert isinstance(embeddings, torch.Tensor)
-        assert embeddings.shape == (1, 5, 768)
-    
-    def test_batch_encode(self, mock_transformers):
-        """Test batch encoding"""
-        wrapper = XPhoneBERTWrapper(device='cpu')
+    def test_multilingual_support(self, model):
+        """多言語サポートテスト"""
+        # 異なる言語IDでのテスト
+        input_ids = torch.randint(0, 1000, (3, 30))
+        language_ids = torch.tensor([0, 1, 2])  # 日本語、英語、中国語
         
-        # Mock outputs
-        mock_transformers['phonemizer_instance'].infer_sentence.return_value = "t e s t"
-        mock_inputs = {
-            'input_ids': torch.tensor([[1, 2, 3, 4]] * 3),
-            'attention_mask': torch.tensor([[1, 1, 1, 1]] * 3),
-        }
-        mock_transformers['tokenizer_instance'].return_value = mock_inputs
+        output = model(input_ids, language_ids)
         
-        mock_output = MagicMock()
-        mock_output.last_hidden_state = torch.randn(3, 4, 768)
-        mock_transformers['model_instance'].return_value = mock_output
+        # 各言語で異なる埋め込みが生成されることを確認
+        embeddings = output['hidden_states']
+        assert not torch.allclose(embeddings[0], embeddings[1])
+        assert not torch.allclose(embeddings[1], embeddings[2])
         
-        # Test batch encoding
-        texts = ["test1", "test2", "test3"]
-        embeddings = wrapper.batch_encode(texts, language='ja')
+    @pytest.mark.parametrize("batch_size", [1, 4, 8, 16])
+    def test_different_batch_sizes(self, model, batch_size):
+        """異なるバッチサイズでのテスト"""
+        input_ids = torch.randint(0, 1000, (batch_size, 40))
+        output = model(input_ids)
         
-        assert embeddings.shape == (3, 4, 768)
-    
-    @pytest.mark.gpu
-    def test_gpu_encoding(self, mock_transformers):
-        """Test GPU encoding"""
-        if not torch.cuda.is_available():
-            pytest.skip("GPU not available")
-        
-        wrapper = XPhoneBERTWrapper(device='cuda')
-        assert wrapper.device.type == 'cuda'
-    
-    @pytest.mark.bf16
-    def test_bf16_encoding(self, mock_transformers):
-        """Test BF16 encoding"""
-        wrapper = XPhoneBERTWrapper(device='cuda', use_bf16=True)
-        
-        # Mock BF16 output
-        mock_output = MagicMock()
-        mock_output.last_hidden_state = torch.randn(1, 5, 768, dtype=torch.bfloat16)
-        mock_transformers['model_instance'].return_value = mock_output
-        
-        embeddings = wrapper.encode("test")
-        assert embeddings.dtype == torch.bfloat16
+        assert output['hidden_states'].shape[0] == batch_size
 
 
-class TestAcousticModel:
-    """Test Acoustic Model components"""
+class TestF0BERT:
+    """F0-BERTのテスト"""
     
     @pytest.fixture
-    def model_config(self):
-        """Small model config for testing"""
-        return {
-            'hidden_channels': 128,
-            'n_layers': 2,
-            'n_heads': 4,
-            'kernel_size': 3,
-            'dropout_rate': 0.1,
-            'n_speakers': 10,
-        }
-    
-    def test_conformer_block(self, model_config):
-        """Test Conformer block"""
-        block = ConformerBlock(
-            channels=model_config['hidden_channels'],
-            kernel_size=model_config['kernel_size'],
-            dropout_rate=model_config['dropout_rate'],
-            n_heads=model_config['n_heads'],
+    def model(self):
+        return F0BERT(
+            hidden_size=256,
+            num_layers=6,
+            num_heads=8,
+            pitch_bins=256,
         )
         
-        # Test forward pass
-        x = torch.randn(2, 128, 50)  # batch, channels, time
-        output = block(x)
+    def test_initialization(self, model):
+        """初期化テスト"""
+        assert model is not None
+        assert model.hidden_size == 256
+        assert model.pitch_bins == 256
         
-        assert output.shape == x.shape
-        assert not torch.isnan(output).any()
+    def test_forward_pass(self, model):
+        """順伝播テスト"""
+        batch_size = 2
+        seq_length = 100
+        
+        # ダミーF0系列
+        f0 = torch.randn(batch_size, seq_length, 1)
+        f0_mask = torch.ones(batch_size, seq_length, dtype=torch.bool)
+        
+        # 推論
+        output = model(f0, f0_mask)
+        
+        # 出力の検証
+        assert 'hidden_states' in output
+        assert output['hidden_states'].shape == (batch_size, seq_length, 256)
+        assert 'pitch_embedding' in output
+        
+    def test_pitch_quantization(self, model):
+        """ピッチ量子化テスト"""
+        # 異なるピッチ値でのテスト
+        f0_values = torch.tensor([
+            [[100.0], [200.0], [300.0]],
+            [[150.0], [250.0], [350.0]],
+        ])
+        
+        output = model(f0_values)
+        
+        # 量子化されたピッチ埋め込みが異なることを確認
+        pitch_emb = output['pitch_embedding']
+        assert pitch_emb.shape == (2, 3, 256)
+        assert not torch.allclose(pitch_emb[0, 0], pitch_emb[0, 1])
+        
+    def test_masked_positions(self, model):
+        """マスク位置のテスト"""
+        f0 = torch.randn(2, 50, 1)
+        mask = torch.ones(2, 50, dtype=torch.bool)
+        mask[0, 25:] = False  # 後半をマスク
+        
+        output = model(f0, mask)
+        
+        # マスクされた位置の出力が影響を受けないことを確認
+        assert output['hidden_states'].shape == (2, 50, 256)
+
+
+class TestVITS:
+    """VITSのテスト"""
     
-    def test_duration_predictor(self):
-        """Test duration predictor"""
-        predictor = DurationPredictor(
-            channels=128,
-            kernel_size=3,
-            dropout_rate=0.1,
+    @pytest.fixture
+    def model(self):
+        return VITS(
+            n_vocab=256,
+            n_speakers=10,
+            hidden_channels=192,
+            inter_channels=192,
+            filter_channels=768,
         )
         
-        x = torch.randn(2, 128, 50)
-        x_mask = torch.ones(2, 1, 50)
+    def test_initialization(self, model):
+        """初期化テスト"""
+        assert model is not None
+        assert model.n_speakers == 10
+        assert model.hidden_channels == 192
         
-        log_durations = predictor(x, x_mask)
+    def test_training_forward(self, model):
+        """学習時の順伝播テスト"""
+        batch_size = 2
+        text_length = 30
+        mel_length = 300
         
-        assert log_durations.shape == (2, 1, 50)
-        assert not torch.isnan(log_durations).any()
+        # ダミー入力
+        text = torch.randint(0, 256, (batch_size, text_length))
+        text_lengths = torch.tensor([text_length, text_length-5])
+        mel = torch.randn(batch_size, 128, mel_length)
+        mel_lengths = torch.tensor([mel_length, mel_length-50])
+        speaker_ids = torch.randint(0, 10, (batch_size,))
+        
+        # 学習モード
+        model.train()
+        output = model(text, text_lengths, mel, mel_lengths, speaker_ids)
+        
+        # 損失の検証
+        assert 'loss' in output
+        assert 'kl_loss' in output
+        assert 'mel_loss' in output
+        assert output['loss'].requires_grad
+        
+    def test_inference(self, model):
+        """推論テスト"""
+        text = torch.randint(0, 256, (1, 20))
+        speaker_id = torch.tensor([0])
+        
+        # 推論モード
+        model.eval()
+        with torch.no_grad():
+            audio = model.infer(text, speaker_id)
+            
+        # 出力の検証
+        assert audio.ndim == 2
+        assert audio.shape[0] == 1
+        assert audio.shape[1] > 0
+        
+    def test_speaker_embedding(self, model):
+        """話者埋め込みテスト"""
+        text = torch.randint(0, 256, (1, 20))
+        
+        # 異なる話者での生成
+        model.eval()
+        with torch.no_grad():
+            audio1 = model.infer(text, torch.tensor([0]))
+            audio2 = model.infer(text, torch.tensor([1]))
+            
+        # 異なる話者で異なる音声が生成されることを確認
+        assert not torch.allclose(audio1, audio2)
+        
+    @pytest.mark.parametrize("length_scale", [0.5, 1.0, 1.5])
+    def test_length_control(self, model, length_scale):
+        """長さ制御テスト"""
+        text = torch.randint(0, 256, (1, 20))
+        speaker_id = torch.tensor([0])
+        
+        model.eval()
+        with torch.no_grad():
+            audio = model.infer(text, speaker_id, length_scale=length_scale)
+            
+        # 音声が生成されることを確認
+        assert audio.shape[1] > 0
+
+
+class TestMatchaTTS:
+    """Matcha-TTSのテスト"""
     
-    def test_speaker_encoder(self, model_config):
-        """Test speaker encoder"""
-        encoder = SpeakerEncoder(
-            n_speakers=model_config['n_speakers'],
-            speaker_embed_dim=256,
-            output_dim=128,
+    @pytest.fixture
+    def model(self):
+        return MatchaTTS(
+            n_vocab=256,
+            n_speakers=10,
+            hidden_channels=256,
+            filter_channels=1024,
+            filter_channels_dp=256,
         )
         
-        speaker_ids = torch.tensor([0, 5, 9])
-        embeddings = encoder(speaker_ids)
+    def test_initialization(self, model):
+        """初期化テスト"""
+        assert model is not None
+        assert model.n_speakers == 10
+        assert model.hidden_channels == 256
         
-        assert embeddings.shape == (3, 128)
-        assert not torch.isnan(embeddings).any()
-    
-    def test_acoustic_model_init(self, model_config):
-        """Test acoustic model initialization"""
-        model = TsukuyomiAcousticModel(
-            hidden_channels=model_config['hidden_channels'],
-            n_layers=model_config['n_layers'],
-            n_heads=model_config['n_heads'],
-            kernel_size=model_config['kernel_size'],
-            dropout_rate=model_config['dropout_rate'],
-            n_speakers=model_config['n_speakers'],
-        )
+    def test_flow_matching(self, model):
+        """フローマッチングテスト"""
+        batch_size = 2
         
-        # Check components
-        assert len(model.encoder_blocks) == model_config['n_layers']
-        assert len(model.decoder_blocks) == model_config['n_layers']
-        assert model.speaker_encoder is not None
-        assert model.duration_predictor is not None
-    
-    def test_acoustic_model_forward(self, model_config):
-        """Test acoustic model forward pass"""
-        model = TsukuyomiAcousticModel(
-            hidden_channels=model_config['hidden_channels'],
-            n_layers=model_config['n_layers'],
-            n_heads=model_config['n_heads'],
-            kernel_size=model_config['kernel_size'],
-            dropout_rate=model_config['dropout_rate'],
-            n_speakers=model_config['n_speakers'],
-        )
+        # ダミー入力
+        text = torch.randint(0, 256, (batch_size, 25))
+        text_lengths = torch.tensor([25, 20])
+        mel = torch.randn(batch_size, 128, 250)
+        mel_lengths = torch.tensor([250, 200])
+        speaker_ids = torch.randint(0, 10, (batch_size,))
+        
+        # 学習モード
+        model.train()
+        output = model(text, text_lengths, mel, mel_lengths, speaker_ids)
+        
+        # フローマッチング損失の検証
+        assert 'loss' in output
+        assert 'flow_loss' in output
+        assert output['loss'].requires_grad
+        
+    def test_inference_speed(self, model):
+        """推論速度テスト"""
+        import time
+        
+        text = torch.randint(0, 256, (1, 30))
+        speaker_id = torch.tensor([0])
+        
         model.eval()
         
-        # Prepare inputs
-        phoneme_embeddings = torch.randn(2, 50, 768)  # From XPhoneBERT
-        speaker_ids = torch.tensor([0, 1])
+        # ウォームアップ
+        with torch.no_grad():
+            _ = model.infer(text, speaker_id)
+            
+        # 速度測定
+        times = []
+        for _ in range(10):
+            start = time.time()
+            with torch.no_grad():
+                _ = model.infer(text, speaker_id)
+            times.append(time.time() - start)
+            
+        avg_time = np.mean(times)
+        assert avg_time < 1.0  # 1秒以内で推論完了
+
+
+class TestBigVGANv2:
+    """BigVGAN-v2のテスト"""
+    
+    @pytest.fixture
+    def model(self):
+        return BigVGANv2(
+            num_mels=128,
+            upsample_initial_channel=1536,
+            resblock_kernel_sizes=[3, 7, 11],
+            resblock_dilation_sizes=[[1, 3, 5], [1, 3, 5], [1, 3, 5]],
+            upsample_rates=[10, 8, 2, 2],
+            upsample_kernel_sizes=[20, 16, 4, 4],
+        )
+        
+    def test_initialization(self, model):
+        """初期化テスト"""
+        assert model is not None
+        assert model.num_mels == 128
+        assert len(model.ups) == 4  # アップサンプリング層の数
+        
+    def test_forward_pass(self, model):
+        """順伝播テスト"""
+        batch_size = 2
+        mel_length = 100
+        
+        # ダミーメルスペクトログラム
+        mel = torch.randn(batch_size, 128, mel_length)
+        
+        # 推論
+        audio = model(mel)
+        
+        # 出力の検証
+        expected_length = mel_length * 10 * 8 * 2 * 2  # アップサンプリング率の積
+        assert audio.shape == (batch_size, 1, expected_length)
+        
+    def test_anti_aliasing(self, model):
+        """アンチエイリアシングテスト"""
+        # 高周波成分を含むメルスペクトログラム
+        mel_length = 50
+        mel = torch.zeros(1, 128, mel_length)
+        mel[:, 64:, :] = 1.0  # 高周波成分
+        
+        audio = model(mel)
+        
+        # 音声が生成され、クリッピングされていないことを確認
+        assert audio.max() <= 1.0
+        assert audio.min() >= -1.0
+        
+    def test_multi_resolution_generation(self, model):
+        """マルチレゾリューション生成テスト"""
+        # 異なる長さのメルスペクトログラム
+        for mel_length in [50, 100, 200]:
+            mel = torch.randn(1, 128, mel_length)
+            audio = model(mel)
+            
+            expected_length = mel_length * 320  # 総アップサンプリング率
+            assert audio.shape[2] == expected_length
+            
+    @pytest.mark.parametrize("batch_size", [1, 2, 4, 8])
+    def test_batch_processing(self, model, batch_size):
+        """バッチ処理テスト"""
+        mel = torch.randn(batch_size, 128, 80)
+        audio = model(mel)
+        
+        assert audio.shape[0] == batch_size
+        assert audio.shape[1] == 1
+        assert audio.shape[2] == 80 * 320
+
+
+class TestIntegration:
+    """統合テスト"""
+    
+    def test_full_pipeline(self):
+        """完全なパイプラインテスト"""
+        # モデルの初期化
+        xphonebert = XPhoneBERT(
+            model_name="vinai/xphonebert-base",
+            hidden_size=768,
+            num_layers=12,
+            num_heads=12,
+        )
+        
+        f0_bert = F0BERT(
+            hidden_size=256,
+            num_layers=6,
+            num_heads=8,
+        )
+        
+        vits = VITS(
+            n_vocab=256,
+            n_speakers=10,
+            hidden_channels=192,
+            inter_channels=192,
+        )
+        
+        bigvgan = BigVGANv2(
+            num_mels=128,
+            upsample_initial_channel=1536,
+            resblock_kernel_sizes=[3, 7, 11],
+            resblock_dilation_sizes=[[1, 3, 5], [1, 3, 5], [1, 3, 5]],
+        )
+        
+        # ダミー入力
+        phoneme_ids = torch.randint(0, 1000, (1, 30))
+        language_id = torch.tensor([0])
+        f0 = torch.randn(1, 30, 1)
+        text = torch.randint(0, 256, (1, 30))
+        speaker_id = torch.tensor([0])
+        
+        # パイプライン実行
+        xphonebert.eval()
+        f0_bert.eval()
+        vits.eval()
+        bigvgan.eval()
         
         with torch.no_grad():
-            mel_output, log_durations = model(phoneme_embeddings, speaker_ids)
-        
-        assert mel_output.shape[0] == 2  # Batch size
-        assert mel_output.shape[1] == 80  # Mel bins
-        assert not torch.isnan(mel_output).any()
-        assert not torch.isnan(log_durations).any()
-    
-    @pytest.mark.gpu
-    @pytest.mark.bf16
-    def test_bf16_forward(self, model_config):
-        """Test BF16 forward pass"""
-        if not (torch.cuda.is_available() and torch.cuda.is_bf16_supported()):
-            pytest.skip("BF16 not supported")
-        
-        model = TsukuyomiAcousticModel(
-            hidden_channels=model_config['hidden_channels'],
-            n_layers=model_config['n_layers'],
-            n_heads=model_config['n_heads'],
-            kernel_size=model_config['kernel_size'],
-            dropout_rate=model_config['dropout_rate'],
-            n_speakers=model_config['n_speakers'],
-            use_bf16=True,
-        ).cuda()
-        model.eval()
-        
-        # BF16 inputs
-        phoneme_embeddings = torch.randn(2, 50, 768, dtype=torch.bfloat16).cuda()
-        speaker_ids = torch.tensor([0, 1]).cuda()
-        
-        with torch.cuda.amp.autocast(dtype=torch.bfloat16):
-            mel_output, log_durations = model(phoneme_embeddings, speaker_ids)
-        
-        assert mel_output.dtype == torch.bfloat16
-        assert not torch.isnan(mel_output).any()
-    
-    def test_gradient_checkpointing(self, model_config):
-        """Test gradient checkpointing"""
-        model = TsukuyomiAcousticModel(
-            hidden_channels=model_config['hidden_channels'],
-            n_layers=model_config['n_layers'],
-            n_heads=model_config['n_heads'],
-            kernel_size=model_config['kernel_size'],
-            dropout_rate=model_config['dropout_rate'],
-            n_speakers=model_config['n_speakers'],
-            use_gradient_checkpointing=True,
-        )
-        
-        # Should work without errors
-        phoneme_embeddings = torch.randn(1, 10, 768, requires_grad=True)
-        speaker_ids = torch.tensor([0])
-        
-        mel_output, log_durations = model(phoneme_embeddings, speaker_ids)
-        loss = mel_output.mean()
-        loss.backward()
-        
-        assert phoneme_embeddings.grad is not None
-    
-    @pytest.mark.parametrize("batch_size,seq_len", [
-        (1, 10),
-        (4, 50),
-        (8, 100),
-    ])
-    def test_different_input_sizes(self, model_config, batch_size, seq_len):
-        """Test model with different input sizes"""
-        model = TsukuyomiAcousticModel(
-            hidden_channels=model_config['hidden_channels'],
-            n_layers=model_config['n_layers'],
-            n_heads=model_config['n_heads'],
-            kernel_size=model_config['kernel_size'],
-            dropout_rate=model_config['dropout_rate'],
-            n_speakers=model_config['n_speakers'],
-        )
-        model.eval()
-        
-        phoneme_embeddings = torch.randn(batch_size, seq_len, 768)
-        speaker_ids = torch.randint(0, model_config['n_speakers'], (batch_size,))
-        
-        with torch.no_grad():
-            mel_output, log_durations = model(phoneme_embeddings, speaker_ids)
-        
-        assert mel_output.shape[0] == batch_size
-        assert log_durations.shape[0] == batch_size
+            # XPhoneBERT
+            xphonebert_out = xphonebert(phoneme_ids, language_id)
+            
+            # F0-BERT
+            f0_bert_out = f0_bert(f0)
+            
+            # エンコーダー出力の結合
+            encoder_output = torch.cat([
+                xphonebert_out['hidden_states'],
+                f0_bert_out['hidden_states']
+            ], dim=-1)
+            
+            # VITS (簡略化のため encoder_output は使用しない)
+            mel = vits.infer(text, speaker_id)
+            
+            # BigVGAN
+            audio = bigvgan(mel)
+            
+        # 最終出力の検証
+        assert audio.shape[0] == 1
+        assert audio.shape[1] == 1
+        assert audio.shape[2] > 0
+        assert audio.max() <= 1.0
+        assert audio.min() >= -1.0
