@@ -186,5 +186,6 @@ tsukuyomi/
 
 - [日本語README](README.ja.md)
 - [英語README](README.md)
+- [JVSデータセット学習ガイド](docs/jvs_training_guide.ja.md)
 - [学習ガイド](docs/train.ja.md)
 - [APIリファレンス](docs/api/api-reference.md)
