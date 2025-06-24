@@ -1,4 +1,4 @@
-name: CI
+name: 統合CI管理
 
 on:
   push:
@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   determine-checks:
-    name: Determine Required Checks
+    name: 実行チェック判定
     runs-on: ubuntu-latest
     outputs:
       quick: ${{ steps.check.outputs.quick }}

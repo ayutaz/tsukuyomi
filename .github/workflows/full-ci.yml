@@ -1,4 +1,4 @@
-name: Full CI
+name: 包括的品質検証
 
 on:
   workflow_call:
@@ -15,7 +15,7 @@ env:
 
 jobs:
   test-matrix:
-    name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    name: マルチプラットフォームテスト（Python ${{ matrix.python-version }} / ${{ matrix.os }}）
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -90,7 +90,7 @@ jobs:
           fail_ci_if_error: false
 
   test-gpu:
-    name: GPU Tests
+    name: GPU加速テスト・パフォーマンスベンチマーク
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event_name == 'schedule'
     steps:
@@ -116,7 +116,7 @@ jobs:
           python scripts/benchmark_inference.py || echo "::warning::Benchmark failed"
 
   security-scan:
-    name: Security & Vulnerability Scan
+    name: セキュリティ脆弱性診断
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -156,7 +156,7 @@ jobs:
             bandit-results.json
 
   build-and-package:
-    name: Build & Package
+    name: パッケージビルド・検証
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -186,7 +186,7 @@ jobs:
           path: dist/
 
   docker-build:
-    name: Docker Build
+    name: Dockerイメージビルド
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'push' || 
