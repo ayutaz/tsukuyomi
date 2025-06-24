@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import torch
 
-from src.models.bigvgan import BigVGANv2
+from src.models.bigvgan_v2 import BigVGANv2
 from src.models.f0_bert import F0BERT
 from src.models.matcha_tts import MatchaTTS
 from src.models.vits import VITS

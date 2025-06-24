@@ -29,12 +29,12 @@ from tqdm import tqdm
 # プロジェクトルートをPythonパスに追加
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from src.data.dataset import VoiceDataset
+from src.data.dataset import TsukuyomiDataset
 from src.models.f0_bert import F0BERT
 from src.models.xphonebert import XPhoneBERT
 from src.models.vits import VITS
 from src.models.matcha_tts import MatchaTTS
-from src.models.bigvgan import BigVGANv2
+from src.models.bigvgan_v2 import BigVGANv2
 from src.training.losses import MultiTaskLoss
 from src.training.metrics import TrainingMetrics
 from src.utils.model_manager import ModelRegistry
@@ -183,7 +183,7 @@ class TTSTrainer:
     def setup_data_loaders(self) -> Tuple[DataLoader, DataLoader]:
         """データローダーの設定"""
         # 学習データセット
-        train_dataset = VoiceDataset(
+        train_dataset = TsukuyomiDataset(
             data_dir=Path(self.config.data.train_dir),
             preprocessor_type=self.config.data.preprocessor,
             sample_rate=self.config.data.sample_rate,
@@ -193,7 +193,7 @@ class TTSTrainer:
         )
         
         # 検証データセット
-        val_dataset = VoiceDataset(
+        val_dataset = TsukuyomiDataset(
             data_dir=Path(self.config.data.val_dir),
             preprocessor_type=self.config.data.preprocessor,
             sample_rate=self.config.data.sample_rate,

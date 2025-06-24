@@ -394,6 +394,118 @@ class StyleTransferLoss(nn.Module):
         return loss
 
 
+    def compute_bert_loss(
+        self, bert_outputs: Dict[str, torch.Tensor], targets: torch.Tensor
+    ) -> torch.Tensor:
+        """Compute loss for BERT models (XPhoneBERT)"""
+        if "logits" in bert_outputs:
+            # Classification loss
+            return F.cross_entropy(
+                bert_outputs["logits"].view(-1, bert_outputs["logits"].size(-1)),
+                targets.view(-1),
+                ignore_index=-100,
+            )
+        elif "hidden_states" in bert_outputs:
+            # If no logits, use MSE loss on hidden states
+            if targets.dim() == bert_outputs["hidden_states"].dim():
+                return F.mse_loss(bert_outputs["hidden_states"], targets)
+            else:
+                # Skip loss if dimensions don't match
+                return torch.tensor(0.0, device=bert_outputs["hidden_states"].device)
+        else:
+            return torch.tensor(0.0)
+
+    def compute_f0_loss(
+        self, f0_outputs: Dict[str, torch.Tensor], targets: torch.Tensor
+    ) -> torch.Tensor:
+        """Compute loss for F0-BERT"""
+        if "f0_prediction" in f0_outputs:
+            # F0 prediction loss
+            mask = targets > 0  # Only compute loss for voiced frames
+            if mask.any():
+                pred = f0_outputs["f0_prediction"][mask]
+                target = targets[mask]
+                return F.mse_loss(pred, target)
+            else:
+                return torch.tensor(0.0, device=f0_outputs["f0_prediction"].device)
+        elif "hidden_states" in f0_outputs:
+            # Hidden state reconstruction loss
+            if targets.dim() == f0_outputs["hidden_states"].dim():
+                return F.mse_loss(f0_outputs["hidden_states"], targets)
+            else:
+                return torch.tensor(0.0, device=f0_outputs["hidden_states"].device)
+        else:
+            return torch.tensor(0.0)
+
+    def compute_acoustic_loss(
+        self, acoustic_outputs: Dict[str, torch.Tensor], targets: torch.Tensor
+    ) -> torch.Tensor:
+        """Compute loss for acoustic model (VITS/Matcha-TTS)"""
+        total_loss = torch.tensor(0.0, device=targets.device)
+        
+        # Mel-spectrogram reconstruction loss
+        if "mel" in acoustic_outputs:
+            total_loss = total_loss + F.l1_loss(acoustic_outputs["mel"], targets)
+        
+        # KL divergence loss (for variational models)
+        if "kl_loss" in acoustic_outputs:
+            total_loss = total_loss + acoustic_outputs["kl_loss"]
+        
+        # Duration loss
+        if "duration_loss" in acoustic_outputs:
+            total_loss = total_loss + acoustic_outputs["duration_loss"]
+        
+        # Flow matching loss (for Matcha-TTS)
+        if "flow_loss" in acoustic_outputs:
+            total_loss = total_loss + acoustic_outputs["flow_loss"]
+        
+        # If the model returns a pre-computed loss
+        if "loss" in acoustic_outputs:
+            return acoustic_outputs["loss"]
+        
+        return total_loss
+
+    def compute_vocoder_loss(
+        self, vocoder_outputs: torch.Tensor, targets: torch.Tensor
+    ) -> torch.Tensor:
+        """Compute loss for vocoder (BigVGAN)"""
+        # Multi-scale spectral loss
+        total_loss = torch.tensor(0.0, device=targets.device)
+        
+        # Time-domain loss
+        total_loss = total_loss + F.l1_loss(vocoder_outputs, targets)
+        
+        # Multi-scale STFT loss
+        for n_fft, hop_length in [(2048, 240), (1024, 120), (512, 50)]:
+            # Compute STFT
+            pred_spec = torch.stft(
+                vocoder_outputs.squeeze(1),
+                n_fft=n_fft,
+                hop_length=hop_length,
+                return_complex=True,
+                window=torch.hann_window(n_fft, device=vocoder_outputs.device),
+            )
+            target_spec = torch.stft(
+                targets.squeeze(1),
+                n_fft=n_fft,
+                hop_length=hop_length,
+                return_complex=True,
+                window=torch.hann_window(n_fft, device=targets.device),
+            )
+            
+            # Magnitude loss
+            pred_mag = pred_spec.abs()
+            target_mag = target_spec.abs()
+            total_loss = total_loss + F.l1_loss(pred_mag, target_mag)
+            
+            # Log magnitude loss
+            total_loss = total_loss + F.l1_loss(
+                torch.log(pred_mag + 1e-7), torch.log(target_mag + 1e-7)
+            )
+        
+        return total_loss / 7  # Normalize by number of loss terms
+
+
 def get_loss_function(config: Dict) -> nn.Module:
     """Factory function to create loss function based on config"""
     loss_type = config.get("loss_type", "multi_task")
