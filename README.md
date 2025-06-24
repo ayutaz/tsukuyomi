@@ -7,7 +7,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-[English](#english) | [日本語](#日本語) | [日本語README](README_ja.md) | [Quick Start](QUICK_START.md) | [Status](STATUS.md)
+[English](#english) | [日本語](README.ja.md) | [Quick Start](docs/jvs_training_guide.ja.md) | [Training Guide](docs/train.ja.md) | [API Reference](docs/api/api-reference.md)
 
 </div>
 
