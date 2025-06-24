@@ -15,12 +15,17 @@ import soundfile as sf
 import torch
 
 # Disable torchaudio in CI environment or when explicitly disabled
-DISABLE_TORCHAUDIO = os.environ.get("DISABLE_TORCHAUDIO", "").lower() in ("1", "true", "yes")
+DISABLE_TORCHAUDIO = os.environ.get("DISABLE_TORCHAUDIO", "").lower() in (
+    "1",
+    "true",
+    "yes",
+)
 TORCHAUDIO_AVAILABLE = False
 
 if not DISABLE_TORCHAUDIO:
     try:
         import torchaudio
+
         TORCHAUDIO_AVAILABLE = True
     except (ImportError, OSError) as e:
         # This catches both import errors and missing .so file errors
