@@ -8,9 +8,8 @@
 import csv
 import random
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
-import numpy as np
 import torch
 import torch.nn.functional as F
 import torchaudio

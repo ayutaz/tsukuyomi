@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import librosa
-import numpy as np
 import soundfile as sf
 import torch
 from torch.utils.data import Dataset
