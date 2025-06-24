@@ -264,6 +264,17 @@ ignore = [
     "B008",    # function call in argument defaults
     "SIM105",  # use contextlib.suppress
     "E402",    # module level import not at top
+    "ARG003",  # unused class method argument
+    "N801",    # class name should use CapWords
+    "N803",    # argument name should be lowercase
+    "N806",    # variable in function should be lowercase
+    "UP038",   # use X | Y in isinstance
+    "PLE1142", # await should be used within async function
+    "UP028",   # replace yield over for loop
+    "PIE790",  # unnecessary pass statement
+    "E741",    # ambiguous variable name
+    "PLR1704", # redefining argument with local name
+    "SIM102",  # use single if statement
 ]
 
 [tool.ruff.lint.per-file-ignores]
