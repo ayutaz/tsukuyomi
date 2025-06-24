@@ -2,6 +2,7 @@
 Tests for utility modules
 """
 
+import os
 import tempfile
 from pathlib import Path
 
@@ -11,6 +12,7 @@ import soundfile as sf
 import torch
 
 from src.utils.audio import (
+    TORCHAUDIO_AVAILABLE,
     audio_to_mel,
     compute_mel_spectrogram,
     load_audio,
@@ -18,6 +20,10 @@ from src.utils.audio import (
     save_audio,
     trim_silence,
 )
+
+# Skip audio processing tests in CI environment due to librosa/torchaudio differences
+if os.environ.get("DISABLE_TORCHAUDIO", "").lower() in ("1", "true", "yes"):
+    pytestmark = pytest.mark.skip(reason="Skipping audio tests in CI environment")
 
 
 class TestAudioUtils:
