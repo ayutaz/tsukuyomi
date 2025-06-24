@@ -2,23 +2,24 @@
 Tests for training components
 """
 
+import tempfile
+from pathlib import Path
+
+import numpy as np
 import pytest
 import torch
-import numpy as np
-from pathlib import Path
-import tempfile
 
-from src.training.trainer import VITSTrainer
-from src.training.losses import VITSLoss, GeneratorLoss, DiscriminatorLoss
-from src.training.metrics import MelSpectrogramMetrics, AudioMetrics
-from src.training.fine_tuning import (
-    LoRAConfig,
-    AdapterConfig,
-    apply_lora,
-    apply_adapter,
-)
-from src.models.vits import VITS
 from src.models.hifigan import HiFiGAN
+from src.models.vits import VITS
+from src.training.fine_tuning import (
+    AdapterConfig,
+    LoRAConfig,
+    apply_adapter,
+    apply_lora,
+)
+from src.training.losses import DiscriminatorLoss, GeneratorLoss, VITSLoss
+from src.training.metrics import AudioMetrics, MelSpectrogramMetrics
+from src.training.trainer import VITSTrainer
 
 
 class TestLosses:

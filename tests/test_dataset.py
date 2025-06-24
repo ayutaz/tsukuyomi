@@ -1,16 +1,17 @@
 """Tests for flexible dataset loader."""
 
-import pytest
-import json
 import csv
-from pathlib import Path
-import numpy as np
-import soundfile as sf
-import tempfile
+import json
 import shutil
+import tempfile
+from pathlib import Path
+
+import numpy as np
+import pytest
+import soundfile as sf
 import torch
 
-from src.data.dataset import TsukuyomiDataset, SpeakerMetadata, AudioSample
+from src.data.dataset import AudioSample, SpeakerMetadata, TsukuyomiDataset
 
 
 class TestDataset:

@@ -2,24 +2,25 @@
 Tests for model compression and quantization
 """
 
-import pytest
-import torch
-import torch.nn as nn
-import numpy as np
 import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+import numpy as np
+import pytest
+import torch
+import torch.nn as nn
+
 from src.tools.model_compression import (
-    ModelCompressor,
-    QuantizationConfig,
-    PruningConfig,
     DistillationConfig,
-    quantize_model,
-    prune_model,
+    ModelCompressor,
+    PruningConfig,
+    QuantizationConfig,
+    benchmark_model,
     distill_model,
     optimize_for_mobile,
-    benchmark_model,
+    prune_model,
+    quantize_model,
 )
 
 

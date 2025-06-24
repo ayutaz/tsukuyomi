@@ -5,18 +5,19 @@ Exports trained models to ONNX format for deployment in Unity and other environm
 Includes optimization for mobile and edge devices.
 """
 
-import torch
-import torch.nn as nn
-import onnx
-import onnxruntime as ort
-from onnxruntime.quantization import quantize_dynamic, QuantType
-from onnxruntime.transformers import optimizer
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
-import numpy as np
+import json
 import logging
 from dataclasses import dataclass
-import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+import onnx
+import onnxruntime as ort
+import torch
+import torch.nn as nn
+from onnxruntime.quantization import QuantType, quantize_dynamic
+from onnxruntime.transformers import optimizer
 
 logger = logging.getLogger(__name__)
 

@@ -3,9 +3,10 @@
 This module provides the interface between text processing and phoneme sequences
 """
 
-import torch
-from typing import List, Dict, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
+
 import numpy as np
+import torch
 
 
 class Text2PhonemeSequence:

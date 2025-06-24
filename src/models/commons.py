@@ -1,8 +1,9 @@
 """Common utilities for VITS and other models"""
 
+from typing import Optional, Tuple
+
 import torch
 import torch.nn.functional as F
-from typing import Optional, Tuple
 
 
 def sequence_mask(

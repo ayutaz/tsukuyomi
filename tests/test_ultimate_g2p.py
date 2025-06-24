@@ -2,17 +2,18 @@
 Tests for Ultimate Japanese G2P with 97%+ accuracy target
 """
 
-import pytest
-import torch
-import numpy as np
 from pathlib import Path
 
+import numpy as np
+import pytest
+import torch
+
 from src.models.ultimate_g2p import (
-    UltimateJapaneseG2P,
-    UltimateG2PConfig,
     AccentBERT,
-    NeuralPhonemeCorrectorRNN,
     ContextualPhonemeEncoder,
+    NeuralPhonemeCorrectorRNN,
+    UltimateG2PConfig,
+    UltimateJapaneseG2P,
     create_ultimate_g2p,
 )
 

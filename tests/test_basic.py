@@ -14,8 +14,8 @@ def test_basic_assertion():
 def test_import_main_package():
     """Test that main package can be imported"""
     # For now, just check that we can import built-in modules
-    import sys
     import os
+    import sys
 
     assert sys.version_info >= (3, 11)
     assert os.path.exists(__file__)

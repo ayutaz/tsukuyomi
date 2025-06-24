@@ -2,15 +2,15 @@
 Tests for core TTS models
 """
 
+import numpy as np
 import pytest
 import torch
-import numpy as np
 
-from src.models.vits import VITS
-from src.models.hifigan import HiFiGAN, Generator
-from src.models.f0_bert import F0BERT
 from src.models.commons import monotonic_align
-from src.models.modules import TextEncoder, PosteriorEncoder, ResidualCouplingBlock
+from src.models.f0_bert import F0BERT
+from src.models.hifigan import Generator, HiFiGAN
+from src.models.modules import PosteriorEncoder, ResidualCouplingBlock, TextEncoder
+from src.models.vits import VITS
 
 
 class TestVITS:

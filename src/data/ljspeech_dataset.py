@@ -13,9 +13,9 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import torch
 import torch.nn.functional as F
-from torch.utils.data import Dataset
 import torchaudio
 import torchaudio.transforms as T
+from torch.utils.data import Dataset
 
 
 class LJSpeechDataset(Dataset):

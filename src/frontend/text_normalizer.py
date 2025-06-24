@@ -7,8 +7,8 @@ tokenization, and conversion to phoneme sequences for TTS.
 
 import re
 import unicodedata
-from typing import List, Dict, Optional, Tuple, Union
 import warnings
+from typing import Dict, List, Optional, Tuple, Union
 
 # Japanese text processing libraries
 try:

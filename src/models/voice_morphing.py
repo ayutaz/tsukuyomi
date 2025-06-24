@@ -3,11 +3,12 @@
 複数の話者やスタイルを滑らかに混合・変換
 """
 
+from typing import Dict, List, Optional, Tuple, Union
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, List, Optional, Tuple, Union
-import numpy as np
 from scipy import signal
 
 

@@ -2,21 +2,22 @@
 Tests for MOS (Mean Opinion Score) evaluation tools
 """
 
-import pytest
-import numpy as np
-import torch
+import json
 import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
-import json
+
+import numpy as np
+import pytest
+import torch
 
 from src.tools.mos_evaluation import (
-    MOSEvaluator,
-    MOSCollector,
-    MOSAnalyzer,
     ABTestEvaluator,
     AutomaticMOSPredictor,
     EvaluationConfig,
+    MOSAnalyzer,
+    MOSCollector,
+    MOSEvaluator,
     create_evaluation_webapp,
 )
 

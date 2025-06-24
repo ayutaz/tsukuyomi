@@ -8,23 +8,24 @@ Performance benchmarking including:
 - Multi-GPU scaling
 """
 
+import gc
+import json
+import logging
+import time
+from concurrent.futures import ProcessPoolExecutor
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import GPUtil
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import psutil
+import seaborn as sns
 import torch
 import torch.nn as nn
-import numpy as np
-import time
-import psutil
-import GPUtil
-from typing import Dict, List, Optional, Tuple, Any
-from pathlib import Path
-import json
-import pandas as pd
-from dataclasses import dataclass, asdict
-import matplotlib.pyplot as plt
-import seaborn as sns
 from tqdm import tqdm
-import logging
-from concurrent.futures import ProcessPoolExecutor
-import gc
 
 from .metrics import ComprehensiveEvaluator, calculate_rtf
 

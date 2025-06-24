@@ -6,12 +6,13 @@ high-quality phoneme embeddings from text, with support for Japanese and
 other languages.
 """
 
+from collections.abc import Sequence
+from typing import Optional, Union
+
+import numpy as np
 import torch
 import torch.nn as nn
 from transformers import AutoModel, AutoTokenizer
-from typing import Optional, Union
-from collections.abc import Sequence
-import numpy as np
 
 # Import text2phonemesequence from frontend directory
 from ..frontend.text2phonemesequence import Text2PhonemeSequence

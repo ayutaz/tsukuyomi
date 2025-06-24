@@ -1,20 +1,21 @@
 """Tests for inference server."""
 
-import pytest
-from fastapi.testclient import TestClient
-import numpy as np
-import torch
-from unittest.mock import Mock, patch, AsyncMock
-import json
 import base64
 import io
+import json
+from unittest.mock import AsyncMock, Mock, patch
+
+import numpy as np
+import pytest
 import soundfile as sf
+import torch
+from fastapi.testclient import TestClient
 
 from src.server.inference_server import (
     InferenceServer,
+    MorphRequest,
     ServerConfig,
     TTSRequest,
-    MorphRequest,
 )
 
 

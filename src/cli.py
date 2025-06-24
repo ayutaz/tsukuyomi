@@ -5,8 +5,8 @@ import argparse
 import sys
 from pathlib import Path
 
-import torch
 import soundfile as sf
+import torch
 
 
 def main():
@@ -149,8 +149,9 @@ Examples:
     # Server mode
     if args.serve:
         print(f"Starting API server on {args.host}:{args.port}")
-        from src.api.server import app
         import uvicorn
+
+        from src.api.server import app
 
         uvicorn.run(app, host=args.host, port=args.port)
         return

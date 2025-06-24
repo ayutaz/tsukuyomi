@@ -3,9 +3,9 @@
 OpenAPI/Swagger仕様のドキュメント生成
 """
 
-from typing import Dict, List, Optional
-from pathlib import Path
 import json
+from pathlib import Path
+from typing import Dict, List, Optional
 
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi

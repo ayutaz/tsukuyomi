@@ -2,12 +2,13 @@
 Pytest configuration and shared fixtures for Tsukuyomi tests
 """
 
+import shutil
+import tempfile
+from pathlib import Path
+
+import numpy as np
 import pytest
 import torch
-import numpy as np
-from pathlib import Path
-import tempfile
-import shutil
 
 
 @pytest.fixture(scope="session")

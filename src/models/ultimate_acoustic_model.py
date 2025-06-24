@@ -8,14 +8,15 @@ This module implements the ultimate acoustic model that achieves:
 - Real-time factor < 0.05
 """
 
+import logging
+import math
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Dict, List, Tuple, Any
-import numpy as np
-from dataclasses import dataclass
-import math
-import logging
 
 # CUDA 12.1+ optimizations
 try:

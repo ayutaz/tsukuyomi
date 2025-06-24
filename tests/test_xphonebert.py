@@ -6,11 +6,11 @@ including forward pass, feature extraction, and error handling.
 """
 
 from typing import List, Tuple
+from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pytest
 import torch
-import numpy as np
-from unittest.mock import MagicMock, patch
 
 from src.models.xphonebert import XPhoneBERTEncoder
 
@@ -212,8 +212,9 @@ class TestXPhoneBERTPerformance:
 
     def test_memory_usage(self, encoder: XPhoneBERTEncoder) -> None:
         """Test memory usage stays within bounds."""
-        import psutil
         import os
+
+        import psutil
 
         process = psutil.Process(os.getpid())
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB

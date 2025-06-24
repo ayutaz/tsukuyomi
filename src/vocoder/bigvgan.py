@@ -5,10 +5,11 @@ This module provides a wrapper around the BigVGAN vocoder for converting
 mel-spectrograms to high-quality audio waveforms.
 """
 
+from typing import Optional, Tuple, Union
+
+import numpy as np
 import torch
 import torch.nn as nn
-from typing import Optional, Union, Tuple
-import numpy as np
 
 # Import bigvgan from src directory
 try:
@@ -19,6 +20,7 @@ except ImportError:
 
     sys.path.append(str(Path(__file__).parent.parent))
     import bigvgan
+
 import warnings
 
 

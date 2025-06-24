@@ -3,10 +3,11 @@
 Based on: https://arxiv.org/abs/2010.05646
 """
 
+from typing import List, Optional, Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import List, Optional, Tuple
 
 
 class ResBlock(nn.Module):

@@ -2,28 +2,29 @@
 Tests for edge device optimization
 """
 
-import pytest
-import torch
-import numpy as np
 import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
+
+import numpy as np
 import onnx
 import onnxruntime as ort
+import pytest
+import torch
 
 from src.tools.edge_optimization import (
-    EdgeOptimizer,
-    EdgeConfig,
-    ONNXConverter,
-    TFLiteConverter,
     CoreMLConverter,
-    OpenVINOConverter,
     EdgeBenchmark,
-    optimize_for_edge,
-    convert_to_onnx,
-    convert_to_tflite,
+    EdgeConfig,
+    EdgeOptimizer,
+    ONNXConverter,
+    OpenVINOConverter,
+    TFLiteConverter,
     convert_to_coreml,
+    convert_to_onnx,
     convert_to_openvino,
+    convert_to_tflite,
+    optimize_for_edge,
 )
 
 

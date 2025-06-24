@@ -5,13 +5,13 @@ This module provides state-of-the-art Japanese grapheme-to-phoneme conversion
 with accurate pitch accent prediction, crucial for natural Japanese TTS.
 """
 
-from typing import Optional, NamedTuple, TypedDict
+import logging
+import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import IntEnum
-import re
-import logging
 from pathlib import Path
+from typing import NamedTuple, Optional, TypedDict
 
 import numpy as np
 import torch

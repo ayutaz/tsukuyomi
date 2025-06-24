@@ -15,11 +15,11 @@ import tritonclient.grpc as grpcclient
 import tritonclient.http as httpclient
 from tritonclient.utils import InferenceServerException, triton_to_np_dtype
 
-from ..models.vits import VITS
-from ..models.matcha_tts import MatchaTTS
 from ..models.bigvgan import BigVGANv2
-from ..models.xphonebert import XPhoneBERT
 from ..models.f0_bert import F0BERT
+from ..models.matcha_tts import MatchaTTS
+from ..models.vits import VITS
+from ..models.xphonebert import XPhoneBERT
 
 
 class TritonModelExporter:
@@ -451,9 +451,9 @@ class TritonTTSClient:
 
     def benchmark(self, num_requests: int = 100) -> Dict[str, float]:
         """性能ベンチマーク"""
-        import time
         import random
         import string
+        import time
 
         results = {}
 

@@ -2,24 +2,25 @@
 Tests for BigVGAN-v2 vocoder
 """
 
+from pathlib import Path
+
+import numpy as np
 import pytest
 import torch
-import numpy as np
-from pathlib import Path
 
 from src.models.bigvgan_v2 import (
     BigVGANv2,
     BigVGANv2Config,
     BigVGANv2Generator,
-    SnakeBeta,
-    ResBlock,
     GeneratorBlock,
     MultiPeriodDiscriminator,
     MultiResolutionDiscriminator,
-    create_bigvgan_v2,
-    compute_gan_loss,
+    ResBlock,
+    SnakeBeta,
     compute_feature_matching_loss,
+    compute_gan_loss,
     compute_mel_loss,
+    create_bigvgan_v2,
 )
 
 

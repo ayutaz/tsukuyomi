@@ -2,12 +2,13 @@
 Integration tests for the complete TTS pipeline
 """
 
-import pytest
-import torch
-import numpy as np
-from unittest.mock import Mock, patch, MagicMock
 import tempfile
 from pathlib import Path
+from unittest.mock import MagicMock, Mock, patch
+
+import numpy as np
+import pytest
+import torch
 
 from src.inference import TsukuyomiTTS
 

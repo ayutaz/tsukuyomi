@@ -1,21 +1,22 @@
 """Tests for demo UI."""
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
-import numpy as np
-import gradio as gr
-import requests
 import io
+from unittest.mock import MagicMock, Mock, patch
+
+import gradio as gr
+import numpy as np
+import pytest
+import requests
 import soundfile as sf
 
 from src.web.demo_ui import (
-    synthesize_speech,
-    morph_voices,
-    create_waveform_plot,
-    build_demo,
-    SPEAKERS,
     EMOTIONS,
+    SPEAKERS,
     STYLES,
+    build_demo,
+    create_waveform_plot,
+    morph_voices,
+    synthesize_speech,
 )
 
 

@@ -2,33 +2,34 @@
 Tests for Web UI components
 """
 
-import pytest
-import tempfile
 import json
+import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
+
 import numpy as np
+import pytest
 import streamlit as st
 from streamlit.testing.v1 import AppTest
 
 # Import web UI modules
 from src.tools.web_ui.app import main as app_main
-from src.tools.web_ui.pages.synthesis import render_synthesis_page
-from src.tools.web_ui.pages.voice_morphing import render_voice_morphing_page
-from src.tools.web_ui.pages.voice_cloning import render_voice_cloning_page
+from src.tools.web_ui.components.audio_player import AudioPlayer
+from src.tools.web_ui.components.emotion_controller import EmotionController
+from src.tools.web_ui.components.speaker_selector import SpeakerSelector
+from src.tools.web_ui.components.style_selector import StyleSelector
 from src.tools.web_ui.pages.batch_processing import render_batch_processing_page
 from src.tools.web_ui.pages.model_management import render_model_management_page
 from src.tools.web_ui.pages.settings import render_settings_page
-from src.tools.web_ui.components.audio_player import AudioPlayer
-from src.tools.web_ui.components.speaker_selector import SpeakerSelector
-from src.tools.web_ui.components.emotion_controller import EmotionController
-from src.tools.web_ui.components.style_selector import StyleSelector
+from src.tools.web_ui.pages.synthesis import render_synthesis_page
+from src.tools.web_ui.pages.voice_cloning import render_voice_cloning_page
+from src.tools.web_ui.pages.voice_morphing import render_voice_morphing_page
 from src.tools.web_ui.utils import (
-    save_audio,
-    load_audio,
     format_duration,
     get_available_models,
+    load_audio,
     load_model_config,
+    save_audio,
 )
 
 

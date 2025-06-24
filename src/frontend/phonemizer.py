@@ -5,12 +5,12 @@ This module provides actual phoneme conversion functionality
 for multiple languages, replacing the mock text2phonemesequence.
 """
 
-from typing import Optional, Union
-from collections.abc import Sequence
-import re
 import logging
+import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
+from typing import Optional, Union
 
 import numpy as np
 

@@ -16,8 +16,8 @@ import torch
 import torch.nn as nn
 from torch.cuda.streams import Stream
 
-from ..models.vits import VITS
 from ..models.bigvgan import BigVGANv2
+from ..models.vits import VITS
 
 
 @dataclass

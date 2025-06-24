@@ -2,17 +2,18 @@
 Tests for F0-BERT pitch prediction model
 """
 
+from pathlib import Path
+
+import numpy as np
 import pytest
 import torch
-import numpy as np
-from pathlib import Path
 
 from src.models.f0_bert import (
     F0BERT,
-    F0BERTConfig,
     ContinuousF0Encoder,
-    StyleConditioningModule,
+    F0BERTConfig,
     F0PredictionHead,
+    StyleConditioningModule,
     create_f0_bert,
 )
 

@@ -1,18 +1,19 @@
 """推論とサービングの包括的なユニットテスト"""
 
-import pytest
-import torch
-import numpy as np
 import tempfile
 import time
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
+
+import numpy as np
+import pytest
+import torch
 
 from src.inference.optimized_inference import (
-    OptimizedInferenceEngine,
-    StreamingInference,
     InferenceConfig,
     LRUCache,
+    OptimizedInferenceEngine,
+    StreamingInference,
 )
 from src.serving.triton_server import (
     TritonModelExporter,

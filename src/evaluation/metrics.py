@@ -9,22 +9,23 @@ Comprehensive evaluation metrics including:
 - Real-time factor (RTF)
 """
 
+import json
+import logging
+import time
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import librosa
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
-from typing import Dict, List, Optional, Tuple, Any
-import librosa
-from scipy.stats import pearsonr
+import torchaudio
 from pesq import pesq
 from pystoi import stoi
-import torchaudio
+from scipy.stats import pearsonr
 from transformers import Wav2Vec2Model, Wav2Vec2Processor
-import logging
-from dataclasses import dataclass
-from pathlib import Path
-import json
-import time
 
 logger = logging.getLogger(__name__)
 
@@ -203,7 +204,7 @@ class SpeakerSimilarity:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         try:
-            from transformers import AutoProcessor, AutoModel
+            from transformers import AutoModel, AutoProcessor
 
             self.processor = AutoProcessor.from_pretrained(model_name)
             self.model = AutoModel.from_pretrained(model_name).to(self.device)

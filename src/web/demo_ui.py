@@ -8,16 +8,17 @@ Features:
 - Download capabilities
 """
 
+import base64
+import io
+import json
+from datetime import datetime
+from typing import List, Optional, Tuple
+
 import gradio as gr
+import matplotlib.pyplot as plt
 import numpy as np
 import requests
-import json
-import base64
-from typing import List, Tuple, Optional
 import soundfile as sf
-import io
-import matplotlib.pyplot as plt
-from datetime import datetime
 
 # API configuration
 API_URL = "http://localhost:8000"

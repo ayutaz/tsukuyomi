@@ -1,15 +1,16 @@
 """Metrics for TTS evaluation"""
 
+from typing import Dict, List, Optional, Tuple
+
+import librosa
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
-from typing import Dict, List, Optional, Tuple
-from scipy.spatial.distance import cosine
-from scipy.stats import pearsonr
-import librosa
 from pesq import pesq
 from pystoi import stoi
+from scipy.spatial.distance import cosine
+from scipy.stats import pearsonr
 
 
 class TrainingMetrics:

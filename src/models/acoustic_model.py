@@ -5,12 +5,13 @@ This module provides the core acoustic modeling functionality with
 H100-optimized BF16 support and efficient training/inference capabilities.
 """
 
+from dataclasses import dataclass
+from typing import Any, Dict, Optional
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Any, Dict
-import numpy as np
-from dataclasses import dataclass
 
 
 @dataclass

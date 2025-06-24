@@ -5,16 +5,16 @@ This module implements a BERT-based F0 (fundamental frequency) predictor
 that models pitch contours with high accuracy for expressive TTS.
 """
 
+import logging
+import math
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Dict, Tuple, List
-import numpy as np
-from dataclasses import dataclass
-import math
-import logging
-
-from transformers import RobertaModel, RobertaConfig
+from transformers import RobertaConfig, RobertaModel
 
 # CUDA 12.1+ optimizations
 try:

@@ -2,10 +2,11 @@
 Tests for vocoder modules
 """
 
+from unittest.mock import MagicMock, Mock, patch
+
+import numpy as np
 import pytest
 import torch
-import numpy as np
-from unittest.mock import Mock, patch, MagicMock
 
 from src.vocoder.bigvgan import BigVGANVocoder
 

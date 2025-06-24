@@ -8,14 +8,15 @@ Implementation of BigVGAN-v2 with:
 - Optimized for H100 GPUs
 """
 
+import logging
+import math
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Dict, List, Tuple
-import numpy as np
-from dataclasses import dataclass
-import math
-import logging
 
 # CUDA 12.1+ optimizations
 try:

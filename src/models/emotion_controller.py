@@ -3,11 +3,12 @@
 音声合成に感情表現を追加するためのコンポーネント
 """
 
+from typing import Dict, List, Optional, Tuple, Union
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, List, Optional, Tuple, Union
-import numpy as np
 
 
 class EmotionEncoder(nn.Module):

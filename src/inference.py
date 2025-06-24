@@ -5,19 +5,20 @@ This module provides the main TTS inference interface that combines
 all components for end-to-end text-to-speech synthesis.
 """
 
-import torch
-import numpy as np
-from typing import Optional, Union, List, Dict
-from collections.abc import Sequence
-import os
 import json
+import os
 import warnings
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Dict, List, Optional, Union
+
+import numpy as np
+import torch
 
 from .frontend import JapaneseTextNormalizer
-from .models import XPhoneBERTEncoder, AcousticModel, AcousticModelConfig
-from .vocoder import BigVGANVocoder
+from .models import AcousticModel, AcousticModelConfig, XPhoneBERTEncoder
 from .utils import save_audio, trim_silence
+from .vocoder import BigVGANVocoder
 
 
 class TsukuyomiTTS:

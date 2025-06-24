@@ -1,22 +1,21 @@
 """Training module for Tsukuyomi TTS"""
 
 from .losses import (
-    MultiTaskLoss,
     DiscriminatorLoss,
     EmotionLoss,
+    MultiTaskLoss,
     StyleTransferLoss,
     get_loss_function,
 )
-
 from .metrics import (
-    TrainingMetrics,
+    AudioQualityMetrics,
+    DurationError,
+    EmotionAccuracy,
     MelCepstralDistortion,
     PitchCorrelation,
-    VoicedUnvoicedError,
     SpeakerSimilarity,
-    AudioQualityMetrics,
-    EmotionAccuracy,
-    DurationError,
+    TrainingMetrics,
+    VoicedUnvoicedError,
     get_evaluation_metrics,
 )
 

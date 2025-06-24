@@ -2,11 +2,12 @@
 Performance and benchmark tests for Tsukuyomi TTS
 """
 
+import time
+from unittest.mock import MagicMock, Mock, patch
+
+import numpy as np
 import pytest
 import torch
-import numpy as np
-import time
-from unittest.mock import Mock, patch, MagicMock
 
 from src.inference import TsukuyomiTTS
 
@@ -294,8 +295,8 @@ class TestPerformance:
 
     def test_concurrent_synthesis(self, mock_fast_components):
         """Test concurrent synthesis requests"""
-        import threading
         import queue
+        import threading
 
         tts = TsukuyomiTTS(device="cpu")
 

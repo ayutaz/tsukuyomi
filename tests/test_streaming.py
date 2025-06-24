@@ -2,23 +2,24 @@
 Tests for streaming and real-time inference
 """
 
-import pytest
-import torch
-import numpy as np
 import asyncio
 import time
 from unittest.mock import Mock, patch
 
+import numpy as np
+import pytest
+import torch
+
 from src.inference.realtime_streaming import (
-    StreamingConfig,
     ChunkedAttention,
-    StreamingVITS,
-    StreamingPipeline,
     OptimizedVocoder,
+    StreamingConfig,
+    StreamingPipeline,
+    StreamingVITS,
     measure_latency,
 )
-from src.models.vits import VITS
 from src.models.bigvgan import BigVGANv2
+from src.models.vits import VITS
 
 
 class TestChunkedAttention:

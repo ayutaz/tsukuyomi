@@ -2,10 +2,11 @@
 Tests for frontend text processing modules
 """
 
-import pytest
 import sys
-import numpy as np
 from unittest.mock import Mock, patch
+
+import numpy as np
+import pytest
 
 from src.frontend.text_normalizer import JapaneseTextNormalizer
 

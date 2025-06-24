@@ -17,11 +17,11 @@ import torch.nn as nn
 from torch.nn.utils.rnn import pad_sequence
 from transformers import AutoTokenizer
 
-from ..models.vits import VITS
-from ..models.matcha_tts import MatchaTTS
 from ..models.bigvgan import BigVGANv2
-from ..models.xphonebert import XPhoneBERT
 from ..models.f0_bert import F0BERT
+from ..models.matcha_tts import MatchaTTS
+from ..models.vits import VITS
+from ..models.xphonebert import XPhoneBERT
 
 
 @dataclass

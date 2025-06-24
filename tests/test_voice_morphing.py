@@ -1,11 +1,12 @@
 """Test voice morphing capabilities in Ultimate Acoustic Model."""
 
+import numpy as np
 import pytest
 import torch
-import numpy as np
+
 from src.models.ultimate_acoustic_model import (
-    UltimateAcousticModel,
     UltimateAcousticConfig,
+    UltimateAcousticModel,
 )
 
 

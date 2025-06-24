@@ -2,23 +2,24 @@
 Tests for Ultimate Acoustic Model (Matcha-TTS/VITS integration)
 """
 
-import pytest
-import torch
-import numpy as np
 from pathlib import Path
 
+import numpy as np
+import pytest
+import torch
+
 from src.models.ultimate_acoustic_model import (
-    UltimateAcousticModel,
-    UltimateAcousticConfig,
     ConditionalFlowMatching,
-    StochasticDurationPredictor,
     MultiSpeakerEncoder,
     PosteriorEncoder,
+    StochasticDurationPredictor,
+    UltimateAcousticConfig,
+    UltimateAcousticModel,
     create_ultimate_acoustic_model,
-    sequence_mask,
-    generate_path,
     expand_durations,
+    generate_path,
     kl_divergence,
+    sequence_mask,
 )
 
 

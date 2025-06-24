@@ -4,21 +4,22 @@ Based on: https://arxiv.org/abs/2106.06103
 """
 
 import math
+from typing import Dict, List, Optional, Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, List, Optional, Tuple
 
+from .commons import generate_path, monotonic_align, rand_slice_segments, sequence_mask
+from .f0_bert import F0BERT, F0BERTConfig
+from .hifigan import Generator as HiFiGANGenerator
 from .modules import (
-    TextEncoder,
+    DurationPredictor,
     PosteriorEncoder,
     ResidualCouplingBlock,
-    DurationPredictor,
     StochasticDurationPredictor,
+    TextEncoder,
 )
-from .hifigan import Generator as HiFiGANGenerator
-from .commons import sequence_mask, generate_path, rand_slice_segments, monotonic_align
-from .f0_bert import F0BERT, F0BERTConfig
 
 
 class VITS(nn.Module):

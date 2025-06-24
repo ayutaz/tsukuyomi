@@ -3,11 +3,12 @@
 話者の声質やスタイルを転送・混合するためのコンポーネント
 """
 
+from typing import Dict, List, Optional, Tuple, Union
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, List, Optional, Tuple, Union
-import numpy as np
 
 
 class StyleEncoder(nn.Module):

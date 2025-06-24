@@ -2,17 +2,18 @@
 Tests for XPhoneBERT Japanese optimization
 """
 
+import json
+from pathlib import Path
+
+import numpy as np
 import pytest
 import torch
-import numpy as np
-from pathlib import Path
-import json
 
 from src.models.xphonebert_japanese import (
+    JapanesePhonemeAdapter,
+    LoRALayer,
     XPhoneBERTJapanese,
     XPhoneBERTJapaneseConfig,
-    LoRALayer,
-    JapanesePhonemeAdapter,
     create_xphonebert_japanese,
 )
 

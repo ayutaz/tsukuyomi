@@ -1,18 +1,19 @@
 """Tests for ONNX export functionality."""
 
+import shutil
+import tempfile
+from pathlib import Path
+from unittest.mock import Mock, patch
+
+import onnx
 import pytest
 import torch
 import torch.nn as nn
-import onnx
-from pathlib import Path
-import tempfile
-import shutil
-from unittest.mock import Mock, patch
 
 from src.export.onnx_export import (
+    ExportConfig,
     ONNXExporter,
     UnityExporter,
-    ExportConfig,
     export_for_deployment,
 )
 

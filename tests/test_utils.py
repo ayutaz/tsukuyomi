@@ -2,19 +2,20 @@
 Tests for utility modules
 """
 
-import pytest
-import numpy as np
-import torch
 import tempfile
-import soundfile as sf
 from pathlib import Path
 
+import numpy as np
+import pytest
+import soundfile as sf
+import torch
+
 from src.utils.audio import (
-    load_audio,
-    save_audio,
-    compute_mel_spectrogram,
     audio_to_mel,
+    compute_mel_spectrogram,
+    load_audio,
     normalize_audio,
+    save_audio,
     trim_silence,
 )
 

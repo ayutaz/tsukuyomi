@@ -1,9 +1,9 @@
 """推論モジュール"""
 
 from .optimized_inference import (
+    InferenceConfig,
     OptimizedInferenceEngine,
     StreamingInference,
-    InferenceConfig,
 )
 
 __all__ = [

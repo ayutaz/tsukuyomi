@@ -2,22 +2,23 @@
 Tests for preprocessing components
 """
 
+import struct
+import tempfile
+import wave
+from pathlib import Path
+
+import numpy as np
 import pytest
 import torch
-import numpy as np
-import tempfile
-from pathlib import Path
-import wave
-import struct
 
 from src.tools.audio_preprocessing import (
-    AudioPreprocessor,
-    PreprocessingConfig,
-    NoiseReduction,
-    AudioNormalizer,
-    VoiceActivityDetector,
-    AudioSegmenter,
     AudioAugmentation,
+    AudioNormalizer,
+    AudioPreprocessor,
+    AudioSegmenter,
+    NoiseReduction,
+    PreprocessingConfig,
+    VoiceActivityDetector,
 )
 
 

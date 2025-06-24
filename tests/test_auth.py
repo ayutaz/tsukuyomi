@@ -1,21 +1,22 @@
 """Tests for authentication and rate limiting."""
 
-import pytest
-import jwt
+import sqlite3
+import tempfile
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-import tempfile
-import sqlite3
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
+
+import jwt
+import pytest
 from fastapi import HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials
 
 from src.server.auth import (
     AuthConfig,
-    User,
     AuthManager,
     RateLimitMiddleware,
+    User,
     authenticate,
     require_admin,
 )

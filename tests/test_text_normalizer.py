@@ -6,8 +6,9 @@ symbol handling, and various Japanese-specific text processing.
 """
 
 from typing import List, Tuple
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from src.frontend.text_normalizer import JapaneseTextNormalizer
 

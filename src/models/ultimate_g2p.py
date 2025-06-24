@@ -5,14 +5,15 @@ Combines rule-based, neural, and contextual approaches for
 the highest possible accuracy in Japanese phoneme conversion.
 """
 
+import logging
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, List, Tuple, Dict
-import numpy as np
-from dataclasses import dataclass
-import logging
-from pathlib import Path
 
 # Existing components
 try:

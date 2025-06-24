@@ -8,21 +8,21 @@ This module implements a Japanese-optimized version of XPhoneBERT with:
 - LoRA fine-tuning for efficiency
 """
 
+import logging
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Dict, List, Tuple, Union
-import numpy as np
-from dataclasses import dataclass
-import logging
-from pathlib import Path
-
 from transformers import (
+    AutoConfig,
     AutoModel,
     AutoTokenizer,
-    AutoConfig,
-    PreTrainedModel,
     PretrainedConfig,
+    PreTrainedModel,
 )
 from transformers.modeling_outputs import BaseModelOutputWithPooling
 

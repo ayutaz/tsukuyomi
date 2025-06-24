@@ -9,23 +9,24 @@ Features:
 - Model comparison and selection
 """
 
+import hashlib
+import json
+import logging
+import shutil
+import tempfile
+import zipfile
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import pandas as pd
+import requests
 import torch
 import torch.nn as nn
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any, Union
-import json
-import hashlib
-import shutil
-from datetime import datetime
-import pandas as pd
-from dataclasses import dataclass, asdict
-import logging
 import yaml
 from packaging import version
-import requests
 from tqdm import tqdm
-import zipfile
-import tempfile
 
 logger = logging.getLogger(__name__)
 

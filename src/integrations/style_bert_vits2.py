@@ -5,12 +5,13 @@ This module provides integration with Style-BERT-VITS2 for immediate
 high-quality Japanese TTS capabilities.
 """
 
-import os
-import sys
 import json
 import logging
+import os
+import sys
 from pathlib import Path
-from typing import Optional, Dict, Any, Union
+from typing import Any, Dict, Optional, Union
+
 import numpy as np
 import torch
 
