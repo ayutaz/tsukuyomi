@@ -47,6 +47,10 @@ output*/
 logs/
 *.log
 
+# Security scan results
+bandit-quick.json
+bandit-full.json
+
 # OS
 .DS_Store
 Thumbs.db

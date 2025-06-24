@@ -88,6 +88,8 @@ jobs:
           pip install -e ".[test]"
       
       - name: Run quick tests
+        env:
+          DISABLE_TORCHAUDIO: "true"
         run: |
           # Run most stable test first
           echo "::group::Basic Import Test"

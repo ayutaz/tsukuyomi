@@ -68,6 +68,8 @@ jobs:
       
       - name: Run full test suite
         shell: bash
+        env:
+          DISABLE_TORCHAUDIO: "true"
         run: |
           # Run tests with proper error handling
           python -m pytest tests -v -m "not gpu" --cov=src --cov-report=xml --cov-report=term --cov-fail-under=0 -x || true
