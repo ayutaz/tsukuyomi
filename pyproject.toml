@@ -214,7 +214,6 @@ ignore = [
     "PLR0915", # too many statements
     "W293",    # blank line contains whitespace
     "PLC0415", # import should be at top-level (needed for lazy imports)
-    "UP045",   # use X | None (we support Python 3.11+)
     "UP006",   # use dict instead of Dict
     "UP007",   # use X | Y
     "UP035",   # typing.Dict is deprecated
