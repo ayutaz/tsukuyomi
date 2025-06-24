@@ -16,13 +16,22 @@ from pydantic import BaseModel, Field
 # リクエスト/レスポンスモデル
 class TTSRequest(BaseModel):
     """音声合成リクエスト"""
-    text: str = Field(..., description="合成するテキスト", example="こんにちは、音声合成のテストです。")
+
+    text: str = Field(
+        ...,
+        description="合成するテキスト",
+        example="こんにちは、音声合成のテストです。",
+    )
     speaker_id: int = Field(0, description="話者ID", ge=0, lt=100)
-    language: Optional[str] = Field("ja", description="言語コード（ja, en, zh）", pattern="^(ja|en|zh)$")
+    language: Optional[str] = Field(
+        "ja", description="言語コード（ja, en, zh）", pattern="^(ja|en|zh)$"
+    )
     speed: float = Field(1.0, description="話速（0.5-2.0）", ge=0.5, le=2.0)
-    pitch_shift: float = Field(0.0, description="ピッチシフト（-12.0-12.0）", ge=-12.0, le=12.0)
+    pitch_shift: float = Field(
+        0.0, description="ピッチシフト（-12.0-12.0）", ge=-12.0, le=12.0
+    )
     energy: float = Field(1.0, description="エネルギー/音量（0.5-2.0）", ge=0.5, le=2.0)
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -38,8 +47,11 @@ class TTSRequest(BaseModel):
 
 class TTSBatchRequest(BaseModel):
     """バッチ音声合成リクエスト"""
-    items: List[TTSRequest] = Field(..., description="合成リクエストのリスト", max_items=32)
-    
+
+    items: List[TTSRequest] = Field(
+        ..., description="合成リクエストのリスト", max_items=32
+    )
+
     class Config:
         schema_extra = {
             "example": {
@@ -59,6 +71,7 @@ class TTSBatchRequest(BaseModel):
 
 class TTSResponse(BaseModel):
     """音声合成レスポンス"""
+
     audio_url: str = Field(..., description="生成された音声ファイルのURL")
     duration: float = Field(..., description="音声の長さ（秒）")
     sample_rate: int = Field(48000, description="サンプリングレート")
@@ -68,12 +81,14 @@ class TTSResponse(BaseModel):
 
 class TTSBatchResponse(BaseModel):
     """バッチ音声合成レスポンス"""
+
     results: List[TTSResponse] = Field(..., description="合成結果のリスト")
     total_processing_time: float = Field(..., description="総処理時間（秒）")
 
 
 class ErrorResponse(BaseModel):
     """エラーレスポンス"""
+
     error: str = Field(..., description="エラーメッセージ")
     detail: Optional[str] = Field(None, description="詳細情報")
     request_id: Optional[str] = Field(None, description="リクエストID")
@@ -81,6 +96,7 @@ class ErrorResponse(BaseModel):
 
 class SpeakerInfo(BaseModel):
     """話者情報"""
+
     id: int = Field(..., description="話者ID")
     name: str = Field(..., description="話者名")
     language: str = Field(..., description="対応言語")
@@ -91,6 +107,7 @@ class SpeakerInfo(BaseModel):
 
 class ModelInfo(BaseModel):
     """モデル情報"""
+
     name: str = Field(..., description="モデル名")
     version: str = Field(..., description="バージョン")
     languages: List[str] = Field(..., description="対応言語リスト")
@@ -100,6 +117,7 @@ class ModelInfo(BaseModel):
 
 class HealthStatus(BaseModel):
     """ヘルスチェックステータス"""
+
     status: str = Field(..., description="ステータス（healthy/unhealthy）")
     model_loaded: bool = Field(..., description="モデルロード状態")
     gpu_available: bool = Field(..., description="GPU利用可能状態")
@@ -109,12 +127,12 @@ class HealthStatus(BaseModel):
 
 def setup_api_documentation(app: FastAPI):
     """APIドキュメントの設定"""
-    
+
     # カスタムOpenAPIスキーマ
     def custom_openapi():
         if app.openapi_schema:
             return app.openapi_schema
-            
+
         openapi_schema = get_openapi(
             title="Tsukuyomi TTS API",
             version="1.0.0",
@@ -156,11 +174,14 @@ Authorization: Bearer YOUR_API_KEY
             routes=app.routes,
             servers=[
                 {"url": "https://api.tsukuyomi-tts.com", "description": "本番環境"},
-                {"url": "https://staging-api.tsukuyomi-tts.com", "description": "ステージング環境"},
+                {
+                    "url": "https://staging-api.tsukuyomi-tts.com",
+                    "description": "ステージング環境",
+                },
                 {"url": "http://localhost:8000", "description": "開発環境"},
             ],
         )
-        
+
         # セキュリティスキーマの追加
         openapi_schema["components"]["securitySchemes"] = {
             "apiKey": {
@@ -176,13 +197,13 @@ Authorization: Bearer YOUR_API_KEY
                 "description": "JWT認証",
             },
         }
-        
+
         # グローバルセキュリティ
         openapi_schema["security"] = [
             {"apiKey": []},
             {"bearerAuth": []},
         ]
-        
+
         # タグの追加
         openapi_schema["tags"] = [
             {
@@ -202,16 +223,17 @@ Authorization: Bearer YOUR_API_KEY
                 "description": "ヘルスチェック",
             },
         ]
-        
+
         app.openapi_schema = openapi_schema
         return app.openapi_schema
-        
+
     app.openapi = custom_openapi
-    
+
     # Swagger UIのカスタマイズ
     @app.get("/docs", include_in_schema=False)
     async def custom_swagger_ui_html():
-        return HTMLResponse(content=f"""
+        return HTMLResponse(
+            content=f"""
 <!DOCTYPE html>
 <html>
 <head>
@@ -253,12 +275,15 @@ Authorization: Bearer YOUR_API_KEY
     </script>
 </body>
 </html>
-        """, status_code=200)
-        
+        """,
+            status_code=200,
+        )
+
     # ReDocのカスタマイズ
     @app.get("/redoc", include_in_schema=False)
     async def redoc_html():
-        return HTMLResponse(content=f"""
+        return HTMLResponse(
+            content=f"""
 <!DOCTYPE html>
 <html>
 <head>
@@ -294,13 +319,15 @@ Authorization: Bearer YOUR_API_KEY
     </script>
 </body>
 </html>
-        """, status_code=200)
+        """,
+            status_code=200,
+        )
 
 
 def generate_client_sdk(openapi_spec: Dict, language: str, output_dir: Path):
     """クライアントSDKの生成"""
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     if language == "python":
         # Python SDKの生成
         sdk_content = '''"""
@@ -384,13 +411,13 @@ if __name__ == "__main__":
     results = client.synthesize_batch(requests)
     print(f"Generated {len(results['results'])} audio files")
 '''
-        
+
         with open(output_dir / "tsukuyomi_client.py", "w") as f:
             f.write(sdk_content)
-            
+
     elif language == "typescript":
         # TypeScript SDKの生成
-        sdk_content = '''/**
+        sdk_content = """/**
  * Tsukuyomi TTS TypeScript Client SDK
  * 
  * 自動生成されたクライアントライブラリ
@@ -489,11 +516,11 @@ async function example() {
   ]);
   console.log(`Generated ${batchResults.results.length} audio files`);
 }
-'''
-        
+"""
+
         with open(output_dir / "tsukuyomi-client.ts", "w") as f:
             f.write(sdk_content)
-            
+
     print(f"Generated {language} SDK in {output_dir}")
 
 
@@ -515,7 +542,7 @@ def generate_postman_collection(openapi_spec: Dict, output_path: Path):
         ],
         "item": [],
     }
-    
+
     # エンドポイントの変換
     for path, methods in openapi_spec.get("paths", {}).items():
         for method, operation in methods.items():
@@ -532,7 +559,7 @@ def generate_postman_collection(openapi_spec: Dict, output_path: Path):
                         },
                     },
                 }
-                
+
                 # リクエストボディの例
                 if "requestBody" in operation:
                     content = operation["requestBody"].get("content", {})
@@ -544,11 +571,11 @@ def generate_postman_collection(openapi_spec: Dict, output_path: Path):
                                 "raw": json.dumps(schema["example"], indent=2),
                                 "options": {"raw": {"language": "json"}},
                             }
-                            
+
                 collection["item"].append(item)
-                
+
     # 保存
     with open(output_path, "w") as f:
         json.dump(collection, f, indent=2)
-        
+
     print(f"Generated Postman collection: {output_path}")

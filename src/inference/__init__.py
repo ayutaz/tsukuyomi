@@ -8,6 +8,6 @@ from .optimized_inference import (
 
 __all__ = [
     "OptimizedInferenceEngine",
-    "StreamingInference", 
+    "StreamingInference",
     "InferenceConfig",
 ]

@@ -4,12 +4,7 @@ from .onnx_export import (
     ONNXExporter,
     UnityExporter,
     ExportConfig,
-    export_for_deployment
+    export_for_deployment,
 )
 
-__all__ = [
-    "ONNXExporter",
-    "UnityExporter", 
-    "ExportConfig",
-    "export_for_deployment"
-]
+__all__ = ["ONNXExporter", "UnityExporter", "ExportConfig", "export_for_deployment"]

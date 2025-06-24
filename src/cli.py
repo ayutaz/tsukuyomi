@@ -27,50 +27,55 @@ Examples:
   
   # Start API server
   tsukuyomi --serve --port 8080
-        """
+        """,
     )
-    
+
     # Main arguments
     parser.add_argument(
         "text",
         nargs="?",
         help="Text to synthesize",
     )
-    
+
     # Model options
     parser.add_argument(
-        "-m", "--model",
+        "-m",
+        "--model",
         type=str,
         default="default",
         help="Model checkpoint path or name",
     )
     parser.add_argument(
-        "-s", "--speaker",
+        "-s",
+        "--speaker",
         type=int,
         default=0,
         help="Speaker ID",
     )
     parser.add_argument(
-        "-e", "--emotion",
+        "-e",
+        "--emotion",
         type=str,
         default="neutral",
         help="Emotion (neutral, happy, sad, angry, etc.)",
     )
-    
+
     # Output options
     parser.add_argument(
-        "-o", "--output",
+        "-o",
+        "--output",
         type=str,
         default="output.wav",
         help="Output audio file path",
     )
     parser.add_argument(
-        "-sr", "--sample-rate",
+        "-sr",
+        "--sample-rate",
         type=int,
         default=48000,
         help="Output sample rate",
     )
-    
+
     # Advanced options
     parser.add_argument(
         "--speed",
@@ -90,7 +95,7 @@ Examples:
         default="cuda" if torch.cuda.is_available() else "cpu",
         help="Device to use (cuda/cpu)",
     )
-    
+
     # Server mode
     parser.add_argument(
         "--serve",
@@ -109,7 +114,7 @@ Examples:
         default="0.0.0.0",
         help="API server host",
     )
-    
+
     # Utility commands
     parser.add_argument(
         "--list-models",
@@ -126,34 +131,35 @@ Examples:
         action="store_true",
         help="Show version",
     )
-    
+
     args = parser.parse_args()
-    
+
     # Handle utility commands
     if args.version:
         print("Tsukuyomi TTS v0.1.0")
         return
-        
+
     if args.list_models:
         print("Available models:")
         print("  - default: Base Japanese TTS model")
         print("  - vits: VITS-based model")
         print("  - matcha: Matcha-TTS model")
         return
-        
+
     # Server mode
     if args.serve:
         print(f"Starting API server on {args.host}:{args.port}")
         from src.api.server import app
         import uvicorn
+
         uvicorn.run(app, host=args.host, port=args.port)
         return
-        
+
     # Check if text is provided
     if not args.text:
         parser.print_help()
         sys.exit(1)
-        
+
     # Import TTS system
     try:
         from src.tsukuyomi_tts import TsukuyomiTTS
@@ -161,7 +167,7 @@ Examples:
         print("Error: Tsukuyomi TTS not properly installed.")
         print("Please run: pip install -e .")
         sys.exit(1)
-        
+
     # Initialize TTS
     print(f"Loading model '{args.model}' on {args.device}...")
     try:
@@ -171,12 +177,12 @@ Examples:
     except Exception as e:
         print(f"Error loading model: {e}")
         sys.exit(1)
-        
+
     # List speakers if requested
     if args.list_speakers:
         print(f"Available speakers: 0-{tts.n_speakers-1}")
         return
-        
+
     # Synthesize speech
     print(f"Synthesizing: {args.text}")
     try:
@@ -187,11 +193,11 @@ Examples:
             speed=args.speed,
             pitch_shift=args.pitch_shift,
         )
-        
+
         # Save audio
         sf.write(args.output, audio, args.sample_rate)
         print(f"Audio saved to: {args.output}")
-        
+
     except Exception as e:
         print(f"Error during synthesis: {e}")
         sys.exit(1)

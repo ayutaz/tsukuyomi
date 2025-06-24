@@ -8,14 +8,14 @@ from .metrics import (
     PronunciationAccuracy,
     MOSPredictor,
     ComprehensiveEvaluator,
-    calculate_rtf
+    calculate_rtf,
 )
 
 from .benchmark import (
     BenchmarkConfig,
     BenchmarkResult,
     PerformanceBenchmark,
-    benchmark_tts_system
+    benchmark_tts_system,
 )
 
 __all__ = [
@@ -28,10 +28,9 @@ __all__ = [
     "MOSPredictor",
     "ComprehensiveEvaluator",
     "calculate_rtf",
-    
     # Benchmark
     "BenchmarkConfig",
     "BenchmarkResult",
     "PerformanceBenchmark",
-    "benchmark_tts_system"
+    "benchmark_tts_system",
 ]

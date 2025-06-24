@@ -114,16 +114,14 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "bf16: mark test to run only when BF16 is supported"
     )
-    config.addinivalue_line(
-        "markers", "slow: mark test as slow running"
-    )
+    config.addinivalue_line("markers", "slow: mark test as slow running")
 
 
 def pytest_collection_modifyitems(config, items):
     """Skip tests based on markers and available hardware"""
     skip_gpu = pytest.mark.skip(reason="GPU not available")
     skip_bf16 = pytest.mark.skip(reason="BF16 not supported")
-    
+
     for item in items:
         if "gpu" in item.keywords and not torch.cuda.is_available():
             item.add_marker(skip_gpu)

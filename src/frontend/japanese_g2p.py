@@ -20,18 +20,23 @@ import torch.nn as nn
 # Core Japanese processing
 try:
     import pyopenjtalk
+
     OPENJTALK_AVAILABLE = True
     # Check if this is the plus version by version string
-    if hasattr(pyopenjtalk, '__version__') and 'post' in str(pyopenjtalk.__version__):
+    if hasattr(pyopenjtalk, "__version__") and "post" in str(pyopenjtalk.__version__):
         OPENJTALK_PLUS = True
         logging.info("Using pyopenjtalk-plus (improved version)")
     else:
         OPENJTALK_PLUS = False
-        logging.warning("Using standard pyopenjtalk. For better accuracy, install: pip install pyopenjtalk-plus")
+        logging.warning(
+            "Using standard pyopenjtalk. For better accuracy, install: pip install pyopenjtalk-plus"
+        )
 except ImportError:
     OPENJTALK_AVAILABLE = False
     OPENJTALK_PLUS = False
-    logging.warning("No OpenJTalk variant installed. Install with: pip install pyopenjtalk-plus")
+    logging.warning(
+        "No OpenJTalk variant installed. Install with: pip install pyopenjtalk-plus"
+    )
 
 # ESPnet2は使用しない（ユーザー要望により除外）
 ESPNET_AVAILABLE = False
@@ -39,6 +44,7 @@ ESPNET_AVAILABLE = False
 # MeCab for morphological analysis
 try:
     import MeCab
+
     MECAB_AVAILABLE = True
 except ImportError:
     MECAB_AVAILABLE = False
@@ -47,6 +53,7 @@ except ImportError:
 
 class AccentType(IntEnum):
     """Japanese accent types."""
+
     HEIBAN = 0  # 平板型 (flat)
     ATAMADAKA = 1  # 頭高型 (initial high)
     NAKADAKA = 2  # 中高型 (middle high)
@@ -55,6 +62,7 @@ class AccentType(IntEnum):
 
 class PhonemeInfo(TypedDict):
     """Information for a single phoneme."""
+
     phoneme: str
     mora_position: int
     accent_phrase_id: int
@@ -64,6 +72,7 @@ class PhonemeInfo(TypedDict):
 
 class AccentPhrase(NamedTuple):
     """Accent phrase information."""
+
     phonemes: list[str]
     accent_position: int  # 0 for 平板, 1+ for accent nucleus position
     is_interrogative: bool
@@ -73,6 +82,7 @@ class AccentPhrase(NamedTuple):
 @dataclass
 class JapaneseG2PConfig:
     """Configuration for Japanese G2P."""
+
     use_accent_info: bool = True
     use_prosody_tags: bool = True
     phoneme_type: str = "ipa"  # "ipa", "kana", "romaji"
@@ -84,45 +94,49 @@ class JapaneseG2PConfig:
 class JapaneseG2P:
     """
     State-of-the-art Japanese G2P with accent prediction.
-    
+
     Combines rule-based (OpenJTalk) and neural approaches for
     highest accuracy in phoneme and accent prediction.
     """
-    
+
     def __init__(self, config: Optional[JapaneseG2PConfig] = None):
         """Initialize Japanese G2P system."""
         self.config = config or JapaneseG2PConfig()
         self.logger = logging.getLogger(__name__)
-        
+
         # Initialize backend
         self._init_backend()
-        
+
         # Initialize accent predictor if using neural model
         if self.config.backend == "neural" and self.config.model_path:
             self._init_neural_model()
-            
+
     def _init_backend(self) -> None:
         """Initialize the G2P backend based on configuration."""
         backend = self.config.backend
-        
+
         if backend == "auto":
             # Choose best available backend (ESPnet2除外)
             if OPENJTALK_AVAILABLE:
                 self._init_openjtalk()
             else:
-                raise RuntimeError("No Japanese G2P backend available. Install pyopenjtalk-plus")
-                
+                raise RuntimeError(
+                    "No Japanese G2P backend available. Install pyopenjtalk-plus"
+                )
+
         elif backend == "openjtalk" and OPENJTALK_AVAILABLE:
             self._init_openjtalk()
         else:
             raise ValueError(f"Backend {backend} not available")
-            
+
     def _init_openjtalk(self) -> None:
         """Initialize OpenJTalk backend."""
         self.backend_name = "openjtalk"
-        
+
         if OPENJTALK_PLUS:
-            self.logger.info("Using pyopenjtalk-plus for Japanese G2P (improved accuracy)")
+            self.logger.info(
+                "Using pyopenjtalk-plus for Japanese G2P (improved accuracy)"
+            )
             # pyopenjtalk-plus specific features
             try:
                 # Test enhanced features if available
@@ -142,7 +156,7 @@ class JapaneseG2P:
             self.logger.info("Using standard pyopenjtalk for Japanese G2P")
             self.supports_detailed_output = False
             self.supports_marine = False
-        
+
         # Set dictionary path if needed
         try:
             # Test if it works
@@ -150,59 +164,52 @@ class JapaneseG2P:
         except Exception as e:
             self.logger.error(f"OpenJTalk initialization failed: {e}")
             raise
-            
-        
+
     def _init_neural_model(self) -> None:
         """Initialize neural accent prediction model."""
         # This would load a trained BERT-based model for accent prediction
         # For now, placeholder for the architecture
         self.logger.info(f"Loading neural model from {self.config.model_path}")
         # self.accent_model = load_accent_bert(self.config.model_path)
-        
+
     def g2p(
-        self, 
-        text: str, 
-        return_accent: bool = True,
-        return_prosody: bool = False
+        self, text: str, return_accent: bool = True, return_prosody: bool = False
     ) -> str | tuple[str, list[AccentPhrase]]:
         """
         Convert Japanese text to phonemes with optional accent information.
-        
+
         Args:
             text: Input Japanese text
             return_accent: Whether to return accent phrase information
             return_prosody: Whether to include detailed prosody tags
-            
+
         Returns:
             Phoneme string, optionally with accent phrases
         """
         # Normalize text
         text = self._normalize_text(text)
-        
+
         if self.backend_name == "openjtalk":
             return self._g2p_openjtalk(text, return_accent, return_prosody)
         else:
             raise ValueError(f"Unknown backend: {self.backend_name}")
-            
+
     def _g2p_openjtalk(
-        self, 
-        text: str, 
-        return_accent: bool,
-        return_prosody: bool
+        self, text: str, return_accent: bool, return_prosody: bool
     ) -> str | tuple[str, list[AccentPhrase]]:
         """G2P using OpenJTalk backend."""
         if return_prosody or (return_accent and self.config.use_accent_info):
             # Use full context labels for detailed information
             labels = pyopenjtalk.extract_fullcontext(text)
             return self._parse_fullcontext_labels(labels, return_accent)
-            
+
         else:
             # Simple phoneme conversion
             if self.config.phoneme_type == "kana":
                 phonemes = pyopenjtalk.g2p(text, kana=True)
             else:
                 # Use marine DNN if available for better accuracy
-                if hasattr(self, 'supports_marine') and self.supports_marine:
+                if hasattr(self, "supports_marine") and self.supports_marine:
                     try:
                         phonemes = pyopenjtalk.g2p(text, kana=False, run_marine=True)
                         self.logger.debug("Using marine DNN for G2P")
@@ -210,49 +217,48 @@ class JapaneseG2P:
                         phonemes = pyopenjtalk.g2p(text, kana=False)
                 else:
                     phonemes = pyopenjtalk.g2p(text, kana=False)
-                
+
             return self._postprocess_phonemes(phonemes)
-            
-            
+
     def _parse_fullcontext_labels(
-        self, 
-        labels: list[str],
-        return_accent: bool
+        self, labels: list[str], return_accent: bool
     ) -> str | tuple[str, list[AccentPhrase]]:
         """Parse OpenJTalk full context labels."""
         accent_phrases = []
         all_phonemes = []
         current_phrase_phonemes = []
         current_accent_pos = 0
-        
+
         for label in labels:
             if label == "sil":
                 # Silence indicates phrase boundary
                 if current_phrase_phonemes:
-                    accent_phrases.append(AccentPhrase(
-                        phonemes=current_phrase_phonemes,
-                        accent_position=current_accent_pos,
-                        is_interrogative=False,
-                        pause_level=1
-                    ))
+                    accent_phrases.append(
+                        AccentPhrase(
+                            phonemes=current_phrase_phonemes,
+                            accent_position=current_accent_pos,
+                            is_interrogative=False,
+                            pause_level=1,
+                        )
+                    )
                     current_phrase_phonemes = []
                     current_accent_pos = 0
                 all_phonemes.append("sil")
                 continue
-                
+
             # Parse label format: p1^p2-p3+p4=p5/A:a1+a2+a3/B:b1-b2...
             parts = label.split("/")
             if len(parts) < 2:
                 continue
-                
+
             # Extract phoneme
             phoneme_part = parts[0]
-            phoneme_match = re.search(r'-(\w+)\+', phoneme_part)
+            phoneme_match = re.search(r"-(\w+)\+", phoneme_part)
             if phoneme_match:
                 phoneme = phoneme_match.group(1)
                 current_phrase_phonemes.append(phoneme)
                 all_phonemes.append(phoneme)
-                
+
             # Extract accent information from A: field
             if len(parts) > 1 and parts[1].startswith("A:"):
                 accent_info = parts[1][2:].split("+")
@@ -264,56 +270,60 @@ class JapaneseG2P:
                             current_accent_pos = accent_pos
                     except ValueError:
                         pass
-                        
+
         # Add final phrase
         if current_phrase_phonemes:
-            accent_phrases.append(AccentPhrase(
-                phonemes=current_phrase_phonemes,
-                accent_position=current_accent_pos,
-                is_interrogative=False,
-                pause_level=0
-            ))
-            
+            accent_phrases.append(
+                AccentPhrase(
+                    phonemes=current_phrase_phonemes,
+                    accent_position=current_accent_pos,
+                    is_interrogative=False,
+                    pause_level=0,
+                )
+            )
+
         phoneme_str = " ".join(all_phonemes)
-        
+
         if return_accent:
             return phoneme_str, accent_phrases
         return phoneme_str
-        
+
     def _normalize_text(self, text: str) -> str:
         """Normalize Japanese text for processing."""
         # Convert full-width alphanumerics to half-width
-        text = text.translate(str.maketrans(
-            '０１２３４５６７８９ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ',
-            '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-        ))
-        
+        text = text.translate(
+            str.maketrans(
+                "０１２３４５６７８９ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ",
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+            )
+        )
+
         # Handle special punctuation
         if self.config.preserve_punctuation:
             # Keep punctuation but normalize
-            text = text.replace('。', '. ')
-            text = text.replace('、', ', ')
-            text = text.replace('！', '! ')
-            text = text.replace('？', '? ')
+            text = text.replace("。", ". ")
+            text = text.replace("、", ", ")
+            text = text.replace("！", "! ")
+            text = text.replace("？", "? ")
         else:
             # Remove punctuation
-            text = re.sub(r'[。、！？!?,.]', ' ', text)
-            
+            text = re.sub(r"[。、！？!?,.]", " ", text)
+
         # Clean up whitespace
-        text = ' '.join(text.split())
-        
+        text = " ".join(text.split())
+
         return text
-        
+
     def _postprocess_phonemes(self, phonemes: str) -> str:
         """Post-process phoneme string."""
         # Clean up OpenJTalk output
-        phonemes = phonemes.replace('pau', 'sil')
-        
+        phonemes = phonemes.replace("pau", "sil")
+
         # Remove duplicate spaces
-        phonemes = ' '.join(phonemes.split())
-        
+        phonemes = " ".join(phonemes.split())
+
         return phonemes
-        
+
     def get_accent_dict(self) -> dict[str, int]:
         """Get dictionary of words with their accent patterns."""
         # This would interface with the accent dictionary
@@ -322,15 +332,15 @@ class JapaneseG2P:
             "東京": 0,  # へいばん
             "京都": 1,  # あたまだか
             "大阪": 0,  # へいばん
-            "箸": 1,    # はし（あたまだか）
-            "橋": 2,    # はし（なかだか）
-            "端": 0,    # はし（へいばん）
+            "箸": 1,  # はし（あたまだか）
+            "橋": 2,  # はし（なかだか）
+            "端": 0,  # はし（へいばん）
         }
-        
+
     def analyze_accent_pattern(self, word: str) -> tuple[int, str]:
         """
         Analyze accent pattern of a word.
-        
+
         Returns:
             Tuple of (accent_position, accent_type_name)
         """
@@ -340,7 +350,7 @@ class JapaneseG2P:
             _, accent_phrases = result
             if accent_phrases:
                 accent_pos = accent_phrases[0].accent_position
-                
+
                 if accent_pos == 0:
                     return 0, "平板型"
                 elif accent_pos == 1:
@@ -349,63 +359,64 @@ class JapaneseG2P:
                     return -1, "尾高型"
                 else:
                     return accent_pos, "中高型"
-                    
+
         return 0, "不明"
 
 
 class AccentPredictorBERT(nn.Module):
     """
     BERT-based accent predictor for highest accuracy.
-    
+
     Based on research showing 94.66% accuracy for accent nucleus prediction.
     """
-    
+
     def __init__(self, vocab_size: int, hidden_size: int = 768):
         """Initialize BERT accent predictor."""
         super().__init__()
-        
+
         # Use a pre-trained Japanese BERT as base
         # In practice, would load from transformers
         self.bert = nn.TransformerEncoder(
             nn.TransformerEncoderLayer(
-                d_model=hidden_size,
-                nhead=12,
-                dim_feedforward=3072,
-                dropout=0.1
+                d_model=hidden_size, nhead=12, dim_feedforward=3072, dropout=0.1
             ),
-            num_layers=12
+            num_layers=12,
         )
-        
+
         self.embedding = nn.Embedding(vocab_size, hidden_size)
-        self.accent_head = nn.Linear(hidden_size, 3)  # 0: no accent, 1: accent, 2: phrase boundary
-        
-    def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
+        self.accent_head = nn.Linear(
+            hidden_size, 3
+        )  # 0: no accent, 1: accent, 2: phrase boundary
+
+    def forward(
+        self, input_ids: torch.Tensor, attention_mask: torch.Tensor
+    ) -> torch.Tensor:
         """Predict accent positions."""
         # Embed input
         embeddings = self.embedding(input_ids)
-        
+
         # Transform with BERT
         hidden_states = self.bert(embeddings, src_key_padding_mask=~attention_mask)
-        
+
         # Predict accent
         accent_logits = self.accent_head(hidden_states)
-        
+
         return accent_logits
 
 
 def create_japanese_g2p(
     backend: str = "openjtalk",
     use_neural: bool = False,
-    model_path: Optional[Path] = None
+    model_path: Optional[Path] = None,
 ) -> JapaneseG2P:
     """
     Create Japanese G2P instance with specified configuration.
-    
+
     Args:
         backend: "openjtalk", "espnet", or "auto"
         use_neural: Whether to use neural accent prediction
         model_path: Path to neural model if use_neural=True
-        
+
     Returns:
         Configured JapaneseG2P instance
     """
@@ -413,9 +424,9 @@ def create_japanese_g2p(
         backend=backend,
         model_path=model_path,
         use_accent_info=True,
-        use_prosody_tags=True
+        use_prosody_tags=True,
     )
-    
+
     return JapaneseG2P(config)
 
 
@@ -423,28 +434,28 @@ def create_japanese_g2p(
 if __name__ == "__main__":
     # Test with different backends
     g2p = create_japanese_g2p(backend="auto")
-    
+
     test_sentences = [
         "東京タワーに行きました。",
         "今日はいい天気ですね。",
         "これは箸ですか、橋ですか。",
-        "人工知能の研究をしています。"
+        "人工知能の研究をしています。",
     ]
-    
+
     for sentence in test_sentences:
         print(f"\n入力: {sentence}")
-        
+
         # Get phonemes with accent
         result = g2p.g2p(sentence, return_accent=True)
-        
+
         if isinstance(result, tuple):
             phonemes, accent_phrases = result
             print(f"音素: {phonemes}")
-            
+
             for i, phrase in enumerate(accent_phrases):
                 print(f"  アクセント句{i+1}: {' '.join(phrase.phonemes)}")
                 print(f"    アクセント位置: {phrase.accent_position}")
-                
+
         # Analyze individual words
         words = ["東京", "タワー", "今日", "天気", "箸", "橋"]
         print("\n単語のアクセント分析:")
