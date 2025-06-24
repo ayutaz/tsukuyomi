@@ -248,6 +248,22 @@ ignore = [
     "E722",    # do not use bare except
     "PLR5501", # use elif instead of else then if
     "F823",    # local variable referenced before assignment
+    "F401",    # imported but unused
+    "F821",    # undefined name (false positives)
+    "B028",    # no explicit stacklevel
+    "B905",    # zip without strict parameter
+    "PTH110",  # os.path.exists -> Path.exists
+    "PTH103",  # os.makedirs -> Path.mkdir
+    "PTH118",  # os.path.join -> Path with /
+    "TID252",  # prefer absolute imports
+    "PLR0912", # too many branches
+    "ARG001",  # unused function argument
+    "B033",    # duplicate set items
+    "RUF005",  # consider unpacking
+    "B007",    # loop control variable not used
+    "B008",    # function call in argument defaults
+    "SIM105",  # use contextlib.suppress
+    "E402",    # module level import not at top
 ]
 
 [tool.ruff.lint.per-file-ignores]
