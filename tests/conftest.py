@@ -27,13 +27,13 @@ def device():
             return torch.device("cuda:0")
     except Exception:
         pass
-    
+
     try:
         if torch.backends.mps.is_available():
             return torch.device("mps")
     except Exception:
         pass
-    
+
     return torch.device("cpu")
 
 
@@ -132,7 +132,7 @@ def pytest_collection_modifyitems(config, items):
     """Skip tests based on markers and available hardware"""
     skip_gpu = pytest.mark.skip(reason="GPU not available")
     skip_bf16 = pytest.mark.skip(reason="BF16 not supported")
-    
+
     # Check CUDA availability safely
     cuda_available = False
     bf16_supported = False

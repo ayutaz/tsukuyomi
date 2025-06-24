@@ -15,6 +15,7 @@ import torch
 
 try:
     import torchaudio
+
     TORCHAUDIO_AVAILABLE = True
 except Exception:
     TORCHAUDIO_AVAILABLE = False
@@ -130,18 +131,18 @@ def mel_spectrogram(
     # Convert to numpy if needed
     if isinstance(audio, torch.Tensor):
         audio = audio.numpy()
-    
+
     # Ensure audio is 1D for librosa
     if audio.ndim > 1:
         audio = audio.squeeze()
-    
+
     # Use librosa for mel spectrogram computation
     if TORCHAUDIO_AVAILABLE:
         # Convert to tensor for torchaudio
         audio_tensor = torch.from_numpy(audio).float()
         if audio_tensor.ndim == 1:
             audio_tensor = audio_tensor.unsqueeze(0)
-        
+
         # Create mel spectrogram transform
         mel_transform = torchaudio.transforms.MelSpectrogram(
             sample_rate=sample_rate,
