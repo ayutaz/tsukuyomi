@@ -333,7 +333,7 @@ class ONNXExporter:
         # Apply optimizations based on target device
         if self.config.target_device == "mobile":
             # Mobile-specific optimizations
-            
+
             optimized_model = optimizer.optimize_model(
                 str(onnx_path),
                 model_type="bert",  # Adjust based on actual model

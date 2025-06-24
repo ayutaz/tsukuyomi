@@ -22,12 +22,19 @@ def test_data_dir():
 @pytest.fixture(scope="session")
 def device():
     """Get the best available device"""
-    if torch.cuda.is_available():
-        return torch.device("cuda:0")
-    elif torch.backends.mps.is_available():
-        return torch.device("mps")
-    else:
-        return torch.device("cpu")
+    try:
+        if torch.cuda.is_available():
+            return torch.device("cuda:0")
+    except Exception:
+        pass
+    
+    try:
+        if torch.backends.mps.is_available():
+            return torch.device("mps")
+    except Exception:
+        pass
+    
+    return torch.device("cpu")
 
 
 @pytest.fixture
@@ -104,7 +111,10 @@ def mock_model_config():
 @pytest.fixture
 def bf16_available():
     """Check if BF16 is available"""
-    return torch.cuda.is_available() and torch.cuda.is_bf16_supported()
+    try:
+        return torch.cuda.is_available() and torch.cuda.is_bf16_supported()
+    except Exception:
+        return False
 
 
 # Markers for conditional tests
@@ -122,11 +132,19 @@ def pytest_collection_modifyitems(config, items):
     """Skip tests based on markers and available hardware"""
     skip_gpu = pytest.mark.skip(reason="GPU not available")
     skip_bf16 = pytest.mark.skip(reason="BF16 not supported")
+    
+    # Check CUDA availability safely
+    cuda_available = False
+    bf16_supported = False
+    try:
+        cuda_available = torch.cuda.is_available()
+        if cuda_available:
+            bf16_supported = torch.cuda.is_bf16_supported()
+    except Exception:
+        pass
 
     for item in items:
-        if "gpu" in item.keywords and not torch.cuda.is_available():
+        if "gpu" in item.keywords and not cuda_available:
             item.add_marker(skip_gpu)
-        if "bf16" in item.keywords and not (
-            torch.cuda.is_available() and torch.cuda.is_bf16_supported()
-        ):
+        if "bf16" in item.keywords and not bf16_supported:
             item.add_marker(skip_bf16)
