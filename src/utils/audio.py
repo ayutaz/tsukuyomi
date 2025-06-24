@@ -12,7 +12,12 @@ import librosa
 import numpy as np
 import soundfile as sf
 import torch
-import torchaudio
+
+try:
+    import torchaudio
+    TORCHAUDIO_AVAILABLE = True
+except Exception:
+    TORCHAUDIO_AVAILABLE = False
 
 
 def load_audio(
@@ -122,33 +127,54 @@ def mel_spectrogram(
     Returns:
         Mel-spectrogram tensor of shape (n_mels, time)
     """
-    # Convert to tensor if needed
-    if isinstance(audio, np.ndarray):
-        audio = torch.from_numpy(audio).float()
-
-    # Ensure audio is 2D (1, time) for torchaudio
-    if audio.ndim == 1:
-        audio = audio.unsqueeze(0)
-
-    # Create mel spectrogram transform
-    mel_transform = torchaudio.transforms.MelSpectrogram(
-        sample_rate=sample_rate,
-        n_fft=n_fft,
-        hop_length=hop_length,
-        win_length=win_length,
-        n_mels=n_mels,
-        f_min=fmin,
-        f_max=fmax,
-        center=center,
-        normalized=normalized,
-        power=1.0,  # Use magnitude spectrogram
-    )
-
-    # Compute mel spectrogram
-    mel_spec = mel_transform(audio)
+    # Convert to numpy if needed
+    if isinstance(audio, torch.Tensor):
+        audio = audio.numpy()
+    
+    # Ensure audio is 1D for librosa
+    if audio.ndim > 1:
+        audio = audio.squeeze()
+    
+    # Use librosa for mel spectrogram computation
+    if TORCHAUDIO_AVAILABLE:
+        # Convert to tensor for torchaudio
+        audio_tensor = torch.from_numpy(audio).float()
+        if audio_tensor.ndim == 1:
+            audio_tensor = audio_tensor.unsqueeze(0)
+        
+        # Create mel spectrogram transform
+        mel_transform = torchaudio.transforms.MelSpectrogram(
+            sample_rate=sample_rate,
+            n_fft=n_fft,
+            hop_length=hop_length,
+            win_length=win_length,
+            n_mels=n_mels,
+            f_min=fmin,
+            f_max=fmax,
+            center=center,
+            normalized=normalized,
+            power=1.0,  # Use magnitude spectrogram
+        )
+        mel = mel_transform(audio_tensor)
+    else:
+        # Fallback to librosa
+        mel = librosa.feature.melspectrogram(
+            y=audio,
+            sr=sample_rate,
+            n_fft=n_fft,
+            hop_length=hop_length,
+            win_length=win_length,
+            n_mels=n_mels,
+            fmin=fmin,
+            fmax=fmax,
+            center=center,
+            norm="slaney" if normalized else None,
+            power=1.0,
+        )
+        mel = torch.from_numpy(mel).float().unsqueeze(0)
 
     # Convert to log scale
-    mel_spec = torch.log(torch.clamp(mel_spec, min=1e-5))
+    mel_spec = torch.log(torch.clamp(mel, min=1e-5))
 
     # Remove batch dimension
     mel_spec = mel_spec.squeeze(0)
