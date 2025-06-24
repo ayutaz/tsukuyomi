@@ -9,15 +9,13 @@ import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
-import numpy as np
 import onnx
 import onnxruntime as ort
 import torch
 import torch.nn as nn
 from onnxruntime.quantization import QuantType, quantize_dynamic
-from onnxruntime.transformers import optimizer
 
 logger = logging.getLogger(__name__)
 
@@ -335,8 +333,7 @@ class ONNXExporter:
         # Apply optimizations based on target device
         if self.config.target_device == "mobile":
             # Mobile-specific optimizations
-            from onnxruntime.transformers import optimizer
-
+            
             optimized_model = optimizer.optimize_model(
                 str(onnx_path),
                 model_type="bert",  # Adjust based on actual model

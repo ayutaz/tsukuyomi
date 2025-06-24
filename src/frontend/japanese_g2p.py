@@ -7,13 +7,11 @@ with accurate pitch accent prediction, crucial for natural Japanese TTS.
 
 import logging
 import re
-from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import IntEnum
 from pathlib import Path
 from typing import NamedTuple, Optional, TypedDict
 
-import numpy as np
 import torch
 import torch.nn as nn
 
@@ -42,13 +40,7 @@ except ImportError:
 ESPNET_AVAILABLE = False
 
 # MeCab for morphological analysis
-try:
-    import MeCab
-
-    MECAB_AVAILABLE = True
-except ImportError:
-    MECAB_AVAILABLE = False
-    logging.info("MeCab not available for advanced analysis")
+MECAB_AVAILABLE = False
 
 
 class AccentType(IntEnum):

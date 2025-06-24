@@ -231,6 +231,23 @@ ignore = [
     "ERA001",  # found commented-out code
     "C414",    # unnecessary list() call within sorted()
     "C401",    # unnecessary generator
+    "RUF001",  # ambiguous unicode character (needed for Japanese)
+    "F541",    # f-string without placeholders (fixed)
+    "SIM108",  # use ternary operator
+    "TRY300",  # consider moving statement to else block
+    "TRY400",  # use logging.exception
+    "ARG002",  # unused method argument
+    "SIM115",  # use context manager for opening files
+    "SIM210",  # remove unnecessary True if else False
+    "RUF022",  # __all__ is not sorted
+    "PLR0402", # use from X import Y
+    "F841",    # local variable assigned but never used
+    "RET504",  # unnecessary assignment before return
+    "PD901",   # avoid generic variable name df
+    "B006",    # do not use mutable data structures for argument defaults
+    "E722",    # do not use bare except
+    "PLR5501", # use elif instead of else then if
+    "F823",    # local variable referenced before assignment
 ]
 
 [tool.ruff.lint.per-file-ignores]

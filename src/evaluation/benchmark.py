@@ -8,14 +8,11 @@ Performance benchmarking including:
 - Multi-GPU scaling
 """
 
-import gc
-import json
 import logging
 import time
-from concurrent.futures import ProcessPoolExecutor
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import GPUtil
 import matplotlib.pyplot as plt
@@ -27,7 +24,7 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 
-from .metrics import ComprehensiveEvaluator, calculate_rtf
+from .metrics import ComprehensiveEvaluator
 
 logger = logging.getLogger(__name__)
 
@@ -404,7 +401,7 @@ class PerformanceBenchmark:
         # Best RTF configuration
         best_rtf_idx = df["rtf_mean"].idxmin()
         best_rtf = df.loc[best_rtf_idx]
-        report.append(f"\n### Best RTF Configuration\n")
+        report.append("\n### Best RTF Configuration\n")
         report.append(f"- Device: {best_rtf['device']}\n")
         report.append(f"- Batch Size: {best_rtf['batch_size']}\n")
         report.append(f"- Sequence Length: {best_rtf['sequence_length']}\n")
@@ -413,7 +410,7 @@ class PerformanceBenchmark:
         # Best throughput configuration
         best_throughput_idx = df["throughput"].idxmax()
         best_throughput = df.loc[best_throughput_idx]
-        report.append(f"\n### Best Throughput Configuration\n")
+        report.append("\n### Best Throughput Configuration\n")
         report.append(f"- Device: {best_throughput['device']}\n")
         report.append(f"- Batch Size: {best_throughput['batch_size']}\n")
         report.append(

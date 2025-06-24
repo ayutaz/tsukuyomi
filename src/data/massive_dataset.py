@@ -8,10 +8,7 @@ and efficient data loading for training the ultimate TTS model.
 import hashlib
 import json
 import logging
-import multiprocessing as mp
-import os
-import warnings
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -19,13 +16,10 @@ from typing import Any, Dict, List, Optional, Tuple
 import librosa
 import numpy as np
 import pandas as pd
-import soundfile as sf
 import torch
 import torchaudio
 
 # Quality metrics
-from pesq import pesq
-from pystoi import stoi
 from torch.utils.data import DataLoader, Dataset, DistributedSampler
 from tqdm import tqdm
 

@@ -332,7 +332,7 @@ if __name__ == "__main__":
 
     # サンプルの取得
     sample = dataset[0]
-    print(f"\nSample 0:")
+    print("\nSample 0:")
     print(f"  Audio shape: {sample['audio'].shape}")
     print(f"  Mel shape: {sample['mel'].shape}")
     print(f"  Text shape: {sample['text'].shape}")
@@ -345,7 +345,7 @@ if __name__ == "__main__":
         num_workers=0,
     )
 
-    print(f"\nDataLoader test:")
+    print("\nDataLoader test:")
     batch = next(iter(train_loader))
     print(f"  Batch audio shape: {batch['audio'].shape}")
     print(f"  Batch mel shape: {batch['mel'].shape}")
