@@ -1,4 +1,4 @@
-name: 高速品質チェック
+name: Quick Quality Check
 
 on:
   workflow_call:
@@ -12,7 +12,7 @@ env:
 
 jobs:
   lint-and-format:
-    name: コード品質チェック（リント・フォーマット）
+    name: Code Quality Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -60,7 +60,7 @@ jobs:
           mypy src --ignore-missing-imports --no-error-summary || true
 
   quick-test:
-    name: 基本動作テスト
+    name: Basic Functionality Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -113,7 +113,7 @@ jobs:
           python -c "from src.models.hifigan import HiFiGAN; print('✓ HiFiGAN imports successfully')" || echo "⚠️ HiFiGAN import failed"
 
   check-files:
-    name: ファイル検証・セキュリティスキャン
+    name: File Validation & Security Scan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

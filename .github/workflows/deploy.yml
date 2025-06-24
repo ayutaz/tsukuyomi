@@ -1,4 +1,4 @@
-name: リリース・デプロイ管理
+name: Release & Deploy
 
 on:
   push:
@@ -16,7 +16,7 @@ env:
 
 jobs:
   validate-release:
-    name: リリースバージョン検証
+    name: Validate Release Version
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.get_version.outputs.version }}
@@ -42,7 +42,7 @@ jobs:
           fi
 
   build-release:
-    name: リリースアーティファクト作成
+    name: Build Release Artifacts
     needs: validate-release
     runs-on: ubuntu-latest
     steps:
@@ -74,7 +74,7 @@ jobs:
           path: dist/
 
   create-github-release:
-    name: GitHubリリース作成
+    name: Create GitHub Release
     needs: [validate-release, build-release]
     runs-on: ubuntu-latest
     permissions:
@@ -108,7 +108,7 @@ jobs:
           prerelease: ${{ contains(needs.validate-release.outputs.version, '-') }}
 
   publish-pypi:
-    name: PyPIパッケージ公開
+    name: Publish to PyPI
     needs: [validate-release, build-release]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
@@ -131,7 +131,7 @@ jobs:
           skip_existing: true
 
   docker-release:
-    name: Dockerイメージビルド・公開
+    name: Build & Push Docker Images
     needs: validate-release
     runs-on: ubuntu-latest
     steps:
