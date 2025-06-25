@@ -30,6 +30,7 @@ from tqdm import tqdm
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from src.data.dataset import TsukuyomiDataset
+from src.data.collate import tts_collate_fn
 from src.models.f0_bert import F0BERT
 from src.models.xphonebert import XPhoneBERTEncoder as XPhoneBERT
 from src.models.vits import VITS
@@ -238,6 +239,7 @@ class TTSTrainer:
             num_workers=self.config.data.num_workers,
             pin_memory=True,
             drop_last=True,
+            collate_fn=tts_collate_fn,
         )
         
         val_loader = DataLoader(
@@ -247,6 +249,7 @@ class TTSTrainer:
             shuffle=False,
             num_workers=self.config.data.num_workers,
             pin_memory=True,
+            collate_fn=tts_collate_fn,
         )
         
         return train_loader, val_loader
