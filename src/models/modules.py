@@ -571,7 +571,17 @@ class Encoder(nn.Module):
             x = x + g
 
         for i in range(self.n_layers):
-            y = self.attn_layers[i](x, x, x_mask)
+            # Ensure x_mask has correct shape for attention
+            attn_mask = x_mask
+            if attn_mask is not None:
+                # x_mask should be [B, 1, T] for attention
+                if attn_mask.dim() == 2:  # [B, T]
+                    attn_mask = attn_mask.unsqueeze(1)  # [B, 1, T]
+                elif attn_mask.dim() == 3 and attn_mask.size(1) != 1:
+                    # Something wrong with mask shape
+                    print(f"WARNING: Unexpected mask shape in Encoder layer {i}: {attn_mask.shape}")
+                    
+            y = self.attn_layers[i](x, x, attn_mask)
             y = self.drop(y)
             x = self.norm_layers_1[i](x + y)
 
