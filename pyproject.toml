@@ -102,6 +102,7 @@ server = [
     "gradio>=4.0.0",
     "redis>=5.0.0",
     "python-multipart>=0.0.6",
+    "aiofiles>=0.8.0",
 ]
 evaluation = [
     "pesq>=0.0.4",

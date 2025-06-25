@@ -11,6 +11,9 @@ onnx>=1.14.0
 onnxruntime>=1.15.0
 streamlit>=1.28.0
 fastapi>=0.104.0  # Required by test_auth.py
+aiofiles>=0.8.0  # Required by inference_server.py
+redis>=5.0.0  # Required by auth.py and inference_server.py
+python-multipart>=0.0.6  # Required by inference_server.py
 
 # Optional test dependencies
 pesq>=0.0.4  # For MOS evaluation tests
