@@ -1,0 +1,103 @@
+# 最小構成での学習設定（動作確認用）
+# メモリ使用量を最小限に抑えた設定
+
+# データ設定
+data:
+  dataset: "jvs"
+  data_dir: "data/jvs_ljspeech"
+  train_dir: "data/jvs_ljspeech"
+  val_dir: "data/jvs_ljspeech"
+  test_dir: "data/jvs_ljspeech"
+  preprocessor: "openjtalk"
+  max_duration: 10.0  # 10秒以下のサンプルのみ
+  min_duration: 0.5   # 0.5秒以上のサンプルのみ
+  
+  # 音声設定
+  sample_rate: 22050
+  hop_length: 256
+  n_mels: 80
+  n_fft: 1024
+  win_length: 1024
+  
+  # キャッシュ設定
+  use_cache: false
+  num_workers: 0  # シングルプロセスで動作確認
+
+# モデル設定（超軽量版）
+models:
+  acoustic_model: "dummy"  # まずはダミーモデルで動作確認
+  vocoder: null  # ボコーダーは無効化
+  
+  # すべて無効化
+  xphonebert:
+    enabled: false
+    
+  f0_bert:
+    enabled: false
+    
+  # ダミーVITS設定（使用しない）
+  vits:
+    n_vocab: 128
+    n_speakers: 100
+    hidden_channels: 32
+    filter_channels: 64
+    n_heads: 1
+    n_layers: 1
+    kernel_size: 3
+    p_dropout: 0.1
+    n_flows: 2
+
+# 学習設定
+training:
+  num_epochs: 1
+  batch_size: 4
+  gradient_accumulation_steps: 1
+  gradient_clip: 1.0
+  mixed_precision: "no"  # まずは無効
+  save_interval: 100
+  checkpoint_dir: "checkpoints/minimal_test"
+  resume_from: null
+  
+  # 損失重み
+  loss_weights:
+    total: 1.0
+    
+  # オプティマイザー設定
+  optimizers:
+    default:
+      lr: 1e-4
+      beta1: 0.9
+      beta2: 0.999
+      eps: 1e-8
+      weight_decay: 0.0
+      
+  # スケジューラー設定
+  schedulers:
+    default:
+      type: "cosine_annealing"
+      T_max: 1
+      eta_min: 1e-6
+      
+  # ロギング設定
+  logging:
+    log_interval: 10
+    trackers: "tensorboard"
+    
+  # メモリ最適化
+  memory_optimization:
+    gradient_checkpointing: false
+    find_unused_parameters: false
+    clear_cache_interval: 50
+    empty_cache_on_validation: true
+
+# パス設定
+paths:
+  checkpoints: "checkpoints/minimal_test"
+  tensorboard: "logs/minimal_test/tensorboard"
+  model_registry: "models/minimal_test/registry.db"
+  
+# 評価設定
+evaluation:
+  metrics: []  # メトリクスは無効化
+  save_samples: false
+  num_samples: 0

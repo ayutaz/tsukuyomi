@@ -36,6 +36,22 @@ from src.models.xphonebert import XPhoneBERTEncoder as XPhoneBERT
 from src.models.vits import VITS
 from src.models.matcha_tts import MatchaTTS
 from src.models.bigvgan_v2 import BigVGANv2Generator as BigVGANv2
+
+# ダミーモデル（動作確認用）
+class DummyAcousticModel(nn.Module):
+    """Dummy acoustic model for testing"""
+    def __init__(self, hidden_dim=128):
+        super().__init__()
+        self.fc = nn.Linear(hidden_dim, hidden_dim)
+        
+    def forward(self, *args, **kwargs):
+        # ダミー出力
+        batch_size = 1
+        if args and hasattr(args[0], 'shape'):
+            batch_size = args[0].shape[0]
+        dummy_mel = torch.randn(batch_size, 80, 100).to(self.fc.weight.device)
+        loss = torch.mean(dummy_mel)
+        return {'mel': dummy_mel, 'loss': loss}
 from src.training.losses import MultiTaskLoss
 from src.training.metrics import TrainingMetrics
 from src.utils.model_manager import ModelRegistry
@@ -104,7 +120,9 @@ class TTSTrainer:
             models['f0_bert'] = F0BERT(config=f0_bert_config)
             
         # 音響モデルの初期化
-        if self.config.models.acoustic_model == "vits":
+        if self.config.models.acoustic_model == "dummy":
+            models['acoustic'] = DummyAcousticModel()
+        elif self.config.models.acoustic_model == "vits":
             models['acoustic'] = VITS(
                 n_vocab=self.config.models.vits.n_vocab,
                 n_speakers=self.config.models.vits.n_speakers,
@@ -125,7 +143,7 @@ class TTSTrainer:
             )
             
         # ボコーダーの初期化
-        if self.config.models.vocoder == "bigvgan":
+        if self.config.models.get('vocoder') and self.config.models.vocoder == "bigvgan":
             from src.models.bigvgan_v2 import BigVGANv2Config
             bigvgan_config = BigVGANv2Config(
                 n_mel_channels=self.config.models.bigvgan.num_mels,
@@ -284,8 +302,12 @@ class TTSTrainer:
             outputs = {}
             losses = {}
             
-            # 簡略化：VITSモデルのみを使用してまず動作確認
-            if 'acoustic' in models and self.config.models.acoustic_model == "vits":
+            # ダミーモデルの場合
+            if 'acoustic' in models and self.config.models.acoustic_model == "dummy":
+                outputs['acoustic'] = models['acoustic'](batch['audio'])
+                losses['total'] = outputs['acoustic']['loss']
+            # VITSモデルの場合
+            elif 'acoustic' in models and self.config.models.acoustic_model == "vits":
                 try:
                     # テキストをトークン化（仮実装 - 実際には適切なトークナイザーが必要）
                     # TODO: 実際のテキストトークナイザーを実装
