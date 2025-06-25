@@ -21,7 +21,7 @@ data:
   
   # キャッシュ設定
   use_cache: false
-  num_workers: 2
+  num_workers: 0  # マルチプロセスを無効化（pickleエラー回避）
 
 # モデル設定（VITSを有効化）
 models:

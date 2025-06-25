@@ -32,6 +32,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from src.data.dataset import TsukuyomiDataset
 from src.data.collate import tts_collate_fn
 from src.data.text_tokenizer import JapaneseTextTokenizer
+from src.data.audio_processor import AudioProcessor
 from src.models.f0_bert import F0BERT
 from src.models.xphonebert import XPhoneBERTEncoder as XPhoneBERT
 from src.models.vits import VITS
@@ -83,6 +84,15 @@ class TTSTrainer:
         
         # テキストトークナイザーの初期化
         self.text_tokenizer = JapaneseTextTokenizer()
+        
+        # 音声プロセッサーの初期化
+        self.audio_processor = AudioProcessor(
+            sample_rate=config.data.sample_rate,
+            n_fft=config.data.n_fft,
+            win_length=config.data.win_length,
+            hop_length=config.data.hop_length,
+            n_mels=config.data.n_mels,
+        )
         
         # ログトラッカーの設定を修正
         log_with = config.training.logging.trackers
@@ -264,6 +274,10 @@ class TTSTrainer:
         train_sampler = DistributedSampler(train_dataset) if self.accelerator.distributed_type != "NO" else None
         val_sampler = DistributedSampler(val_dataset, shuffle=False) if self.accelerator.distributed_type != "NO" else None
         
+        # カスタムcollate関数（audio_processorを含む）
+        def collate_fn_with_processor(batch):
+            return tts_collate_fn(batch, audio_processor=self.audio_processor)
+        
         # データローダー
         train_loader = DataLoader(
             train_dataset,
@@ -273,7 +287,7 @@ class TTSTrainer:
             num_workers=self.config.data.num_workers,
             pin_memory=True,
             drop_last=True,
-            collate_fn=tts_collate_fn,
+            collate_fn=collate_fn_with_processor,
         )
         
         val_loader = DataLoader(
@@ -283,7 +297,7 @@ class TTSTrainer:
             shuffle=False,
             num_workers=self.config.data.num_workers,
             pin_memory=True,
-            collate_fn=tts_collate_fn,
+            collate_fn=collate_fn_with_processor,
         )
         
         return train_loader, val_loader
@@ -337,11 +351,9 @@ class TTSTrainer:
                     text_tokens = text_encoding['input_ids'].to(batch['audio'].device)
                     text_lengths = text_encoding['lengths'].to(batch['audio'].device)
                     
-                    # メルスペクトログラムを生成
-                    # TODO: 実際のメル変換を実装
-                    mel_len = 64  # さらに短くする
-                    mel_spec = torch.randn(batch_size, 80, mel_len).to(batch['audio'].device)
-                    mel_lengths = torch.tensor([mel_len] * batch_size).to(batch['audio'].device)
+                    # メルスペクトログラムを取得
+                    mel_spec = batch['mel_targets'].to(batch['audio'].device)
+                    mel_lengths = batch['mel_lengths'].to(batch['audio'].device)
                     
                     # デバッグ情報
                     logger.debug(f"VITS input shapes - text: {text_tokens.shape}, mel: {mel_spec.shape}, speaker_ids: {batch['speaker_ids'].shape}")
@@ -488,7 +500,31 @@ class TTSTrainer:
                         batch['f0_targets'],
                     )
                     
-                if 'acoustic' in models and self.config.models.acoustic_model != "dummy":
+                if 'acoustic' in models and self.config.models.acoustic_model == "vits":
+                    # VITSモデルの場合
+                    texts = batch['text']
+                    text_encoding = self.text_tokenizer.batch_encode(
+                        texts,
+                        add_special_tokens=True,
+                        max_length=200,
+                        padding=True,
+                        return_tensors=True
+                    )
+                    text_tokens = text_encoding['input_ids'].to(batch['audio'].device)
+                    text_lengths = text_encoding['lengths'].to(batch['audio'].device)
+                    
+                    mel_spec = batch['mel_targets'].to(batch['audio'].device)
+                    mel_lengths = batch['mel_lengths'].to(batch['audio'].device)
+                    
+                    outputs['acoustic'] = models['acoustic'](
+                        text=text_tokens,
+                        text_lengths=text_lengths,
+                        mel=mel_spec,
+                        mel_lengths=mel_lengths,
+                        speaker_ids=batch['speaker_ids'],
+                    )
+                elif 'acoustic' in models and self.config.models.acoustic_model != "dummy":
+                    # 他のモデルの場合
                     encoder_outputs = []
                     if 'xphonebert' in outputs:
                         encoder_outputs.append(outputs['xphonebert']['hidden_states'])
@@ -503,10 +539,15 @@ class TTSTrainer:
                         batch['speaker_ids'],
                         encoder_output=encoder_output,
                     )
-                    losses['acoustic'] = loss_fn.compute_acoustic_loss(
-                        outputs['acoustic'],
-                        batch['mel_targets'],
-                    )
+                    if self.config.models.acoustic_model == "vits":
+                        # VITSは内部で損失を計算
+                        if 'loss' in outputs['acoustic']:
+                            losses['acoustic'] = outputs['acoustic']['loss']
+                    else:
+                        losses['acoustic'] = loss_fn.compute_acoustic_loss(
+                            outputs['acoustic'],
+                            batch['mel_targets'],
+                        )
                     
                     # MCD計算
                     for pred, target in zip(outputs['acoustic']['mel'], batch['mel_targets']):

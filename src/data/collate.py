@@ -7,13 +7,16 @@ from typing import Dict, List, Optional, Union
 import numpy as np
 import torch
 
+from .audio_processor import AudioProcessor
 
-def tts_collate_fn(batch: List[Dict]) -> Dict[str, torch.Tensor]:
+
+def tts_collate_fn(batch: List[Dict], audio_processor: Optional[AudioProcessor] = None) -> Dict[str, torch.Tensor]:
     """
     Collate function for TTS training.
 
     Args:
         batch: List of dictionaries from TsukuyomiDataset
+        audio_processor: AudioProcessor instance for mel-spectrogram extraction
 
     Returns:
         Dictionary with batched tensors
@@ -51,7 +54,7 @@ def tts_collate_fn(batch: List[Dict]) -> Dict[str, torch.Tensor]:
         [speaker_id_to_idx[sid] for sid in speaker_ids], dtype=torch.long
     )
 
-    return {
+    result = {
         "audio": audio_batch,
         "audio_lengths": audio_lengths,
         "text": texts,
@@ -59,3 +62,40 @@ def tts_collate_fn(batch: List[Dict]) -> Dict[str, torch.Tensor]:
         "speaker_names": speaker_ids,
         "audio_paths": audio_paths,
     }
+    
+    # メルスペクトログラムの生成（audio_processorが提供された場合）
+    if audio_processor is not None:
+        mel_spectrograms = []
+        mel_lengths = []
+        
+        for audio, audio_len in zip(audio_batch, audio_lengths):
+            # 実際の長さまでトリミング
+            audio_trimmed = audio[:audio_len]
+            
+            # メルスペクトログラムに変換
+            mel = audio_processor.wav_to_mel(audio_trimmed)
+            mel_spectrograms.append(mel)
+            
+            # メル長を計算
+            mel_len = audio_processor.get_mel_lengths(audio_len.unsqueeze(0)).squeeze()
+            mel_lengths.append(mel_len)
+        
+        # パディング
+        max_mel_len = max(mel.shape[-1] for mel in mel_spectrograms)
+        padded_mels = []
+        
+        for mel in mel_spectrograms:
+            mel_len = mel.shape[-1]
+            if mel_len < max_mel_len:
+                padding = max_mel_len - mel_len
+                mel = torch.nn.functional.pad(mel, (0, padding), value=0.0)
+            padded_mels.append(mel)
+        
+        # バッチ化
+        mel_batch = torch.stack(padded_mels, dim=0)
+        mel_lengths = torch.tensor(mel_lengths, dtype=torch.long)
+        
+        result["mel_targets"] = mel_batch
+        result["mel_lengths"] = mel_lengths
+    
+    return result
