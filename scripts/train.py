@@ -98,7 +98,7 @@ class TTSTrainer:
                 hidden_size=self.config.models.f0_bert.hidden_size,
                 num_hidden_layers=self.config.models.f0_bert.num_layers,
                 num_attention_heads=self.config.models.f0_bert.num_heads,
-                pitch_bins=self.config.models.f0_bert.pitch_bins,
+                f0_bins=self.config.models.f0_bert.pitch_bins,  # pitch_bins -> f0_bins
             )
             models['f0_bert'] = F0BERT(config=f0_bert_config)
             
