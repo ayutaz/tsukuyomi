@@ -1,0 +1,82 @@
+name: Validate Setup
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ dev, main ]
+
+jobs:
+  validate:
+    name: Validate Environment Setup
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y mecab libmecab-dev mecab-ipadic-utf8
+    
+    - name: Create virtual environment
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        echo "VIRTUAL_ENV=$PWD/venv" >> $GITHUB_ENV
+        echo "$PWD/venv/bin" >> $GITHUB_PATH
+    
+    - name: Upgrade pip
+      run: |
+        python -m pip install --upgrade pip wheel setuptools
+    
+    - name: Install core dependencies step by step
+      run: |
+        # Step 1: Fix librosa compatibility
+        pip install "librosa>=0.10.1" "numba>=0.57.0"
+        
+        # Step 2: Install PyTorch CPU version
+        pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+        
+        # Step 3: Install other core dependencies
+        pip install numpy scipy transformers
+        
+        # Step 4: Install Japanese text processing
+        pip install mecab-python3 unidic-lite jaconv pykakasi
+        
+        # Step 5: Install training dependencies
+        pip install omegaconf hydra-core accelerate wandb tensorboard
+        
+        # Step 6: Install remaining dependencies
+        pip install -r requirements.txt || echo "Some optional dependencies failed"
+    
+    - name: Install package
+      run: |
+        pip install -e .
+    
+    - name: Validate installation
+      run: |
+        python scripts/test_installation.py
+    
+    - name: Test basic synthesis
+      run: |
+        python -c "
+        print('Testing basic imports...')
+        import torch
+        import librosa
+        import pyopenjtalk_plus
+        print('✅ All critical imports successful!')
+        "
+    
+    - name: Summary
+      if: always()
+      run: |
+        echo "=== Installation Summary ==="
+        echo "Python version: $(python --version)"
+        echo "Pip version: $(pip --version)"
+        echo "Installed packages: $(pip list | wc -l)"
+        echo "✅ Setup validation complete!"

@@ -95,5 +95,15 @@ jobs:
     
     - name: Run basic tests
       run: |
-        python scripts/test_installation.py || echo "Installation test script not found, skipping"
+        if [ -f scripts/test_installation.py ]; then
+          python scripts/test_installation.py
+        else
+          echo "test_installation.py not found, running basic import test"
+          python -c "
+          import torch
+          import librosa
+          import numpy
+          print('Basic imports successful!')
+          "
+        fi
 
