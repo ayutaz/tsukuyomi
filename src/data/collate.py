@@ -10,13 +10,14 @@ import torch
 from .audio_processor import AudioProcessor
 
 
-def tts_collate_fn(batch: List[Dict], audio_processor: Optional[AudioProcessor] = None) -> Dict[str, torch.Tensor]:
+def tts_collate_fn(batch: List[Dict], audio_processor: Optional[AudioProcessor] = None, speaker_to_id: Optional[Dict[str, int]] = None) -> Dict[str, torch.Tensor]:
     """
     Collate function for TTS training.
 
     Args:
         batch: List of dictionaries from TsukuyomiDataset
         audio_processor: AudioProcessor instance for mel-spectrogram extraction
+        speaker_to_id: Optional global speaker ID mapping
 
     Returns:
         Dictionary with batched tensors
@@ -48,11 +49,18 @@ def tts_collate_fn(batch: List[Dict], audio_processor: Optional[AudioProcessor] 
     audio_lengths = torch.tensor(audio_lengths, dtype=torch.long)
 
     # Map speaker IDs to indices
-    unique_speakers = sorted(list(set(speaker_ids)))
-    speaker_id_to_idx = {sid: idx for idx, sid in enumerate(unique_speakers)}
-    speaker_indices = torch.tensor(
-        [speaker_id_to_idx[sid] for sid in speaker_ids], dtype=torch.long
-    )
+    if speaker_to_id is not None:
+        # Use global speaker mapping
+        speaker_indices = torch.tensor(
+            [speaker_to_id[sid] for sid in speaker_ids], dtype=torch.long
+        )
+    else:
+        # Fallback to local mapping (for compatibility)
+        unique_speakers = sorted(list(set(speaker_ids)))
+        speaker_id_to_idx = {sid: idx for idx, sid in enumerate(unique_speakers)}
+        speaker_indices = torch.tensor(
+            [speaker_id_to_idx[sid] for sid in speaker_ids], dtype=torch.long
+        )
 
     result = {
         "audio": audio_batch,

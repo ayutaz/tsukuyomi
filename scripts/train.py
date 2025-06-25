@@ -288,13 +288,18 @@ class TTSTrainer:
             is_validation=True,
         )
         
+        # グローバルなスピーカーIDマッピングを作成
+        all_speaker_ids = sorted(list(set(train_dataset.get_speaker_ids() + val_dataset.get_speaker_ids())))
+        self.speaker_to_id = {speaker: idx for idx, speaker in enumerate(all_speaker_ids)}
+        logger.info(f"Total speakers: {len(all_speaker_ids)}")
+        
         # 分散学習用のサンプラー
         train_sampler = DistributedSampler(train_dataset) if self.accelerator.distributed_type != "NO" else None
         val_sampler = DistributedSampler(val_dataset, shuffle=False) if self.accelerator.distributed_type != "NO" else None
         
-        # カスタムcollate関数（audio_processorを含む）
+        # カスタムcollate関数（audio_processorとspeaker_to_idを含む）
         def collate_fn_with_processor(batch):
-            return tts_collate_fn(batch, audio_processor=self.audio_processor)
+            return tts_collate_fn(batch, audio_processor=self.audio_processor, speaker_to_id=self.speaker_to_id)
         
         # データローダー
         train_loader = DataLoader(
