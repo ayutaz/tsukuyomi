@@ -1,0 +1,27 @@
+name: Status Check
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 * * *'  # Daily at noon UTC
+
+jobs:
+  check-workflows:
+    name: Check All Workflows
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check workflow status
+      run: |
+        echo "## Tsukuyomi CI/CD Status Report"
+        echo "Date: $(date -u)"
+        echo ""
+        echo "### Workflow Status:"
+        echo "- CI: [![CI](https://github.com/ayutaz/tsukuyomi/actions/workflows/ci.yml/badge.svg)](https://github.com/ayutaz/tsukuyomi/actions/workflows/ci.yml)"
+        echo "- Dependencies: [![Dependencies](https://github.com/ayutaz/tsukuyomi/actions/workflows/dependencies.yml/badge.svg)](https://github.com/ayutaz/tsukuyomi/actions/workflows/dependencies.yml)"
+        echo "- Basic Tests: [![Basic Tests](https://github.com/ayutaz/tsukuyomi/actions/workflows/test-basic.yml/badge.svg)](https://github.com/ayutaz/tsukuyomi/actions/workflows/test-basic.yml)"
+        echo ""
+        echo "### Summary:"
+        echo "All workflows are configured and running. Check individual badges for current status."
