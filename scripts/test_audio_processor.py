@@ -30,11 +30,23 @@ def main():
     print(f"  Mel bins: {audio_processor.n_mels}")
     
     # データセットの読み込み
+    data_root = Path("data/jvs_ljspeech")
+    
+    # 適切なmetadataファイルを選択
+    if (data_root / "metadata_multispeaker.csv").exists():
+        metadata_file = "metadata_multispeaker.csv"
+        print(f"\n使用するメタデータ: {metadata_file}")
+    else:
+        metadata_file = "metadata.csv"
+        print(f"\n使用するメタデータ: {metadata_file}")
+    
     dataset = TsukuyomiDataset(
-        data_root="data/jvs_ljspeech",
-        transcript_file="metadata.csv",
+        data_root=data_root,
+        transcript_file=metadata_file,
         sample_rate=22050,
         cache_audio=False,
+        max_duration=10.0,  # 10秒以下のサンプルのみ
+        min_duration=0.5,   # 0.5秒以上のサンプルのみ
     )
     
     if len(dataset) > 0:
