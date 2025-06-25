@@ -8,6 +8,7 @@ data:
   train_dir: "data/jvs_ljspeech"
   val_dir: "data/jvs_ljspeech"
   test_dir: "data/jvs_ljspeech"
+  preprocessor: "openjtalk"  # 日本語用プリプロセッサー
   
   # JVS設定（話者数を減らす）
   use_speakers: [
