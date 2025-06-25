@@ -7,7 +7,7 @@ on:
       - 'requirements.txt'
       - 'requirements-*.txt'
       - 'pyproject.toml'
-      - '.github/workflows/test-dependencies.yml'
+      - '.github/workflows/dependencies.yml'
       - 'scripts/test_installation.py'
   pull_request:
     branches: [ main, dev ]
@@ -15,7 +15,7 @@ on:
       - 'requirements.txt'
       - 'requirements-*.txt'
       - 'pyproject.toml'
-      - '.github/workflows/test-dependencies.yml'
+      - '.github/workflows/dependencies.yml'
       - 'scripts/test_installation.py'
   workflow_dispatch:  # Manual trigger
   schedule:
@@ -60,6 +60,8 @@ jobs:
     - name: Install from requirements.txt
       run: |
         uv pip install -r requirements.txt
+        # Install additional dependencies that might be missing
+        uv pip install rotary-embedding-torch || echo "rotary-embedding-torch not available, skipping"
     
     - name: Install package
       run: |

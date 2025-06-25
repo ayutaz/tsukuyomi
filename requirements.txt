@@ -29,7 +29,7 @@ tensorboard>=2.15.0
 
 # Model components
 einops>=0.7.0
-rotary-embedding-torch>=0.3.0
+rotary-embedding-torch>=0.3.0 ; python_version < '3.12'
 
 # Evaluation metrics
 pesq>=0.0.4

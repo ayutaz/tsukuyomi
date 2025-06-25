@@ -1,0 +1,33 @@
+name: Test All
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ dev ]
+
+jobs:
+  dependencies:
+    name: Test Dependencies
+    uses: ./.github/workflows/dependencies.yml
+    
+  quick-tests:
+    name: Quick Tests
+    uses: ./.github/workflows/test-quick.yml
+    
+  status:
+    name: Overall Status
+    runs-on: ubuntu-latest
+    needs: [dependencies, quick-tests]
+    if: always()
+    steps:
+      - name: Check status
+        run: |
+          if [ "${{ needs.dependencies.result }}" == "success" ] && [ "${{ needs.quick-tests.result }}" == "success" ]; then
+            echo "✅ All tests passed!"
+            exit 0
+          else
+            echo "❌ Some tests failed:"
+            echo "Dependencies: ${{ needs.dependencies.result }}"
+            echo "Quick Tests: ${{ needs.quick-tests.result }}"
+            exit 1
+          fi
