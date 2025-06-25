@@ -219,6 +219,8 @@ class TsukuyomiDataset(Dataset):
             if "|" in first_line and not "," in first_line:
                 # LJSpeech format: audio_id|text|normalized_text
                 logger.info("Detected LJSpeech format (pipe-delimited)")
+                format_logged = False  # フォーマットログを1回だけ出力するためのフラグ
+                
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -239,7 +241,9 @@ class TsukuyomiDataset(Dataset):
                                 # audio_id|speaker_id|text フォーマット
                                 speaker_id = parts[1]
                                 text = parts[2] if len(parts) > 2 else ""
-                                logger.info(f"Format detected: audio|speaker|text")
+                                if not format_logged:
+                                    logger.info(f"Format detected: audio|speaker|text")
+                                    format_logged = True
                             else:
                                 # audio_id|text|normalized_text フォーマット
                                 text = parts[1]
