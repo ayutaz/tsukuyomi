@@ -63,7 +63,7 @@ class TTSTrainer:
             mixed_precision=config.training.mixed_precision,
             gradient_accumulation_steps=config.training.gradient_accumulation_steps,
             log_with=log_with,
-            logging_dir=str(log_dir),
+            project_dir=str(log_dir),
         )
         
         # モデルレジストリの初期化
