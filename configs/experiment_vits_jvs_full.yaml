@@ -1,4 +1,4 @@
-# VITSモデル実データ学習用設定（デバッグ版）
+# VITSモデル実データ学習用設定（フル版）
 
 # データ設定
 data:
@@ -7,7 +7,7 @@ data:
   train_dir: "data/jvs_ljspeech"
   val_dir: "data/jvs_ljspeech"
   test_dir: "data/jvs_ljspeech"
-  transcript_file: "metadata_corrected_metadata.csv"  # 実際のJVSデータセット用
+  transcript_file: "metadata_multispeaker.csv"  # JVSフルデータセット用
   preprocessor: "openjtalk"
   max_duration: 10.0
   min_duration: 0.5
@@ -20,8 +20,8 @@ data:
   win_length: 1024
   
   # キャッシュ設定
-  use_cache: false
-  num_workers: 0  # pickleエラー回避
+  use_cache: true
+  num_workers: 4  # CPUコア数に応じて調整
 
 # モデル設定（VITS）
 models:
@@ -36,11 +36,11 @@ models:
     
   # VITS設定（実データ用）
   vits:
-    n_vocab: 93  # トークナイザーの語彙サイズ
+    n_vocab: 93  # 日本語トークナイザーの語彙サイズ
     n_speakers: 100  # JVSデータセットは100スピーカー
-    hidden_channels: 192   # 標準サイズ
-    filter_channels: 768   # 標準サイズ
-    n_heads: 1  # デバッグ用にシングルヘッドに変更
+    hidden_channels: 192
+    filter_channels: 768
+    n_heads: 2
     n_layers: 6
     kernel_size: 3
     p_dropout: 0.1
@@ -49,17 +49,17 @@ models:
     speaker_embedding_dim: 256
     duration_predictor_filter_channels: 256
     duration_predictor_kernel_size: 3
-    duration_predictor_dropout: 0.1
+    duration_predictor_dropout: 0.5
 
 # 学習設定
 training:
-  num_epochs: 5  # 短めのエポック数でテスト
-  batch_size: 2  # デバッグ用に小さくする
+  num_epochs: 100  # 本番学習用
+  batch_size: 32  # GPUメモリに応じて調整
   gradient_accumulation_steps: 1
   gradient_clip: 1.0
-  mixed_precision: "no"  # 一旦無効化（grad_scalerエラー回避）
-  save_interval: 100
-  checkpoint_dir: "checkpoints/vits_jvs_debug"
+  mixed_precision: "fp16"  # GPUがサポートしている場合
+  save_interval: 1000
+  checkpoint_dir: "checkpoints/vits_jvs_full"
   resume_from: null
   
   # 損失重み
@@ -83,24 +83,25 @@ training:
       
   # ロギング設定
   logging:
-    log_interval: 10
+    log_interval: 100
     trackers: "tensorboard"
     
   # メモリ最適化
   memory_optimization:
     gradient_checkpointing: false
     find_unused_parameters: false
-    clear_cache_interval: 50
+    clear_cache_interval: 100
     empty_cache_on_validation: true
 
 # パス設定
 paths:
-  checkpoints: "checkpoints/vits_jvs_debug"
-  tensorboard: "logs/vits_jvs_debug/tensorboard"
-  model_registry: "models/vits_jvs_debug/registry.db"
+  checkpoints: "checkpoints/vits_jvs_full"
+  tensorboard: "logs/vits_jvs_full/tensorboard"
+  model_registry: "models/vits_jvs_full/registry.db"
   
 # 評価設定
 evaluation:
-  metrics: ["mcd", "f0_rmse"]
+  metrics: ["mcd", "f0_rmse", "speaker_similarity"]
   save_samples: true
-  num_samples: 5
+  num_samples: 10
+  validation_interval: 1000

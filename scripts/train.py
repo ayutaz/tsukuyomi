@@ -347,6 +347,20 @@ class TTSTrainer:
         pbar = tqdm(train_loader, desc=f"Epoch {epoch}", disable=not self.accelerator.is_main_process)
         
         for batch_idx, batch in enumerate(pbar):
+            # バッチのデバッグ
+            if batch is None:
+                logger.error(f"Batch {batch_idx} is None!")
+                continue
+            
+            if batch_idx == 0:
+                logger.info(f"First batch keys: {list(batch.keys()) if isinstance(batch, dict) else 'not a dict'}")
+                if isinstance(batch, dict):
+                    for key, value in batch.items():
+                        if isinstance(value, torch.Tensor):
+                            logger.info(f"  {key}: shape={value.shape}, dtype={value.dtype}")
+                        else:
+                            logger.info(f"  {key}: type={type(value)}, len={len(value) if hasattr(value, '__len__') else 'N/A'}")
+            
             # 勾配のリセット
             for optimizer in optimizers.values():
                 optimizer.zero_grad()
@@ -401,6 +415,11 @@ class TTSTrainer:
                         mel_lengths=mel_lengths,
                         speaker_ids=batch['speaker_ids'],
                     )
+                    
+                    # デバッグ: VITSの出力を確認
+                    logger.info(f"VITS output keys: {list(outputs['acoustic'].keys())}")
+                    if 'losses' in outputs['acoustic']:
+                        logger.info(f"VITS losses: {list(outputs['acoustic']['losses'].keys())}")
                 except Exception as e:
                     import traceback
                     logger.error(f"VITS forward error: {e}")
@@ -411,11 +430,26 @@ class TTSTrainer:
                     losses['total'] = dummy_loss
                 
                 # 簡略化した損失（VITSの出力から）
-                if 'loss' in outputs['acoustic']:
-                    losses['total'] = outputs['acoustic']['loss']
+                if 'losses' in outputs['acoustic']:
+                    # VITSは複数の損失を返す
+                    vits_losses = outputs['acoustic']['losses']
+                    # 損失を安全に取得
+                    if isinstance(vits_losses, dict):
+                        if 'kl' in vits_losses:
+                            losses['kl'] = vits_losses['kl']
+                        if 'duration' in vits_losses:
+                            losses['duration'] = vits_losses['duration']
+                    # 総損失を計算
+                    if losses:
+                        losses['total'] = sum(losses.values())
+                    else:
+                        # 勾配を持つダミー損失
+                        dummy_param = next(models['acoustic'].parameters())
+                        losses['total'] = dummy_param.sum() * 0.0
                 else:
-                    # ダミー損失
-                    losses['total'] = torch.tensor(0.0, device=batch['audio'].device)
+                    # ダミー損失（勾配が必要）
+                    dummy_param = next(models['acoustic'].parameters())
+                    losses['total'] = dummy_param.sum() * 0.0  # 勾配を持つダミー損失
                 
             # ボコーダー（一時的に無効化）
             # TODO: VITSの出力形式に合わせて修正
@@ -427,12 +461,23 @@ class TTSTrainer:
             #     )
                 
             # 総損失の計算
-            if losses:
-                total_loss = sum(losses.values())
-                losses['total'] = total_loss
+            if 'total' in losses and losses['total'] is not None:
+                total_loss = losses['total']
+            elif losses:
+                # 'total'がない場合は他の損失を合計
+                valid_losses = [v for k, v in losses.items() if k != 'total' and v is not None and v.requires_grad]
+                if valid_losses:
+                    total_loss = sum(valid_losses)
+                    losses['total'] = total_loss
+                else:
+                    # 勾配を持つダミー損失
+                    dummy_param = next(models['acoustic'].parameters())
+                    total_loss = dummy_param.sum() * 0.0
+                    losses['total'] = total_loss
             else:
                 # 損失がない場合はダミー損失
-                total_loss = torch.tensor(1.0, device=batch['audio'].device, requires_grad=True)
+                dummy_param = next(models['acoustic'].parameters())
+                total_loss = dummy_param.sum() * 0.0
                 losses['total'] = total_loss
             
             # バックプロパゲーション
@@ -451,6 +496,8 @@ class TTSTrainer:
                 
             # 損失の記録
             for name, loss in losses.items():
+                if name not in epoch_losses:
+                    epoch_losses[name] = 0.0
                 epoch_losses[name] += loss.item()
                 
             # メトリクスの更新（エラー回避のため一時的に無効化）

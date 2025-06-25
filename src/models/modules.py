@@ -101,17 +101,38 @@ class DurationPredictor(nn.Module):
     def forward(
         self, x: torch.Tensor, x_mask: torch.Tensor, g: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
+        # Debug input shapes
+        if x.size(0) == 16:
+            print(f"DEBUG DurationPredictor input:")
+            print(f"  x shape: {x.shape}")
+            print(f"  x_mask shape: {x_mask.shape}")
+            print(f"  expected in_channels: {self.in_channels}")
+            if g is not None:
+                print(f"  g shape before expand: {g.shape}")
+        
         if g is not None:
             g = g.expand(-1, -1, x.size(2))
             x = torch.cat([x, g], dim=1)
+            if x.size(0) == 16:
+                print(f"  x shape after concat with g: {x.shape}")
 
         for i in range(len(self.conv_layers)):
             x = self.conv_layers[i](x * x_mask)
+            if x.size(0) == 16 and i == 0:
+                print(f"  x shape after first conv: {x.shape}")
             x = self.norm_layers[i](x)
             x = F.relu(x)
             x = self.drop(x)
 
+        if x.size(0) == 16:
+            print(f"  x shape before proj: {x.shape}")
+            print(f"  self.proj weight shape: {self.proj.weight.shape}")
+            
         x = self.proj(x * x_mask)
+        
+        if x.size(0) == 16:
+            print(f"  x shape after proj: {x.shape}")
+            
         return x * x_mask
 
 
@@ -140,7 +161,8 @@ class StochasticDurationPredictor(nn.Module):
         )
 
         # Projection layers
-        self.proj = nn.Conv1d(filter_channels, filter_channels * 2, 1)
+        # NOTE: The encoder outputs 1 channel, not filter_channels!
+        self.proj = nn.Conv1d(1, filter_channels * 2, 1)  # Changed from filter_channels to 1
 
         # Normalizing flow
         self.flows = nn.ModuleList()
@@ -155,11 +177,27 @@ class StochasticDurationPredictor(nn.Module):
         reverse: bool = False,
         noise_scale: float = 1.0,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
+        # Debug input shapes
+        if x.size(0) == 16:
+            print(f"DEBUG StochasticDurationPredictor input:")
+            print(f"  x shape: {x.shape}")
+            print(f"  x_mask shape: {x_mask.shape}")
+            if g is not None:
+                print(f"  g shape: {g.shape}")
+        
         # Encode
         h = self.encoder(x, x_mask, g)
+        
+        if x.size(0) == 16:
+            print(f"  h shape after encoder: {h.shape}")
+            print(f"  self.proj weight shape: {self.proj.weight.shape}")
 
         # Project to mean and log_std
         stats = self.proj(h) * x_mask
+        
+        if x.size(0) == 16:
+            print(f"  stats shape after proj: {stats.shape}")
+        
         m, logs = torch.split(stats, stats.size(1) // 2, dim=1)
 
         if not reverse:
@@ -282,7 +320,14 @@ class PosteriorEncoder(nn.Module):
         self, x: torch.Tensor, x_lengths: torch.Tensor, g: Optional[torch.Tensor] = None
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         # Create mask
-        x_mask = sequence_mask(x_lengths).unsqueeze(1).to(x.dtype)
+        x_mask = sequence_mask(x_lengths, x.size(2)).unsqueeze(1).to(x.dtype)
+        
+        # Debug mask shape
+        if x.size(0) == 16:
+            print(f"DEBUG PosteriorEncoder:")
+            print(f"  x shape: {x.shape}")
+            print(f"  x_lengths: {x_lengths}")
+            print(f"  x_mask shape: {x_mask.shape}")
 
         # Encode
         x = self.pre(x) * x_mask

@@ -55,6 +55,8 @@ class VITS(nn.Module):
         upsample_kernel_sizes: List[int] = [16, 16, 4, 4],
         resblock_kernel_sizes: List[int] = [3, 7, 11],
         resblock_dilation_sizes: List[List[int]] = [[1, 3, 5], [1, 3, 5], [1, 3, 5]],
+        # Segment size for training
+        segment_size: int = 8192,
     ):
         super().__init__()
 
@@ -63,6 +65,7 @@ class VITS(nn.Module):
         self.n_feats = n_feats
         self.sample_rate = sample_rate
         self.hop_length = hop_length
+        self.segment_size = segment_size // hop_length  # Convert to mel frames
 
         # Speaker embedding
         if n_speakers > 1:
@@ -158,6 +161,16 @@ class VITS(nn.Module):
 
         # Text encoding
         x, m_p, logs_p, x_mask = self.text_encoder(text, text_lengths, g)
+        
+        # Debug shapes
+        if text.size(0) == 16:  # Debug for batch size 16
+            print(f"DEBUG VITS forward:")
+            print(f"  text shape: {text.shape}")
+            print(f"  text_lengths: {text_lengths}")
+            print(f"  x shape after encoder: {x.shape}")
+            print(f"  m_p shape: {m_p.shape}")
+            print(f"  logs_p shape: {logs_p.shape}")
+            print(f"  x_mask shape: {x_mask.shape}")
 
         if mel is not None:  # Training mode
             # Posterior encoding
@@ -192,6 +205,13 @@ class VITS(nn.Module):
             w = attention.sum(1, keepdim=True)
 
             # Duration loss
+            if text.size(0) == 16:  # Debug
+                print(f"DEBUG before duration predictor:")
+                print(f"  x shape: {x.shape}")
+                print(f"  x_mask shape: {x_mask.shape}")
+                if g is not None:
+                    print(f"  g shape: {g.shape}")
+            
             log_w, log_w_std = self.duration_predictor(x, x_mask, g=g)
             log_duration_targets = torch.log(w.float() + 1e-6) * x_mask
 
@@ -284,6 +304,12 @@ class VITS(nn.Module):
         kl_loss = kl_divergence(logs_q, m_q, logs_p, m_p, z_mask)
 
         # Duration loss
+        # log_duration_prediction is [B, 1, T], log_duration_targets is [B, 1, T]
+        # Make sure they have the same shape
+        if log_duration_prediction.size(1) > 1:
+            # Take only the mean (first channel) for loss calculation
+            log_duration_prediction = log_duration_prediction[:, :1, :]
+        
         duration_loss = F.mse_loss(
             log_duration_prediction * duration_mask,
             log_duration_targets * duration_mask,
