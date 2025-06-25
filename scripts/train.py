@@ -50,6 +50,10 @@ class TTSTrainer:
     def __init__(self, config: DictConfig):
         self.config = config
         
+        # ログディレクトリの作成
+        log_dir = Path(config.paths.tensorboard).parent
+        log_dir.mkdir(parents=True, exist_ok=True)
+        
         # ログトラッカーの設定を修正
         log_with = config.training.logging.trackers
         if isinstance(log_with, list) and len(log_with) == 1:
@@ -59,6 +63,7 @@ class TTSTrainer:
             mixed_precision=config.training.mixed_precision,
             gradient_accumulation_steps=config.training.gradient_accumulation_steps,
             log_with=log_with,
+            logging_dir=str(log_dir),
         )
         
         # モデルレジストリの初期化
