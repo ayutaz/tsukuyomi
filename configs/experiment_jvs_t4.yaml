@@ -105,7 +105,7 @@ training:
   # ロギング設定
   logging:
     log_interval: 100  # 頻度を下げる
-    trackers: ["tensorboard"]
+    trackers: "tensorboard"  # 文字列として設定
     
   # メモリ最適化（T4では必須）
   memory_optimization:
