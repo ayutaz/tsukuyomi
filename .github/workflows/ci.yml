@@ -19,12 +19,17 @@ jobs:
     steps:
       - id: check
         run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          
           if [[ "${{ github.event_name }}" == "pull_request" ]] || \
              [[ "${{ github.ref }}" == "refs/heads/main" ]] || \
              [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "Running FULL checks"
             echo "full=true" >> $GITHUB_OUTPUT
             echo "quick=false" >> $GITHUB_OUTPUT
           else
+            echo "Running QUICK checks"
             echo "full=false" >> $GITHUB_OUTPUT
             echo "quick=true" >> $GITHUB_OUTPUT
           fi

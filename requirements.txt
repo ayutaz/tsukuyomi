@@ -31,8 +31,8 @@ tensorboard>=2.15.0
 einops>=0.7.0
 rotary-embedding-torch>=0.3.0 ; python_version < '3.12'
 
-# Evaluation metrics
-pesq>=0.0.4
+# Evaluation metrics (optional - may fail in CI)
+pesq>=0.0.4 ; platform_system != "Windows"
 pystoi>=0.3.3
 jiwer>=3.0.0
 

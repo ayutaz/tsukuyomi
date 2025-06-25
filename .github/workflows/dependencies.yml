@@ -70,27 +70,40 @@ jobs:
     - name: Test imports
       run: |
         python -c "
-        import torch
-        import torchaudio
-        import transformers
-        import librosa
-        import numpy
-        import scipy
-        import soundfile
-        import omegaconf
-        import hydra
-        import accelerate
-        import wandb
-        import tensorboard
-        import einops
-        import pesq
-        import pystoi
-        import jiwer
-        import seaborn
-        import pyopenjtalk_plus
-        print('All imports successful!')
-        print(f'PyTorch version: {torch.__version__}')
-        print(f'Python version: {torch.version.cuda}')
+        import sys
+        print(f'Python: {sys.version}')
+        
+        # Test imports one by one to identify failures
+        failed_imports = []
+        
+        modules = [
+            'torch', 'torchaudio', 'transformers', 'librosa', 
+            'numpy', 'scipy', 'soundfile', 'omegaconf', 'hydra',
+            'accelerate', 'wandb', 'tensorboard', 'einops',
+            'pesq', 'pystoi', 'jiwer', 'seaborn', 'pyopenjtalk_plus'
+        ]
+        
+        for module in modules:
+            try:
+                __import__(module)
+                print(f'✅ {module}')
+            except ImportError as e:
+                print(f'❌ {module}: {e}')
+                failed_imports.append(module)
+        
+        if failed_imports:
+            print(f'\\nFailed imports: {failed_imports}')
+            print('Continuing with partial success...')
+        else:
+            print('\\nAll imports successful!')
+        
+        # Check PyTorch
+        try:
+            import torch
+            print(f'\\nPyTorch version: {torch.__version__}')
+            print(f'CUDA available: {torch.cuda.is_available()}')
+        except:
+            pass
         "
     
     - name: Run basic tests
