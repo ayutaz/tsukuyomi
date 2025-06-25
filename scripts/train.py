@@ -49,8 +49,17 @@ class DummyAcousticModel(nn.Module):
         batch_size = 1
         if args and hasattr(args[0], 'shape'):
             batch_size = args[0].shape[0]
+        
+        # fcレイヤーを通すことで勾配を有効にする
+        dummy_input = torch.randn(batch_size, 128).to(self.fc.weight.device)
+        dummy_output = self.fc(dummy_input)
+        
+        # 損失計算（requires_grad=Trueになる）
+        loss = torch.mean(dummy_output ** 2)
+        
+        # ダミーメル出力
         dummy_mel = torch.randn(batch_size, 80, 100).to(self.fc.weight.device)
-        loss = torch.mean(dummy_mel)
+        
         return {'mel': dummy_mel, 'loss': loss}
 from src.training.losses import MultiTaskLoss
 from src.training.metrics import TrainingMetrics
@@ -435,8 +444,12 @@ class TTSTrainer:
                 outputs = {}
                 losses = {}
                 
+                # ダミーモデルの場合
+                if 'acoustic' in models and self.config.models.acoustic_model == "dummy":
+                    outputs['acoustic'] = models['acoustic'](batch['audio'])
+                    losses['total'] = outputs['acoustic']['loss']
                 # 前向き計算（学習時と同様）
-                if 'xphonebert' in models:
+                elif 'xphonebert' in models:
                     outputs['xphonebert'] = models['xphonebert'](
                         batch['phoneme_ids'],
                         batch['language_ids'],
@@ -492,8 +505,11 @@ class TTSTrainer:
                     )
                     
                 # 総損失
-                total_loss = sum(losses.values())
-                losses['total'] = total_loss
+                if losses:
+                    total_loss = sum(losses.values())
+                    losses['total'] = total_loss
+                else:
+                    losses['total'] = torch.tensor(0.0)
                 
                 # 損失の記録
                 for name, loss in losses.items():
