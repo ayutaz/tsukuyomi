@@ -368,7 +368,7 @@ class TTSTrainer:
                     
                     # スピーカーIDも確認
                     if 'speaker_ids' in batch:
-                        logger.info(f"Speaker IDs: {batch['speaker_ids'][:2]}")
+                        logger.info(f"Speaker IDs shape: {batch['speaker_ids'].shape}, First 2: {batch['speaker_ids'][:2].tolist()}")
                     
                     # テキストをカタカナに変換
                     katakana_texts = [simple_text_to_katakana(text) for text in texts]
@@ -390,6 +390,7 @@ class TTSTrainer:
                     
                     # デバッグ情報
                     logger.info(f"VITS input shapes - text: {text_tokens.shape}, text_lengths: {text_lengths}, mel: {mel_spec.shape}, mel_lengths: {mel_lengths}")
+                    logger.info(f"VITS speaker_ids shape: {batch['speaker_ids'].shape}, dtype: {batch['speaker_ids'].dtype}, device: {batch['speaker_ids'].device}")
                     logger.debug(f"VITS config - hidden_channels: {self.config.models.vits.hidden_channels}, n_heads: {self.config.models.vits.n_heads}")
                     
                     # VITSフォワードパス

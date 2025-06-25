@@ -562,7 +562,12 @@ class Encoder(nn.Module):
         self, x: torch.Tensor, x_mask: torch.Tensor, g: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         if g is not None and hasattr(self, "cond_layer"):
+            print(f"DEBUG Encoder: x shape: {x.shape}, g shape before cond_layer: {g.shape}")
             g = self.cond_layer(g)
+            print(f"DEBUG Encoder: g shape after cond_layer: {g.shape}")
+            # Expand g to match x's time dimension
+            g = g.expand(-1, -1, x.size(2))
+            print(f"DEBUG Encoder: g shape after expand: {g.shape}")
             x = x + g
 
         for i in range(self.n_layers):
