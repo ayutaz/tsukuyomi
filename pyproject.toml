@@ -29,7 +29,7 @@ dependencies = [
     
     # Audio processing
     "soundfile>=0.12.0",
-    "librosa>=0.10.0",
+    "librosa>=0.10.1",
     "matplotlib>=3.5.0",
     
     # TTS specific

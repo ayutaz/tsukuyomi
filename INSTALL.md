@@ -22,6 +22,12 @@ cd tsukuyomi
 # Create virtual environment and install
 uv venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# Fix Python 3.11 dependency issues with librosa
+uv cache clean
+uv pip install "librosa>=0.10.1" "numba>=0.57.0"
+
+# Install the project
 uv pip install -e .
 uv pip install -r requirements.txt
 ```

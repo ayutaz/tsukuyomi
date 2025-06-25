@@ -36,12 +36,20 @@ source .venv/bin/activate  # Linux/macOS
 ### 1.3 依存関係のインストール
 
 ```bash
+# キャッシュをクリア（必要に応じて）
+uv cache clean
+
+# librosaの依存関係の問題を回避するため、先に必要なパッケージをインストール
+uv pip install "librosa>=0.10.1" "numba>=0.57.0"
+
 # 基本パッケージ
 uv pip install -e .
 
 # 学習用追加パッケージ
 uv pip install accelerate wandb tensorboard
 ```
+
+**注意**: Python 3.11でlibrosaの古いバージョンがインストールされる問題がある場合は、上記のように先にlibrosaとnumbaを明示的にインストールしてください。
 
 ## 2. JVSデータセットの準備
 

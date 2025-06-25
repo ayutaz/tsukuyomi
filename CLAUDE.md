@@ -1,191 +1,125 @@
-# Tsukuyomi TTS プロジェクト
+# CLAUDE.md
 
-## プロジェクト概要
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Tsukuyomi TTSは、最高峰の日本語音声合成システムです。XPhoneBERT、F0-BERT、VITS/Matcha-TTS、BigVGAN-v2などの最先端技術を統合し、自然で表現豊かな音声を生成します。
+## Project Overview
 
-### 主な特徴
+Tsukuyomi is a state-of-the-art Japanese Text-to-Speech (TTS) system targeting MOS 4.7+ quality (indistinguishable from human speech). It integrates cutting-edge models like XPhoneBERT, F0-BERT, VITS/Matcha-TTS, and BigVGAN-v2 to generate natural and expressive speech.
 
-1. **最高品質の音声合成**
-   - XPhoneBERTによる多言語音素エンコーディング
-   - F0-BERTによる高精度なピッチモデリング
-   - VITS/Matcha-TTSによる高品質音響モデル
-   - BigVGAN-v2による高忠実度ボコーダー
+## Development Commands
 
-2. **大規模データ対応**
-   - 1万時間以上のデータセット処理能力
-   - 100人以上の話者サポート
-   - 効率的な分散学習
-
-3. **本番環境対応**
-   - ONNX変換によるUnity統合
-   - Triton Inference Serverサポート
-   - バッチ処理とキャッシングによる高速推論
-   - 包括的なAPIとドキュメント
-
-## 実装状況
-
-### ✅ 完了した機能
-
-#### コアモデル
-- [x] XPhoneBERT統合（日本語最適化）
-- [x] F0-BERT実装
-- [x] VITS音響モデル
-- [x] Matcha-TTS（フローマッチング）
-- [x] BigVGAN-v2ボコーダー
-
-#### インフラストラクチャ
-- [x] Docker環境（Windows/Linux対応）
-- [x] 分散学習スクリプト
-- [x] GitHub Actions CI/CD
-- [x] UV パッケージマネージャー統合
-
-#### 最適化・統合
-- [x] ONNX変換・最適化
-- [x] Unity C#ラッパー生成
-- [x] 推論最適化（バッチ処理、キャッシング）
-- [x] Triton Inference Server統合
-
-#### 評価・品質保証
-- [x] 包括的な評価システム（MCD、ピッチ、話者類似度）
-- [x] パフォーマンスベンチマーク
-- [x] ユニットテスト（モデル、データ、推論）
-
-#### API・ドキュメント
-- [x] FastAPI サーバー実装
-- [x] 認証・レート制限
-- [x] OpenAPI/Swagger ドキュメント
-- [x] クライアントSDK生成（Python、TypeScript）
-
-#### 高度な機能
-- [x] 感情制御（10種類の感情 + VADモデル）
-- [x] スタイル転送（参照音声、スタイルミキシング）
-- [x] 音声モーフィング（複数話者ブレンド、連続遷移）
-- [x] リアルタイムストリーミング（低レイテンシ、WebSocket）
-- [x] 統合AdvancedTTSモデル
-
-### 🔧 開発コマンド
-
+### Environment Setup
 ```bash
-# 環境セットアップ
+# Create virtual environment and install package (uses UV package manager)
 uv venv
+source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+
+# Fix Python 3.11 dependency issues with librosa
+uv cache clean
+uv pip install "librosa>=0.10.1" "numba>=0.57.0"
+
+# Install the project
 uv pip install -e .
 
-# 学習の実行
+# Development installation with all extras
+uv pip install -e .[dev,test]
+
+# H100-optimized installation
+uv pip install -e .[h100]
+```
+
+### Common Development Tasks
+```bash
+# Run tests
+pytest tests/ -v                    # All tests
+pytest -m "not slow and not gpu"    # Fast tests only
+pytest -m gpu                       # GPU tests only
+pytest -v --cov=src                 # With coverage
+
+# Run single test file or function
+pytest tests/test_models.py -v
+pytest tests/test_models.py::test_xphonebert -v
+
+# Code quality
+make lint      # Run linting (ruff, black, isort, mypy)
+make format    # Auto-format code
+
+# Training
 python scripts/train.py --config configs/train_config.yaml
+./scripts/train_multi_gpu.sh configs/train_config.yaml  # Multi-GPU
 
-# マルチGPU学習
-./scripts/train_multi_gpu.sh configs/train_config.yaml
-
-# 推論ベンチマーク
+# Inference and benchmarking
 python scripts/benchmark_inference.py --model checkpoints/best_model.pt
+python scripts/test_synthesis.py --text "こんにちは"
 
-# Tritonデプロイ
-python scripts/deploy_triton.py --checkpoint checkpoints/best_model.pt
-
-# APIドキュメント生成
-python scripts/generate_api_docs.py --output-dir docs/api
-
-# テストの実行
-pytest tests/ -v
-
-# リント
-ruff check src
-black src tests
-
-# 高度な機能のデモ
+# Demo advanced features
 python scripts/demo_advanced_features.py --model-path checkpoints/best_model.pt --demo-type all
 ```
 
-### 📁 プロジェクト構造
+## High-Level Architecture
 
+### Core Model Pipeline
 ```
-tsukuyomi/
-├── src/
-│   ├── models/          # コアモデル実装
-│   │   ├── xphonebert.py
-│   │   ├── f0_bert.py
-│   │   ├── vits.py
-│   │   ├── matcha_tts.py
-│   │   ├── bigvgan.py
-│   │   ├── emotion_controller.py  # 感情制御
-│   │   ├── style_transfer.py      # スタイル転送
-│   │   ├── voice_morphing.py      # 音声モーフィング
-│   │   └── advanced_tts.py        # 統合モデル
-│   ├── data/            # データ処理
-│   ├── training/        # 学習関連
-│   ├── inference/       # 推論最適化
-│   │   ├── optimized_inference.py
-│   │   └── realtime_streaming.py  # ストリーミング
-│   ├── serving/         # モデルサービング
-│   ├── server/          # APIサーバー
-│   ├── evaluation/      # 評価メトリクス
-│   ├── export/          # モデル変換
-│   └── utils/           # ユーティリティ
-├── scripts/             # 実行スクリプト
-│   ├── train.py
-│   ├── benchmark_inference.py
-│   └── demo_advanced_features.py  # 高度な機能デモ
-├── configs/             # 設定ファイル
-├── tests/               # テストコード
-├── docker/              # Docker関連
-└── docs/                # ドキュメント
+Text → G2P++ → XPhoneBERT-JP → F0-BERT → Acoustic Model (VITS/Matcha-TTS) → BigVGAN-v2 → Audio
 ```
 
-## 高度な機能の詳細
+### Key Components Integration
 
-### 🎭 感情制御
-- **10種類の基本感情**: neutral, happy, sad, angry, fearful, surprised, disgusted, excited, calm, confident
-- **VADモデル**: Valence（感情価）、Arousal（覚醒度）、Dominance（支配性）による連続的な感情表現
-- **感情予測**: テキストから自動的に感情を推定
-- **感情強度制御**: 0.0〜2.0の範囲で感情の強さを調整
+1. **Frontend Processing (src/frontend/)**
+   - Japanese text normalization with pyopenjtalk-plus
+   - G2P++ system achieving 97%+ accuracy through rule-based + neural correction
+   - Context-aware BERT-based accent prediction
 
-### 🎨 スタイル転送
-- **参照音声からのスタイル抽出**: 任意の音声からスタイルを学習
-- **スタイルミキシング**: 複数のスタイルをブレンド
-- **適応的スタイル転送**: コンテンツに応じて転送強度を自動調整
-- **スタイルバンク**: 事前定義された50種類のスタイル
+2. **Model Architecture (src/models/)**
+   - **XPhoneBERT**: Multilingual phoneme encoder optimized for Japanese with LoRA fine-tuning
+   - **F0-BERT**: High-precision pitch modeling with emotion/style conditioning
+   - **Acoustic Models**: Both VITS (VAE-based) and Matcha-TTS (flow matching) supported
+   - **BigVGAN-v2**: 48kHz vocoder with Snake-Beta activation
+   - **Advanced Features**: Emotion control, style transfer, voice morphing, real-time streaming
 
-### 🔀 音声モーフィング
-- **球面線形補間（SLERP）**: 滑らかな話者間の遷移
-- **多点モーフィング**: 3人以上の話者を同時にブレンド
-- **連続モーフィング**: 時間軸に沿った動的な話者変化
-- **声質変換**: コンテンツを保持したまま声質のみ変更
+3. **Training Infrastructure (src/training/)**
+   - Distributed training support for H100 GPU clusters
+   - Mixed precision training with BF16
+   - Gradient accumulation and checkpointing
+   - Custom loss functions for multi-task learning
 
-### ⚡ リアルタイムストリーミング
-- **低レイテンシ**: 100ms以下の遅延
-- **チャンク処理**: 256文字単位での逐次生成
-- **CUDAストリーム**: 並列処理による高速化
-- **WebSocketサーバー**: リアルタイム双方向通信
+4. **Inference Optimization (src/inference/)**
+   - ONNX export for Unity integration
+   - Triton Inference Server deployment
+   - Batch processing with dynamic padding
+   - Real-time streaming with <100ms latency via WebSocket
 
-## 今後の拡張案
+5. **API Server (src/server/)**
+   - FastAPI-based REST API with authentication
+   - WebSocket support for streaming
+   - OpenAPI/Swagger documentation
+   - Rate limiting and caching
 
-1. **追加の前処理・拡張**
-   - より高度なテキスト正規化
-   - ~~感情制御機能~~ ✅ 実装済み
-   - ~~声質変換~~ ✅ 実装済み
+### Advanced Features
 
-2. **モデル改良**
-   - より大規模な事前学習
-   - ファインチューニング戦略
-   - マルチタスク学習
+- **Emotion Control**: 10 basic emotions + VAD (Valence-Arousal-Dominance) model
+- **Style Transfer**: Reference audio extraction, style mixing, adaptive transfer
+- **Voice Morphing**: SLERP interpolation, multi-speaker blending, continuous morphing
+- **Real-time Streaming**: Chunk-based processing, CUDA streams, WebSocket server
 
-3. **デプロイメント**
-   - Kubernetes オーケストレーション
-   - エッジデバイス対応
-   - WebAssembly 統合
+### Configuration System
 
-## 注意事項
+The project uses YAML configs (configs/) for experiments. Key config files:
+- `train_config.yaml`: Main training configuration
+- `model_config.yaml`: Model architecture settings
+- `data_config.yaml`: Dataset and preprocessing
 
-- 前処理と事前学習はユーザー側で実施
-- H100 GPU 8台での学習を想定
-- 100時間以上のデータでの学習を推奨
-- メタデータが不完全な場合はnull許容
+### Testing Strategy
 
-## リンク
+- **Unit tests**: Model components, data processing, utilities
+- **Integration tests**: End-to-end synthesis, API endpoints
+- **Performance tests**: Inference speed, memory usage
+- **Markers**: `slow`, `gpu`, `integration`, `unit`, `benchmark`
 
-- [日本語README](README.ja.md)
-- [英語README](README.md)
-- [JVSデータセット学習ガイド](docs/jvs_training_guide.ja.md)
-- [学習ガイド](docs/train.ja.md)
-- [APIリファレンス](docs/api/api-reference.md)
+## Important Notes
+
+- Preprocessing and pre-training should be done by users
+- Designed for 8x H100 GPU training
+- Requires 100+ hours of audio data for quality results
+- Supports incomplete metadata with null tolerance
+- Japanese-first design with multilingual expansion capability

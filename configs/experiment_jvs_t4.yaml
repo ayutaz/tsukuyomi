@@ -1,0 +1,148 @@
+# JVSデータセットを使用したT4 GPU向け軽量実験設定
+# T4: 16GB VRAM, 計算能力が限定的
+
+# データ設定
+data:
+  dataset: "jvs"
+  train_dir: "data/jvs_ljspeech"
+  val_dir: "data/jvs_ljspeech"
+  test_dir: "data/jvs_ljspeech"
+  
+  # JVS設定（話者数を減らす）
+  use_speakers: [
+    "jvs001", "jvs002", "jvs003"  # 3話者のみで実験
+  ]
+  
+  # 音声設定（メモリ節約）
+  sample_rate: 22050  # 24kHzから22.05kHzに下げる
+  hop_length: 256     # 標準的な設定
+  n_mels: 80         # 80次元
+  n_fft: 1024
+  win_length: 1024
+  
+  # キャッシュ設定
+  use_cache: true
+  cache_dir: "data/jvs_cache"
+  num_workers: 2  # T4向けに削減
+
+# モデル設定（T4最適化: 極限まで軽量化）
+models:
+  # 最も軽量な設定
+  acoustic_model: "vits"
+  
+  # XPhoneBERT設定（最小構成）
+  xphonebert:
+    enabled: false  # T4では無効化してメモリ節約
+    
+  # F0-BERT設定（最小構成）
+  f0_bert:
+    enabled: true
+    hidden_size: 64   # 非常に小さく
+    num_layers: 2     # 最小限
+    num_heads: 2
+    pitch_bins: 64    # 削減
+    
+  # VITS設定（T4最適化）
+  vits:
+    n_vocab: 128      # 語彙数削減
+    n_speakers: 3     # 3話者のみ
+    hidden_channels: 64    # 大幅に削減
+    inter_channels: 64
+    filter_channels: 256   # 削減
+    n_heads: 1        # 最小
+    n_layers: 2       # 最小
+    kernel_size: 3
+    p_dropout: 0.2    # ドロップアウト増加
+    n_flows: 2        # フロー数削減
+    
+  # BigVGAN設定（超軽量版）
+  bigvgan:
+    num_mels: 80
+    upsample_initial_channel: 256  # 大幅削減
+    resblock_kernel_sizes: [3, 5]  # カーネル数削減
+    resblock_dilation_sizes: [[1, 3], [1, 3]]
+    upsample_rates: [8, 8, 2, 2]   # 22.05kHz用
+    upsample_kernel_sizes: [16, 16, 4, 4]
+
+# 学習設定（T4最適化）
+training:
+  num_epochs: 50    # 短めに設定
+  batch_size: 2     # 非常に小さく
+  gradient_accumulation_steps: 16  # 実効バッチサイズ32
+  gradient_clip: 1.0
+  mixed_precision: "fp16"  # fp16必須
+  save_interval: 10
+  
+  # チェックポイント設定
+  checkpoint_dir: "checkpoints/jvs_t4_experiment"
+  resume_from: null
+  
+  # 損失重み（シンプルに）
+  loss_weights:
+    f0_bert: 0.3
+    acoustic: 1.0
+    vocoder: 1.0
+    kl: 0.1
+    duration: 1.0
+    
+  # オプティマイザー設定
+  optimizers:
+    default:
+      lr: 1e-4       # 低めの学習率
+      beta1: 0.8
+      beta2: 0.99
+      eps: 1e-9
+      weight_decay: 0.01
+      
+  # スケジューラー設定
+  schedulers:
+    default:
+      type: "cosine_annealing"
+      T_max: 50
+      eta_min: 1e-6
+      
+  # ロギング設定
+  logging:
+    log_interval: 100  # 頻度を下げる
+    trackers: ["tensorboard"]
+    
+  # メモリ最適化（T4では必須）
+  memory_optimization:
+    gradient_checkpointing: true  # 必須
+    find_unused_parameters: false
+    clear_cache_interval: 50      # 頻繁にクリア
+    empty_cache_on_validation: true
+    max_split_size_mb: 512       # メモリ分割サイズ
+
+# パス設定
+paths:
+  checkpoints: "checkpoints/jvs_t4_experiment"
+  tensorboard: "logs/jvs_t4_experiment/tensorboard"
+  model_registry: "models/jvs_t4_experiment/registry.db"
+  
+# 評価設定（軽量化）
+evaluation:
+  metrics:
+    - "mcd"  # 最小限のメトリクス
+  save_samples: true
+  num_samples: 3  # サンプル数削減
+  
+# 高度な機能（T4では全て無効）
+advanced_features:
+  emotion_control:
+    enabled: false
+    
+  style_transfer:
+    enabled: false
+    
+  voice_morphing:
+    enabled: false
+    
+  streaming:
+    enabled: false
+
+# データローダー最適化
+dataloader:
+  pin_memory: true
+  persistent_workers: false  # T4ではfalse
+  prefetch_factor: 2
