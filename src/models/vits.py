@@ -153,13 +153,10 @@ class VITS(nn.Module):
         # Get speaker embeddings
         if self.speaker_embedding is not None and speaker_ids is not None:
             g = self.speaker_embedding(speaker_ids).unsqueeze(-1)  # [B, C, 1]
-            print(f"DEBUG VITS: speaker_ids shape: {speaker_ids.shape}, g shape: {g.shape}")
         else:
             g = None
-            print(f"DEBUG VITS: No speaker embedding (speaker_embedding: {self.speaker_embedding is not None}, speaker_ids: {speaker_ids is not None})")
 
         # Text encoding
-        print(f"DEBUG VITS: text shape: {text.shape}, text_lengths shape: {text_lengths.shape}")
         x, m_p, logs_p, x_mask = self.text_encoder(text, text_lengths, g)
 
         if mel is not None:  # Training mode
