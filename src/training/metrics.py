@@ -33,22 +33,32 @@ class TrainingMetrics:
 
     def update(self, outputs: Dict[str, torch.Tensor], batch: Dict[str, torch.Tensor]):
         """Update metrics with new values
-        
+
         Args:
             outputs: Model outputs
             batch: Input batch containing targets
         """
         # Extract losses from outputs
-        for key in ["loss", "mel_loss", "kl_loss", "duration_loss", "pitch_loss", "gen_loss", "disc_loss"]:
+        for key in [
+            "loss",
+            "mel_loss",
+            "kl_loss",
+            "duration_loss",
+            "pitch_loss",
+            "gen_loss",
+            "disc_loss",
+        ]:
             if key in outputs:
                 value = outputs[key]
                 if isinstance(value, torch.Tensor):
                     value = value.detach().cpu().item()
                 if key in self.metrics:
                     self.metrics[key].append(value)
-        
+
         # Also support old interface with metrics_dict
-        if isinstance(outputs, dict) and all(key in self.metrics for key in outputs.keys()):
+        if isinstance(outputs, dict) and all(
+            key in self.metrics for key in outputs.keys()
+        ):
             for key, value in outputs.items():
                 if key in self.metrics:
                     if isinstance(value, torch.Tensor):
@@ -72,7 +82,7 @@ class TrainingMetrics:
         for key, value in averages.items():
             logged_metrics[f"{prefix}/{key}"] = value
         return logged_metrics
-    
+
     def compute(self) -> Dict[str, float]:
         """Compute and return average metrics (alias for compute_average)"""
         return self.compute_average()

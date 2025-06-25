@@ -139,7 +139,7 @@ class FlowMatchingDecoder(nn.Module):
 
         # Time steps from 0 to 1
         dt = 1.0 / n_timesteps
-        
+
         # Euler integration
         for i in range(n_timesteps):
             t = torch.full((B, 1), i * dt, device=device, dtype=dtype)
@@ -185,7 +185,7 @@ class FlowBlock(nn.Module):
         self.drops = nn.ModuleList()
 
         for i in range(n_layers):
-            dilation = dilation_rate ** i
+            dilation = dilation_rate**i
             padding = int((kernel_size * dilation - dilation) / 2)
             self.convs.append(
                 nn.Conv1d(
@@ -417,7 +417,7 @@ class MatchaTTS(nn.Module):
         t = torch.rand(mel.size(0), 1, device=mel.device)
         z_0 = torch.randn_like(mel)
         z_t = (1 - t.unsqueeze(-1)) * z_0 + t.unsqueeze(-1) * mel
-        
+
         # Compute velocity
         v_pred = self.decoder(
             z_t,
@@ -426,7 +426,7 @@ class MatchaTTS(nn.Module):
             t,
             g,
         )
-        
+
         # Target velocity
         v_target = mel - z_0
 
@@ -434,7 +434,9 @@ class MatchaTTS(nn.Module):
         flow_loss = F.mse_loss(v_pred, v_target)
 
         # Duration loss
-        l_length = ((logw - torch.log(attn.sum(2))).pow(2) * x_mask).sum() / x_mask.sum()
+        l_length = (
+            (logw - torch.log(attn.sum(2))).pow(2) * x_mask
+        ).sum() / x_mask.sum()
 
         losses = {
             "flow_loss": flow_loss,

@@ -393,7 +393,6 @@ class StyleTransferLoss(nn.Module):
 
         return loss
 
-
     def compute_bert_loss(
         self, bert_outputs: Dict[str, torch.Tensor], targets: torch.Tensor
     ) -> torch.Tensor:
@@ -442,27 +441,27 @@ class StyleTransferLoss(nn.Module):
     ) -> torch.Tensor:
         """Compute loss for acoustic model (VITS/Matcha-TTS)"""
         total_loss = torch.tensor(0.0, device=targets.device)
-        
+
         # Mel-spectrogram reconstruction loss
         if "mel" in acoustic_outputs:
             total_loss = total_loss + F.l1_loss(acoustic_outputs["mel"], targets)
-        
+
         # KL divergence loss (for variational models)
         if "kl_loss" in acoustic_outputs:
             total_loss = total_loss + acoustic_outputs["kl_loss"]
-        
+
         # Duration loss
         if "duration_loss" in acoustic_outputs:
             total_loss = total_loss + acoustic_outputs["duration_loss"]
-        
+
         # Flow matching loss (for Matcha-TTS)
         if "flow_loss" in acoustic_outputs:
             total_loss = total_loss + acoustic_outputs["flow_loss"]
-        
+
         # If the model returns a pre-computed loss
         if "loss" in acoustic_outputs:
             return acoustic_outputs["loss"]
-        
+
         return total_loss
 
     def compute_vocoder_loss(
@@ -471,10 +470,10 @@ class StyleTransferLoss(nn.Module):
         """Compute loss for vocoder (BigVGAN)"""
         # Multi-scale spectral loss
         total_loss = torch.tensor(0.0, device=targets.device)
-        
+
         # Time-domain loss
         total_loss = total_loss + F.l1_loss(vocoder_outputs, targets)
-        
+
         # Multi-scale STFT loss
         for n_fft, hop_length in [(2048, 240), (1024, 120), (512, 50)]:
             # Compute STFT
@@ -492,17 +491,17 @@ class StyleTransferLoss(nn.Module):
                 return_complex=True,
                 window=torch.hann_window(n_fft, device=targets.device),
             )
-            
+
             # Magnitude loss
             pred_mag = pred_spec.abs()
             target_mag = target_spec.abs()
             total_loss = total_loss + F.l1_loss(pred_mag, target_mag)
-            
+
             # Log magnitude loss
             total_loss = total_loss + F.l1_loss(
                 torch.log(pred_mag + 1e-7), torch.log(target_mag + 1e-7)
             )
-        
+
         return total_loss / 7  # Normalize by number of loss terms
 
 
