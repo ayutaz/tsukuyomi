@@ -49,10 +49,16 @@ class TTSTrainer:
     
     def __init__(self, config: DictConfig):
         self.config = config
+        
+        # ログトラッカーの設定を修正
+        log_with = config.training.logging.trackers
+        if isinstance(log_with, list) and len(log_with) == 1:
+            log_with = log_with[0]  # 単一要素のリストは文字列に変換
+            
         self.accelerator = Accelerator(
             mixed_precision=config.training.mixed_precision,
             gradient_accumulation_steps=config.training.gradient_accumulation_steps,
-            log_with=config.training.logging.trackers,
+            log_with=log_with,
         )
         
         # モデルレジストリの初期化
