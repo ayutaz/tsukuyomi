@@ -128,13 +128,17 @@ class TsukuyomiDataset(Dataset):
             self._split_dataset(validation_split, is_validation, random_seed)
 
         logger.info(f"Loaded {len(self.samples)} samples from {data_root}")
-        
+
         # Debug: Show sample distribution by speaker
         if self.samples:
             speaker_counts = {}
             for sample in self.samples:
-                speaker_counts[sample.speaker_id] = speaker_counts.get(sample.speaker_id, 0) + 1
-            logger.info(f"Speaker distribution: {dict(sorted(speaker_counts.items())[:5])}...")  # Show first 5
+                speaker_counts[sample.speaker_id] = (
+                    speaker_counts.get(sample.speaker_id, 0) + 1
+                )
+            logger.info(
+                f"Speaker distribution: {dict(sorted(speaker_counts.items())[:5])}..."
+            )  # Show first 5
 
     def _load_transcripts(self, transcript_file: str) -> List[AudioSample]:
         """Load transcripts from various formats."""
@@ -204,7 +208,7 @@ class TsukuyomiDataset(Dataset):
             # First, try to detect if it's LJSpeech format (pipe-delimited without header)
             first_line = f.readline().strip()
             f.seek(0)  # Reset to beginning
-            
+
             # Check if it's LJSpeech format (starts with audio ID like "LJ001-0001")
             if "|" in first_line and not "," in first_line:
                 # LJSpeech format: audio_id|text|normalized_text
@@ -213,23 +217,23 @@ class TsukuyomiDataset(Dataset):
                     line = line.strip()
                     if not line:
                         continue
-                    
+
                     parts = line.split("|")
                     if len(parts) >= 2:
                         audio_id = parts[0]
                         text = parts[1]  # Use original text
-                        
+
                         # For JVS dataset, extract speaker ID from audio filename
                         if audio_id.startswith("jvs"):
                             # e.g., jvs001_001 -> speaker_id = jvs001
                             speaker_id = audio_id.split("_")[0]
                         else:
                             speaker_id = "default"
-                        
+
                         # Add .wav extension if not present
-                        if not audio_id.endswith(('.wav', '.mp3')):
-                            audio_id = audio_id + '.wav'
-                        
+                        if not audio_id.endswith((".wav", ".mp3")):
+                            audio_id = audio_id + ".wav"
+
                         audio_path = self._resolve_audio_path(audio_id)
                         if audio_path and audio_path.exists():
                             samples.append(
@@ -248,8 +252,12 @@ class TsukuyomiDataset(Dataset):
                 for row in reader:
                     # Try common column names
                     audio_file = row.get("audio") or row.get("wav") or row.get("file")
-                    text = row.get("text") or row.get("transcript") or row.get("sentence")
-                    speaker_id = row.get("speaker") or row.get("speaker_id") or "default"
+                    text = (
+                        row.get("text") or row.get("transcript") or row.get("sentence")
+                    )
+                    speaker_id = (
+                        row.get("speaker") or row.get("speaker_id") or "default"
+                    )
 
                     if audio_file and text:
                         audio_path = self._resolve_audio_path(audio_file)
@@ -259,9 +267,9 @@ class TsukuyomiDataset(Dataset):
                                     audio_path=audio_path,
                                     text=text,
                                     speaker_id=speaker_id,
-                                metadata=row,  # Store all fields as metadata
+                                    metadata=row,  # Store all fields as metadata
+                                )
                             )
-                        )
 
         return samples
 
