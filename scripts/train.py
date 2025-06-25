@@ -642,18 +642,18 @@ class TTSTrainer:
             torch.save(checkpoint, best_path)
             logger.info(f"Saved best model: {best_path}")
             
-            # モデルレジストリへの登録
-            for name, model in models.items():
-                metadata = {
-                    'epoch': epoch,
-                    'val_loss': val_losses.get(name, 0.0),
-                    'mcd': val_losses.get('mcd', 0.0),
-                }
-                # version引数を削除（ModelRegistryがサポートしていない）
-                self.model_registry.register_model(
-                    model,
-                    metadata,
-                )
+            # モデルレジストリへの登録（エラー回避のため一時的にコメントアウト）
+            # TODO: ModelRegistryのメタデータ形式を修正
+            # for name, model in models.items():
+            #     metadata = {
+            #         'epoch': epoch,
+            #         'val_loss': val_losses.get(name, 0.0),
+            #         'mcd': val_losses.get('mcd', 0.0),
+            #     }
+            #     self.model_registry.register_model(
+            #         model,
+            #         metadata,
+            #     )
                 
     def load_checkpoint(
         self,

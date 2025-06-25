@@ -127,9 +127,10 @@ class ModelRegistry:
         Returns:
             Path to saved model
         """
-        # Validate version
-        if not self._is_valid_version(metadata.version):
-            raise ValueError(f"Invalid version format: {metadata.version}")
+        # Validate version (metadataがdictの場合の対応)
+        version = metadata.get('version', '1.0.0') if isinstance(metadata, dict) else getattr(metadata, 'version', '1.0.0')
+        if not self._is_valid_version(version):
+            raise ValueError(f"Invalid version format: {version}")
 
         # Check if version already exists
         if metadata.name in self.registry:
