@@ -31,10 +31,10 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from src.data.dataset import TsukuyomiDataset
 from src.models.f0_bert import F0BERT
-from src.models.xphonebert import XPhoneBERT
+from src.models.xphonebert import XPhoneBERTEncoder as XPhoneBERT
 from src.models.vits import VITS
 from src.models.matcha_tts import MatchaTTS
-from src.models.bigvgan_v2 import BigVGANv2
+from src.models.bigvgan_v2 import BigVGANv2Generator as BigVGANv2
 from src.training.losses import MultiTaskLoss
 from src.training.metrics import TrainingMetrics
 from src.utils.model_manager import ModelRegistry
