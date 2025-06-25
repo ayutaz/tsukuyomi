@@ -31,6 +31,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from src.data.dataset import TsukuyomiDataset
 from src.data.collate import tts_collate_fn
+from src.data.text_tokenizer import JapaneseTextTokenizer
 from src.models.f0_bert import F0BERT
 from src.models.xphonebert import XPhoneBERTEncoder as XPhoneBERT
 from src.models.vits import VITS
@@ -79,6 +80,9 @@ class TTSTrainer:
         # ログディレクトリの作成
         log_dir = Path(config.paths.tensorboard).parent
         log_dir.mkdir(parents=True, exist_ok=True)
+        
+        # テキストトークナイザーの初期化
+        self.text_tokenizer = JapaneseTextTokenizer()
         
         # ログトラッカーの設定を修正
         log_with = config.training.logging.trackers
@@ -321,12 +325,17 @@ class TTSTrainer:
             # VITSモデルの場合
             elif 'acoustic' in models and self.config.models.acoustic_model == "vits":
                 try:
-                    # テキストをトークン化（仮実装 - 実際には適切なトークナイザーが必要）
-                    # TODO: 実際のテキストトークナイザーを実装
-                    batch_size = batch['audio'].shape[0]
-                    text_len = 20  # さらに短くする
-                    text_tokens = torch.randint(0, min(50, self.config.models.vits.n_vocab), (batch_size, text_len)).to(batch['audio'].device)
-                    text_lengths = torch.tensor([text_len] * batch_size).to(batch['audio'].device)
+                    # テキストをトークン化
+                    texts = batch['text']
+                    text_encoding = self.text_tokenizer.batch_encode(
+                        texts,
+                        add_special_tokens=True,
+                        max_length=200,  # 最大長を設定
+                        padding=True,
+                        return_tensors=True
+                    )
+                    text_tokens = text_encoding['input_ids'].to(batch['audio'].device)
+                    text_lengths = text_encoding['lengths'].to(batch['audio'].device)
                     
                     # メルスペクトログラムを生成
                     # TODO: 実際のメル変換を実装

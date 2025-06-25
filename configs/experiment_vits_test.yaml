@@ -1,4 +1,4 @@
-# JVS実データセット用の学習設定
+# VITSモデルテスト用設定（トークナイザー統合）
 
 # データ設定
 data:
@@ -7,7 +7,7 @@ data:
   train_dir: "data/jvs_ljspeech"
   val_dir: "data/jvs_ljspeech"
   test_dir: "data/jvs_ljspeech"
-  transcript_file: "metadata_multispeaker.csv"  # 実際のJVSデータ用
+  transcript_file: "metadata.csv"  # 開発環境用
   preprocessor: "openjtalk"
   max_duration: 10.0
   min_duration: 0.5
@@ -21,12 +21,12 @@ data:
   
   # キャッシュ設定
   use_cache: false
-  num_workers: 4
+  num_workers: 2
 
-# モデル設定（まずはダミーモデルで動作確認）
+# モデル設定（VITSを有効化）
 models:
-  acoustic_model: "dummy"
-  vocoder: null
+  acoustic_model: "vits"  # VITSモデルを使用
+  vocoder: null  # VITSは内部でボコーダーを持つ
   
   xphonebert:
     enabled: false
@@ -34,26 +34,32 @@ models:
   f0_bert:
     enabled: false
     
+  # VITS設定（軽量版）
   vits:
-    n_vocab: 100  # 日本語カタカナ+記号の語彙サイズ
+    n_vocab: 93  # トークナイザーの語彙サイズに合わせる
     n_speakers: 100
-    hidden_channels: 32
-    filter_channels: 64
-    n_heads: 1
-    n_layers: 1
+    hidden_channels: 64    # 少し増やす
+    filter_channels: 128   # 少し増やす
+    n_heads: 2
+    n_layers: 3
     kernel_size: 3
     p_dropout: 0.1
-    n_flows: 2
+    n_flows: 4
+    # 追加パラメータ
+    speaker_embedding_dim: 32
+    duration_predictor_filter_channels: 64
+    duration_predictor_kernel_size: 3
+    duration_predictor_dropout: 0.1
 
 # 学習設定
 training:
   num_epochs: 1
-  batch_size: 16
-  gradient_accumulation_steps: 1
+  batch_size: 2  # 開発環境用（ダミーデータが少ない）
+  gradient_accumulation_steps: 2
   gradient_clip: 1.0
-  mixed_precision: "fp16"
+  mixed_precision: "no"  # まずは無効
   save_interval: 100
-  checkpoint_dir: "checkpoints/jvs_real"
+  checkpoint_dir: "checkpoints/vits_test"
   resume_from: null
   
   # 損失重み
@@ -91,9 +97,9 @@ training:
 
 # パス設定
 paths:
-  checkpoints: "checkpoints/jvs_real"
-  tensorboard: "logs/jvs_real/tensorboard"
-  model_registry: "models/jvs_real/registry.db"
+  checkpoints: "checkpoints/vits_test"
+  tensorboard: "logs/vits_test/tensorboard"
+  model_registry: "models/vits_test/registry.db"
   
 # 評価設定
 evaluation:
