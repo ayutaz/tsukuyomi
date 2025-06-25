@@ -144,6 +144,32 @@ jobs:
           python -c "from src.models.vits import VITS; print('✓ VITS imports successfully')" || echo "⚠️ VITS import failed"
           python -c "from src.models.hifigan import HiFiGAN; print('✓ HiFiGAN imports successfully')" || echo "⚠️ HiFiGAN import failed"
 
+  training-smoke-test:
+    name: Training Smoke Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install minimal dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install numpy scipy soundfile
+          pip install pytest
+      
+      - name: Run dummy training test
+        run: |
+          python scripts/train_dummy.py
+      
+      - name: Quick training test
+        run: |
+          pytest tests/test_training_basic.py::test_collate_function -v
+
   check-files:
     name: File Validation & Security Scan
     runs-on: ubuntu-latest

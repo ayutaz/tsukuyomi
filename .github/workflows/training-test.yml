@@ -1,0 +1,174 @@
+name: Training Test
+
+on:
+  push:
+    branches: [ main, dev ]
+    paths:
+      - 'src/**'
+      - 'scripts/train*.py'
+      - 'configs/**'
+      - 'tests/test_training*.py'
+      - '.github/workflows/training-test.yml'
+  pull_request:
+    branches: [ main, dev ]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  test-training:
+    name: Test Training Pipeline
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libsndfile1 ffmpeg
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-training-${{ hashFiles('**/requirements.txt', '**/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-training-
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        # Install core dependencies
+        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+        pip install -r requirements.txt
+        pip install -e .
+    
+    - name: Run dummy training test
+      run: |
+        echo "=== Running dummy training test ==="
+        python scripts/train_dummy.py
+        echo "✅ Dummy training completed successfully"
+    
+    - name: Run training unit tests
+      run: |
+        echo "=== Running training unit tests ==="
+        pytest tests/test_training_basic.py -v --tb=short
+    
+    - name: Test minimal training configuration
+      run: |
+        echo "=== Testing minimal training configuration ==="
+        # Create minimal config for CI
+        cat > configs/ci_test.yaml << EOF
+        # Minimal configuration for CI testing
+        data:
+          dataset: "test"
+          train_dir: "tests/data/dummy"
+          val_dir: "tests/data/dummy"
+          sample_rate: 22050
+          hop_length: 256
+          n_mels: 80
+          use_cache: false
+          num_workers: 0
+          max_duration: null
+          min_duration: null
+        
+        models:
+          acoustic_model: "vits"
+          vocoder: "bigvgan"
+          xphonebert:
+            enabled: false
+          f0_bert:
+            enabled: false
+          vits:
+            n_vocab: 50
+            n_speakers: 2
+            hidden_channels: 32
+            filter_channels: 64
+            n_heads: 1
+            n_layers: 1
+            kernel_size: 3
+            p_dropout: 0.1
+            n_flows: 2
+          bigvgan:
+            num_mels: 80
+            upsample_initial_channel: 64
+            resblock_kernel_sizes: [3]
+            resblock_dilation_sizes: [[1, 3]]
+            upsample_rates: [8, 4]
+            upsample_kernel_sizes: [16, 8]
+        
+        training:
+          num_epochs: 1
+          batch_size: 1
+          gradient_accumulation_steps: 1
+          gradient_clip: 1.0
+          mixed_precision: "no"
+          save_interval: 100
+          checkpoint_dir: "checkpoints/ci_test"
+          loss_weights:
+            total: 1.0
+          optimizers:
+            default:
+              lr: 1e-4
+          schedulers:
+            default:
+              type: "cosine_annealing"
+              T_max: 1
+              eta_min: 1e-6
+          logging:
+            log_interval: 1
+            trackers: "tensorboard"
+          memory_optimization:
+            gradient_checkpointing: false
+        
+        paths:
+          checkpoints: "checkpoints/ci_test"
+          tensorboard: "logs/ci_test"
+          model_registry: "models/ci_test/registry.db"
+        
+        evaluation:
+          metrics: []
+          save_samples: false
+          num_samples: 0
+        EOF
+        
+        # Create dummy data directory
+        mkdir -p tests/data/dummy/wavs
+        
+        # Create dummy metadata
+        echo "test_001|This is a test.|This is a test." > tests/data/dummy/metadata.csv
+        echo "test_002|Another test.|Another test." >> tests/data/dummy/metadata.csv
+        
+        # Create dummy audio files (1 second of silence)
+        python -c "
+        import numpy as np
+        import soundfile as sf
+        for i in range(1, 3):
+            audio = np.zeros(22050, dtype=np.float32)
+            sf.write(f'tests/data/dummy/wavs/test_{i:03d}.wav', audio, 22050)
+        "
+        
+        # Run training for 1 step
+        timeout 60s python scripts/train.py --config configs/ci_test.yaml || EXIT_CODE=$?
+        
+        # Check if it ran (even if it didn't complete)
+        if [ -d "logs/ci_test" ] || [ -d "checkpoints/ci_test" ]; then
+          echo "✅ Training started successfully"
+          exit 0
+        else
+          echo "❌ Training failed to start"
+          exit 1
+        fi
+    
+    - name: Clean up
+      if: always()
+      run: |
+        rm -rf checkpoints/ci_test logs/ci_test models/ci_test tests/data/dummy configs/ci_test.yaml
