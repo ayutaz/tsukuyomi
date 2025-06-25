@@ -321,13 +321,14 @@ class TTSTrainer:
                     # ダミー損失
                     losses['total'] = torch.tensor(0.0, device=batch['audio'].device)
                 
-            # ボコーダー
-            if 'vocoder' in models and 'acoustic' in outputs:
-                outputs['vocoder'] = models['vocoder'](outputs['acoustic']['mel'])
-                losses['vocoder'] = loss_fn.compute_vocoder_loss(
-                    outputs['vocoder'],
-                    batch['audio_targets'],
-                )
+            # ボコーダー（一時的に無効化）
+            # TODO: VITSの出力形式に合わせて修正
+            # if 'vocoder' in models and 'acoustic' in outputs and 'mel' in outputs['acoustic']:
+            #     outputs['vocoder'] = models['vocoder'](outputs['acoustic']['mel'])
+            #     losses['vocoder'] = loss_fn.compute_vocoder_loss(
+            #         outputs['vocoder'],
+            #         batch['audio_targets'],
+            #     )
                 
             # 総損失の計算
             if losses:
