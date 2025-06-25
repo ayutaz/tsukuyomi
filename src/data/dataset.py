@@ -194,21 +194,64 @@ class TsukuyomiDataset(Dataset):
         samples = []
 
         with open(path, "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                # Try common column names
-                audio_file = row.get("audio") or row.get("wav") or row.get("file")
-                text = row.get("text") or row.get("transcript") or row.get("sentence")
-                speaker_id = row.get("speaker") or row.get("speaker_id") or "default"
+            # First, try to detect if it's LJSpeech format (pipe-delimited without header)
+            first_line = f.readline().strip()
+            f.seek(0)  # Reset to beginning
+            
+            # Check if it's LJSpeech format (starts with audio ID like "LJ001-0001")
+            if "|" in first_line and not "," in first_line:
+                # LJSpeech format: audio_id|text|normalized_text
+                logger.info("Detected LJSpeech format (pipe-delimited)")
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    
+                    parts = line.split("|")
+                    if len(parts) >= 2:
+                        audio_id = parts[0]
+                        text = parts[1]  # Use original text
+                        
+                        # For JVS dataset, extract speaker ID from audio filename
+                        if audio_id.startswith("jvs"):
+                            # e.g., jvs001_001 -> speaker_id = jvs001
+                            speaker_id = audio_id.split("_")[0]
+                        else:
+                            speaker_id = "default"
+                        
+                        # Add .wav extension if not present
+                        if not audio_id.endswith(('.wav', '.mp3')):
+                            audio_id = audio_id + '.wav'
+                        
+                        audio_path = self._resolve_audio_path(audio_id)
+                        if audio_path and audio_path.exists():
+                            samples.append(
+                                AudioSample(
+                                    audio_path=audio_path,
+                                    text=text,
+                                    speaker_id=speaker_id,
+                                )
+                            )
+                        else:
+                            logger.warning(f"Audio file not found: {audio_id}")
+            else:
+                # Standard CSV format
+                f.seek(0)
+                reader = csv.DictReader(f)
+                for row in reader:
+                    # Try common column names
+                    audio_file = row.get("audio") or row.get("wav") or row.get("file")
+                    text = row.get("text") or row.get("transcript") or row.get("sentence")
+                    speaker_id = row.get("speaker") or row.get("speaker_id") or "default"
 
-                if audio_file and text:
-                    audio_path = self._resolve_audio_path(audio_file)
-                    if audio_path and audio_path.exists():
-                        samples.append(
-                            AudioSample(
-                                audio_path=audio_path,
-                                text=text,
-                                speaker_id=speaker_id,
+                    if audio_file and text:
+                        audio_path = self._resolve_audio_path(audio_file)
+                        if audio_path and audio_path.exists():
+                            samples.append(
+                                AudioSample(
+                                    audio_path=audio_path,
+                                    text=text,
+                                    speaker_id=speaker_id,
                                 metadata=row,  # Store all fields as metadata
                             )
                         )
