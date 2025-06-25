@@ -119,7 +119,7 @@ training:
     find_unused_parameters: false
     clear_cache_interval: 50      # 頻繁にクリア
     empty_cache_on_validation: true
-    max_split_size_mb: 512       # メモリ分割サイズ
+    # max_split_size_mb: 512       # メモリ分割サイズ（PyTorchバージョンによってはサポートされない）
 
 # パス設定
 paths:
