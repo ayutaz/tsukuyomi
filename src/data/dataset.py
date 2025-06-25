@@ -391,6 +391,25 @@ class TsukuyomiDataset(Dataset):
             audio_path = self.data_root / "wavs" / speaker_id / audio_file
             if audio_path.exists():
                 return audio_path
+            
+            # JVSの複雑なファイル名形式に対応
+            # e.g., jvs001_001 -> jvs001_*_001.wav のパターンマッチング
+            base_name = Path(audio_file).stem  # 拡張子を除く
+            if "_" in base_name:
+                parts = base_name.split("_")
+                if len(parts) >= 2:
+                    speaker = parts[0]
+                    suffix = parts[-1]
+                    # パターンマッチング: jvs001_*_001.wav
+                    pattern = f"{speaker}_*_{suffix}.wav"
+                    
+                    # wavsディレクトリで検索
+                    wavs_dir = self.data_root / "wavs"
+                    if wavs_dir.exists():
+                        matches = list(wavs_dir.glob(pattern))
+                        if matches:
+                            # 最初にマッチしたファイルを使用
+                            return matches[0]
 
         # Try nested speaker directories
         parts = Path(audio_file).parts
@@ -412,6 +431,7 @@ class TsukuyomiDataset(Dataset):
             if audio_file.startswith("jvs") and "_" in audio_file:
                 speaker_id = audio_file.split("_")[0]
                 logger.debug(f"  - {self.data_root / speaker_id / audio_file}")
+                logger.debug(f"  - Pattern: {self.data_root / 'wavs' / f'{speaker_id}_*_{audio_file.split('_')[-1]}'}")
 
         return None
 
