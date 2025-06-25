@@ -766,20 +766,29 @@ class BigVGANv2(nn.Module):
 # Helper functions
 def weight_norm(module: nn.Module) -> nn.Module:
     """Apply weight normalization."""
-    from torch.nn.utils import weight_norm as wn
+    try:
+        from torch.nn.utils.parametrizations import weight_norm as wn
+    except ImportError:
+        # Fallback to old API for older PyTorch versions
+        from torch.nn.utils import weight_norm as wn
 
     return wn(module)
 
 
 def remove_weight_norm(module: nn.Module) -> None:
     """Remove weight normalization."""
-    from torch.nn.utils import remove_weight_norm as rwn
-
     try:
-        rwn(module)
-    except ValueError:
-        # Already removed
-        pass
+        from torch.nn.utils.parametrize import remove_parametrizations
+        # New API uses remove_parametrizations
+        remove_parametrizations(module, "weight")
+    except (ImportError, ValueError):
+        # Fallback to old API or already removed
+        try:
+            from torch.nn.utils import remove_weight_norm as rwn
+            rwn(module)
+        except ValueError:
+            # Already removed
+            pass
 
 
 def compute_gan_loss(

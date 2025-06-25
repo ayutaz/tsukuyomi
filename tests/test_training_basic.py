@@ -24,6 +24,7 @@ class TestBasicTraining:
                 "dataset": "test",
                 "train_dir": "data/test",
                 "val_dir": "data/test",
+                "transcript_file": "metadata.csv",  # テスト用のメタデータファイル
                 "sample_rate": 22050,
                 "hop_length": 256,
                 "n_mels": 80,
