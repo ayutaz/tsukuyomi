@@ -263,7 +263,8 @@ class TsukuyomiDataset(Dataset):
                                 )
                             )
                         else:
-                            logger.warning(f"Audio file not found: {audio_id}")
+                            if len(samples) < 5:  # 最初の数個だけ詳細ログ
+                                logger.warning(f"Audio file not found: {audio_id} (searched in {self.data_root})")
             else:
                 # Standard CSV format
                 f.seek(0)
@@ -373,18 +374,44 @@ class TsukuyomiDataset(Dataset):
             return audio_path
 
         # Try common subdirectories
-        for subdir in ["audio", "wav", "wavs", "data"]:
+        for subdir in ["audio", "wav", "wavs", "data", "audios", "waves"]:
             audio_path = self.data_root / subdir / audio_file
             if audio_path.exists():
                 return audio_path
 
-        # Try speaker subdirectories
+        # Try speaker subdirectories (JVSスタイル)
+        # e.g., jvs001_001.wav -> jvs001/jvs001_001.wav
+        if audio_file.startswith("jvs") and "_" in audio_file:
+            speaker_id = audio_file.split("_")[0]
+            audio_path = self.data_root / speaker_id / audio_file
+            if audio_path.exists():
+                return audio_path
+            
+            # wavs/スピーカーID/ファイル名 形式も試す
+            audio_path = self.data_root / "wavs" / speaker_id / audio_file
+            if audio_path.exists():
+                return audio_path
+
+        # Try nested speaker directories
         parts = Path(audio_file).parts
         if len(parts) > 1:
             # Format: speaker_001/audio.wav
             audio_path = self.data_root / audio_file
             if audio_path.exists():
                 return audio_path
+        
+        # ログに詳細を出力
+        if not hasattr(self, "_logged_paths"):
+            self._logged_paths = set()
+        
+        if audio_file not in self._logged_paths:
+            self._logged_paths.add(audio_file)
+            logger.debug(f"Tried paths for {audio_file}:")
+            logger.debug(f"  - {self.data_root / audio_file}")
+            logger.debug(f"  - {self.data_root / 'wavs' / audio_file}")
+            if audio_file.startswith("jvs") and "_" in audio_file:
+                speaker_id = audio_file.split("_")[0]
+                logger.debug(f"  - {self.data_root / speaker_id / audio_file}")
 
         return None
 
