@@ -1,0 +1,64 @@
+name: Verify Dependencies
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ dev ]
+    paths:
+      - 'requirements.txt'
+      - '.github/workflows/verify-dependencies.yml'
+
+jobs:
+  verify-all:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y mecab libmecab-dev mecab-ipadic-utf8
+    
+    - name: Install UV
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
+    - name: Create virtual environment
+      run: |
+        uv venv
+        echo "VIRTUAL_ENV=$PWD/.venv" >> $GITHUB_ENV
+        echo "$PWD/.venv/bin" >> $GITHUB_PATH
+    
+    - name: Install all dependencies
+      run: |
+        # Fix for librosa
+        uv pip install "librosa>=0.10.1" "numba>=0.57.0"
+        # Install from requirements
+        uv pip install -r requirements.txt
+        # Install package
+        uv pip install -e .
+    
+    - name: Run installation test
+      run: |
+        python scripts/test_installation.py
+    
+    - name: Test training script imports
+      run: |
+        python -c "
+        print('Testing training script imports...')
+        import scripts.train
+        print('✅ Training script imports successful!')
+        "
+    
+    - name: Summary
+      run: |
+        echo "✅ All dependency tests passed!"
+        echo "Python version: $(python --version)"
+        echo "Pip packages: $(pip list | wc -l) packages installed"
