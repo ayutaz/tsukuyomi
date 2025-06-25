@@ -431,7 +431,10 @@ class TsukuyomiDataset(Dataset):
             if audio_file.startswith("jvs") and "_" in audio_file:
                 speaker_id = audio_file.split("_")[0]
                 logger.debug(f"  - {self.data_root / speaker_id / audio_file}")
-                logger.debug(f"  - Pattern: {self.data_root / 'wavs' / f'{speaker_id}_*_{audio_file.split('_')[-1]}'}")
+                parts = audio_file.split('_')
+                if len(parts) >= 2:
+                    pattern = f"{speaker_id}_*_{parts[-1]}"
+                    logger.debug(f"  - Pattern: {self.data_root / 'wavs' / pattern}")
 
         return None
 
