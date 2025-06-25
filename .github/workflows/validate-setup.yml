@@ -85,7 +85,7 @@ jobs:
         print('Testing basic imports...')
         import torch
         import librosa
-        import pyopenjtalk_plus
+        import pyopenjtalk
         print('✅ All critical imports successful!')
         "
     

@@ -30,7 +30,7 @@ import pyopenjtalk
 phonemes = pyopenjtalk.g2p("こんにちは")
 
 # pyopenjtalk-plus（完全互換）
-import pyopenjtalk_plus as pyopenjtalk
+import pyopenjtalk
 phonemes = pyopenjtalk.g2p("こんにちは")
 ```
 
@@ -44,7 +44,7 @@ result = pyopenjtalk.g2p("今日は晴れです", kana=False, join=False)
 ### 3. フォールバック対応
 ```python
 try:
-    import pyopenjtalk_plus as pyopenjtalk
+    import pyopenjtalk
     USING_PLUS = True
 except ImportError:
     import pyopenjtalk

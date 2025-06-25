@@ -94,7 +94,7 @@ def main():
     # Japanese text processing
     print("\n--- Japanese Text Processing ---")
     japanese_modules = [
-        ("pyopenjtalk_plus", "pyOpenJTalk Plus"),
+        ("pyopenjtalk", "pyOpenJTalk Plus"),
         ("jaconv", "jaconv"),
         ("pykakasi", "PyKakasi"),
         ("unidic_lite", "UniDic Lite"),

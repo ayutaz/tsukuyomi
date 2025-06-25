@@ -61,7 +61,7 @@ RUN uv pip install -e .
 # Run dependency tests
 RUN python -c "import torch; print(f'PyTorch: {torch.__version__}, CUDA: {torch.cuda.is_available()}')"
 RUN python -c "import librosa; print(f'librosa: {librosa.__version__}')"
-RUN python -c "import pyopenjtalk_plus; print('pyopenjtalk_plus imported successfully')"
+RUN python -c "import pyopenjtalk; print('pyopenjtalk imported successfully')"
 
 # Test all imports
 RUN python -c "
