@@ -7,7 +7,12 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from pesq import pesq
+try:
+    from pesq import pesq
+except ImportError:
+    pesq = None
+    import warnings
+    warnings.warn("PESQ not available. PESQ metric calculation will be disabled.")
 from pystoi import stoi
 from scipy.spatial.distance import cosine
 from scipy.stats import pearsonr
@@ -301,8 +306,11 @@ class AudioQualityMetrics:
                     target_audio, orig_sr=self.sample_rate, target_sr=16000
                 )
 
-            score = pesq(16000, target_audio, pred_audio, "wb")
-            return score
+            if pesq is not None:
+                score = pesq(16000, target_audio, pred_audio, "wb")
+                return score
+            else:
+                return 0.0
         except Exception:
             return 0.0
 

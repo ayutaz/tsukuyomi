@@ -446,7 +446,7 @@ class TsukuyomiDataset(Dataset):
         random.shuffle(speakers)
 
         # Split speakers
-        n_val_speakers = int(len(speakers) * validation_split)
+        n_val_speakers = max(1, int(len(speakers) * validation_split))
         val_speakers = set(speakers[:n_val_speakers])
 
         # Filter samples

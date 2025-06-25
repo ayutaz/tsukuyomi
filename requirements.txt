@@ -32,7 +32,7 @@ einops>=0.7.0
 rotary-embedding-torch>=0.3.0 ; python_version < '3.12'
 
 # Evaluation metrics (optional - may fail in CI)
-pesq>=0.0.4 ; platform_system != "Windows"
+# pesq>=0.0.4 ; platform_system != "Windows"  # Disabled due to build issues
 pystoi>=0.3.3
 jiwer>=3.0.0
 

@@ -50,7 +50,7 @@ models:
 # 学習設定
 training:
   num_epochs: 1
-  batch_size: 4
+  batch_size: 2  # Reduced for small dataset
   gradient_accumulation_steps: 1
   gradient_clip: 1.0
   mixed_precision: "no"  # まずは無効

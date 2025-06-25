@@ -20,7 +20,12 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from pesq import pesq
+try:
+    from pesq import pesq
+except ImportError:
+    pesq = None
+    import warnings
+    warnings.warn("PESQ not available. PESQ metric calculation will be disabled.")
 from pystoi import stoi
 from scipy.stats import pearsonr
 from transformers import Wav2Vec2Model, Wav2Vec2Processor
@@ -445,7 +450,10 @@ class ComprehensiveEvaluator:
                     syn_16k = librosa.resample(
                         synthesized_audio, orig_sr=sr, target_sr=16000
                     )
-                    results["pesq_score"] = pesq(16000, ref_16k, syn_16k, "wb")
+                    if pesq is not None:
+                        results["pesq_score"] = pesq(16000, ref_16k, syn_16k, "wb")
+                    else:
+                        logger.warning("PESQ not available, skipping PESQ calculation")
                 except Exception as e:
                     logger.warning(f"PESQ calculation failed: {e}")
 
