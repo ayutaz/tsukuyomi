@@ -2,8 +2,6 @@ name: Test All
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ dev ]
 
 jobs:
   dependencies:

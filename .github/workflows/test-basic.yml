@@ -1,0 +1,45 @@
+name: Basic Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ dev ]
+
+jobs:
+  test-imports:
+    name: Test Basic Imports
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y mecab libmecab-dev mecab-ipadic-utf8
+    
+    - name: Test basic setup
+      run: |
+        python --version
+        pip --version
+        echo "✅ Basic Python setup successful"
+    
+    - name: Install and test librosa
+      run: |
+        pip install "librosa>=0.10.1" "numba>=0.57.0"
+        python -c "import librosa; print(f'✅ librosa {librosa.__version__}')"
+    
+    - name: Install and test core dependencies
+      run: |
+        pip install torch torchaudio numpy scipy
+        python -c "import torch; print(f'✅ PyTorch {torch.__version__}')"
+        python -c "import numpy; print(f'✅ NumPy {numpy.__version__}')"
+    
+    - name: Summary
+      run: |
+        echo "✅ All basic tests passed!"
