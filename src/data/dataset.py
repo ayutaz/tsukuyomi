@@ -128,6 +128,13 @@ class TsukuyomiDataset(Dataset):
             self._split_dataset(validation_split, is_validation, random_seed)
 
         logger.info(f"Loaded {len(self.samples)} samples from {data_root}")
+        
+        # Debug: Show sample distribution by speaker
+        if self.samples:
+            speaker_counts = {}
+            for sample in self.samples:
+                speaker_counts[sample.speaker_id] = speaker_counts.get(sample.speaker_id, 0) + 1
+            logger.info(f"Speaker distribution: {dict(sorted(speaker_counts.items())[:5])}...")  # Show first 5
 
     def _load_transcripts(self, transcript_file: str) -> List[AudioSample]:
         """Load transcripts from various formats."""

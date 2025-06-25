@@ -9,11 +9,15 @@ data:
   val_dir: "data/jvs_ljspeech"
   test_dir: "data/jvs_ljspeech"
   preprocessor: "openjtalk"  # 日本語用プリプロセッサー
+  max_duration: null  # 一時的に無効化
+  min_duration: null  # 一時的に無効化
   
   # JVS設定（話者数を減らす）
-  use_speakers: [
-    "jvs001", "jvs002", "jvs003"  # 3話者のみで実験
-  ]
+  # use_speakers: [
+  #   "jvs001", "jvs002", "jvs003"  # 3話者のみで実験
+  # ]
+  # T4のメモリ制限のため、データセット全体は使用せず、
+  # 学習時にサンプル数を制限します
   
   # 音声設定（メモリ節約）
   sample_rate: 22050  # 24kHzから22.05kHzに下げる
@@ -47,7 +51,7 @@ models:
   # VITS設定（T4最適化）
   vits:
     n_vocab: 128      # 語彙数削減
-    n_speakers: 3     # 3話者のみ
+    n_speakers: 100   # JVSデータセットの話者数
     hidden_channels: 64    # 大幅に削減
     inter_channels: 64
     filter_channels: 256   # 削減
