@@ -93,11 +93,14 @@ class TTSTrainer:
             
         # F0-BERTの初期化
         if self.config.models.f0_bert.enabled:
-            models['f0_bert'] = F0BERT(
+            from src.models.f0_bert import F0BERTConfig
+            f0_bert_config = F0BERTConfig(
                 hidden_size=self.config.models.f0_bert.hidden_size,
-                num_layers=self.config.models.f0_bert.num_layers,
-                num_heads=self.config.models.f0_bert.num_heads,
+                num_hidden_layers=self.config.models.f0_bert.num_layers,
+                num_attention_heads=self.config.models.f0_bert.num_heads,
+                pitch_bins=self.config.models.f0_bert.pitch_bins,
             )
+            models['f0_bert'] = F0BERT(config=f0_bert_config)
             
         # 音響モデルの初期化
         if self.config.models.acoustic_model == "vits":
@@ -105,7 +108,12 @@ class TTSTrainer:
                 n_vocab=self.config.models.vits.n_vocab,
                 n_speakers=self.config.models.vits.n_speakers,
                 hidden_channels=self.config.models.vits.hidden_channels,
-                inter_channels=self.config.models.vits.inter_channels,
+                filter_channels=self.config.models.vits.filter_channels,
+                n_heads=self.config.models.vits.n_heads,
+                n_layers=self.config.models.vits.n_layers,
+                kernel_size=self.config.models.vits.kernel_size,
+                p_dropout=self.config.models.vits.p_dropout,
+                n_flows=self.config.models.vits.n_flows,
             )
         elif self.config.models.acoustic_model == "matcha":
             models['acoustic'] = MatchaTTS(

@@ -35,6 +35,7 @@ data:
 models:
   # 最も軽量な設定
   acoustic_model: "vits"
+  vocoder: "bigvgan"  # ボコーダー設定を追加
   
   # XPhoneBERT設定（最小構成）
   xphonebert:
