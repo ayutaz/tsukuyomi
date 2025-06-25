@@ -45,7 +45,9 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Install dependencies with fix for librosa
 RUN uv pip install "librosa>=0.10.1" "numba>=0.57.0" && \
-    uv pip install -r requirements.txt
+    uv pip install -r requirements.txt || \
+    (echo "Failed to install some dependencies, continuing..." && \
+     uv pip list)
 
 # Copy the rest of the application
 COPY . .

@@ -8,6 +8,7 @@ on:
       - 'pyproject.toml'
       - '.github/workflows/test-dependencies.yml'
       - 'Dockerfile.test'
+      - 'scripts/test_installation.py'
   pull_request:
     branches: [ main, dev ]
     paths:
@@ -15,7 +16,10 @@ on:
       - 'pyproject.toml'
       - '.github/workflows/test-dependencies.yml'
       - 'Dockerfile.test'
+      - 'scripts/test_installation.py'
   workflow_dispatch:  # Manual trigger
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
 
 jobs:
   test-cpu-dependencies:

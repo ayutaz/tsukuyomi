@@ -1,0 +1,24 @@
+name: Quick Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ dev ]
+
+jobs:
+  quick-test:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Test basic imports
+      run: |
+        pip install librosa>=0.10.1 numba>=0.57.0
+        python -c "import librosa; print(f'librosa version: {librosa.__version__}')"
+        echo "Basic import test passed!"
