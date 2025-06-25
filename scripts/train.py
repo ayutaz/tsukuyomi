@@ -125,12 +125,16 @@ class TTSTrainer:
             
         # ボコーダーの初期化
         if self.config.models.vocoder == "bigvgan":
-            models['vocoder'] = BigVGANv2(
-                num_mels=self.config.models.bigvgan.num_mels,
-                upsample_initial_channel=self.config.models.bigvgan.upsample_initial_channel,
+            from src.models.bigvgan_v2 import BigVGANv2Config
+            bigvgan_config = BigVGANv2Config(
+                n_mel_channels=self.config.models.bigvgan.num_mels,
+                hidden_channels=self.config.models.bigvgan.upsample_initial_channel,
                 resblock_kernel_sizes=self.config.models.bigvgan.resblock_kernel_sizes,
-                resblock_dilation_sizes=self.config.models.bigvgan.resblock_dilation_sizes,
+                resblock_dilations=self.config.models.bigvgan.resblock_dilation_sizes,
+                upsample_rates=self.config.models.bigvgan.upsample_rates,
+                upsample_kernel_sizes=self.config.models.bigvgan.upsample_kernel_sizes,
             )
+            models['vocoder'] = BigVGANv2(config=bigvgan_config)
             
         return models
     
