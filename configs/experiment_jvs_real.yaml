@@ -1,0 +1,101 @@
+# JVS実データセット用の学習設定
+
+# データ設定
+data:
+  dataset: "jvs"
+  data_dir: "data/jvs_ljspeech"
+  train_dir: "data/jvs_ljspeech"
+  val_dir: "data/jvs_ljspeech"
+  test_dir: "data/jvs_ljspeech"
+  preprocessor: "openjtalk"
+  max_duration: 10.0
+  min_duration: 0.5
+  
+  # 音声設定
+  sample_rate: 22050
+  hop_length: 256
+  n_mels: 80
+  n_fft: 1024
+  win_length: 1024
+  
+  # キャッシュ設定
+  use_cache: false
+  num_workers: 4
+
+# モデル設定（まずはダミーモデルで動作確認）
+models:
+  acoustic_model: "dummy"
+  vocoder: null
+  
+  xphonebert:
+    enabled: false
+    
+  f0_bert:
+    enabled: false
+    
+  vits:
+    n_vocab: 128
+    n_speakers: 100
+    hidden_channels: 32
+    filter_channels: 64
+    n_heads: 1
+    n_layers: 1
+    kernel_size: 3
+    p_dropout: 0.1
+    n_flows: 2
+
+# 学習設定
+training:
+  num_epochs: 1
+  batch_size: 16
+  gradient_accumulation_steps: 1
+  gradient_clip: 1.0
+  mixed_precision: "fp16"
+  save_interval: 100
+  checkpoint_dir: "checkpoints/jvs_real"
+  resume_from: null
+  
+  # 損失重み
+  loss_weights:
+    total: 1.0
+    
+  # オプティマイザー設定
+  optimizers:
+    default:
+      lr: 1e-4
+      beta1: 0.9
+      beta2: 0.999
+      eps: 1e-8
+      weight_decay: 0.0
+      
+  # スケジューラー設定
+  schedulers:
+    default:
+      type: "cosine_annealing_warm_restarts"
+      T_0: 10
+      T_mult: 2
+      eta_min: 1e-6
+      
+  # ロギング設定
+  logging:
+    log_interval: 10
+    trackers: "tensorboard"
+    
+  # メモリ最適化
+  memory_optimization:
+    gradient_checkpointing: false
+    find_unused_parameters: false
+    clear_cache_interval: 50
+    empty_cache_on_validation: true
+
+# パス設定
+paths:
+  checkpoints: "checkpoints/jvs_real"
+  tensorboard: "logs/jvs_real/tensorboard"
+  model_registry: "models/jvs_real/registry.db"
+  
+# 評価設定
+evaluation:
+  metrics: []
+  save_samples: false
+  num_samples: 0
