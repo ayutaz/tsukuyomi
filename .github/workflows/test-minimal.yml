@@ -1,0 +1,27 @@
+name: Minimal Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ dev ]
+
+jobs:
+  minimal-test:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check Python version
+      run: |
+        python3 --version
+        which python3
+    
+    - name: Test pip
+      run: |
+        python3 -m pip --version
+        python3 -m pip list
+    
+    - name: Simple test
+      run: |
+        echo "Test completed successfully!"
