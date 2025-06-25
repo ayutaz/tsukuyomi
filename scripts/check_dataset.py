@@ -43,9 +43,18 @@ def main():
     # データセットの読み込みテスト
     try:
         print("\n=== データセット読み込みテスト ===")
+        
+        # 適切なmetadataファイルを選択
+        if (data_root / "metadata_multispeaker.csv").exists():
+            metadata_file = "metadata_multispeaker.csv"
+            print(f"使用するメタデータ: {metadata_file}")
+        else:
+            metadata_file = "metadata.csv"
+            print(f"使用するメタデータ: {metadata_file}")
+        
         dataset = TsukuyomiDataset(
             data_root=data_root,
-            transcript_file="metadata.csv",
+            transcript_file=metadata_file,
             sample_rate=22050,
             max_duration=10.0,
             min_duration=0.5,

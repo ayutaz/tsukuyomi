@@ -233,10 +233,13 @@ class TTSTrainer:
     
     def setup_data_loaders(self) -> Tuple[DataLoader, DataLoader]:
         """データローダーの設定"""
+        # transcript_fileを設定から取得（デフォルトは"metadata.csv"）
+        transcript_file = self.config.data.get("transcript_file", "metadata.csv")
+        
         # 学習データセット
         train_dataset = TsukuyomiDataset(
             data_root=Path(self.config.data.train_dir),
-            transcript_file="metadata.csv",  # LJSpeech形式
+            transcript_file=transcript_file,
             sample_rate=self.config.data.sample_rate,
             cache_audio=self.config.data.use_cache,
             validation_split=0.1,  # 10%を検証用に
@@ -246,7 +249,7 @@ class TTSTrainer:
         # 検証データセット（同じデータから分割）
         val_dataset = TsukuyomiDataset(
             data_root=Path(self.config.data.val_dir),
-            transcript_file="metadata.csv",  # LJSpeech形式
+            transcript_file=transcript_file,
             sample_rate=self.config.data.sample_rate,
             cache_audio=self.config.data.use_cache,
             validation_split=0.1,  # 10%を検証用に

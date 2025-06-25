@@ -7,6 +7,7 @@ data:
   train_dir: "data/jvs_ljspeech"
   val_dir: "data/jvs_ljspeech"
   test_dir: "data/jvs_ljspeech"
+  transcript_file: "metadata_multispeaker.csv"  # 実際のJVSデータ用
   preprocessor: "openjtalk"
   max_duration: 10.0
   min_duration: 0.5
