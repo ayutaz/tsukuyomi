@@ -599,10 +599,10 @@ class TTSTrainer:
                     'val_loss': val_losses.get(name, 0.0),
                     'mcd': val_losses.get('mcd', 0.0),
                 }
+                # version引数を削除（ModelRegistryがサポートしていない）
                 self.model_registry.register_model(
                     model,
                     metadata,
-                    version=f"{epoch}.0.0",
                 )
                 
     def load_checkpoint(
