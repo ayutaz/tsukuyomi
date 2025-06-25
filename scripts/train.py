@@ -195,22 +195,22 @@ class TTSTrainer:
         """データローダーの設定"""
         # 学習データセット
         train_dataset = TsukuyomiDataset(
-            data_dir=Path(self.config.data.train_dir),
-            preprocessor_type=self.config.data.preprocessor,
+            data_root=Path(self.config.data.train_dir),
+            transcript_file="metadata.csv",  # LJSpeech形式
             sample_rate=self.config.data.sample_rate,
-            hop_length=self.config.data.hop_length,
-            n_mels=self.config.data.n_mels,
-            cache_dir=Path(self.config.data.cache_dir) if self.config.data.use_cache else None,
+            cache_audio=self.config.data.use_cache,
+            validation_split=0.1,  # 10%を検証用に
+            is_validation=False,
         )
         
-        # 検証データセット
+        # 検証データセット（同じデータから分割）
         val_dataset = TsukuyomiDataset(
-            data_dir=Path(self.config.data.val_dir),
-            preprocessor_type=self.config.data.preprocessor,
+            data_root=Path(self.config.data.val_dir),
+            transcript_file="metadata.csv",  # LJSpeech形式
             sample_rate=self.config.data.sample_rate,
-            hop_length=self.config.data.hop_length,
-            n_mels=self.config.data.n_mels,
-            cache_dir=Path(self.config.data.cache_dir) if self.config.data.use_cache else None,
+            cache_audio=self.config.data.use_cache,
+            validation_split=0.1,  # 10%を検証用に
+            is_validation=True,
         )
         
         # 分散学習用のサンプラー
