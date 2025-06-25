@@ -614,6 +614,12 @@ class MultiHeadAttention(nn.Module):
         q = self.conv_q(x)
         k = self.conv_k(c)
         v = self.conv_v(c)
+        
+        # Debug shapes
+        if attn_mask is not None and hasattr(attn_mask, 'shape'):
+            if x.size(0) == 16:  # Only log for our problematic batch
+                print(f"DEBUG MHA: x shape: {x.shape}, c shape: {c.shape}, mask shape: {attn_mask.shape}")
+                print(f"DEBUG MHA: q shape: {q.shape}, k shape: {k.shape}, v shape: {v.shape}")
 
         x, _ = self.attention(q, k, v, mask=attn_mask)
 
@@ -637,6 +643,20 @@ class MultiHeadAttention(nn.Module):
         scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(self.k_channels)
 
         if mask is not None:
+            # Debug mask shape
+            if b == 16:  # Only log for our problematic batch
+                print(f"DEBUG attention mask shape before processing: {mask.shape}")
+                print(f"DEBUG scores shape: {scores.shape}")
+            
+            # Ensure mask has the correct shape for broadcasting
+            if mask.dim() == 3:  # [B, 1, T]
+                mask = mask.unsqueeze(1)  # [B, 1, 1, T]
+            elif mask.dim() == 2:  # [B, T]
+                mask = mask.unsqueeze(1).unsqueeze(1)  # [B, 1, 1, T]
+                
+            if b == 16:  # Only log for our problematic batch
+                print(f"DEBUG attention mask shape after processing: {mask.shape}")
+                
             scores = scores.masked_fill(mask == 0, -1e4)
 
         p_attn = torch.softmax(scores, dim=-1)

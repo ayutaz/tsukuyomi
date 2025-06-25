@@ -402,7 +402,9 @@ class TTSTrainer:
                         speaker_ids=batch['speaker_ids'],
                     )
                 except Exception as e:
+                    import traceback
                     logger.error(f"VITS forward error: {e}")
+                    logger.error(f"Traceback:\n{traceback.format_exc()}")
                     # エラー時はダミー出力（勾配を持つように修正）
                     dummy_loss = torch.tensor(1.0, device=batch['audio'].device, requires_grad=True)
                     outputs['acoustic'] = {'loss': dummy_loss}

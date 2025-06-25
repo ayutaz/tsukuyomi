@@ -14,7 +14,8 @@ def sequence_mask(
         max_length = lengths.max()
 
     x = torch.arange(max_length, dtype=lengths.dtype, device=lengths.device)
-    return x.unsqueeze(0) < lengths.unsqueeze(1)
+    mask = x.unsqueeze(0) < lengths.unsqueeze(1)
+    return mask
 
 
 def generate_path(duration: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
