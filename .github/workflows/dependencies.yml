@@ -1,4 +1,4 @@
-name: Dependency Tests
+name: Dependencies
 
 on:
   push:

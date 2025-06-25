@@ -1,4 +1,4 @@
-name: CI Orchestrator
+name: CI
 
 on:
   push:
@@ -32,10 +32,10 @@ jobs:
   quick-check:
     needs: determine-checks
     if: needs.determine-checks.outputs.quick == 'true'
-    uses: ./.github/workflows/quick-check.yml
+    uses: ./.github/workflows/test-quick.yml
   
   full-ci:
     needs: determine-checks
     if: needs.determine-checks.outputs.full == 'true'
-    uses: ./.github/workflows/full-ci.yml
+    uses: ./.github/workflows/test-full.yml
     secrets: inherit

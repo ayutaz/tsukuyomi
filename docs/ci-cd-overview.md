@@ -6,25 +6,27 @@ This document describes the GitHub Actions workflows used in the Tsukuyomi TTS p
 
 ```
 .github/workflows/
-├── ci.yml              # Main orchestrator workflow
-├── full-ci.yml         # Comprehensive test suite
-├── quick-check.yml     # Fast quality checks for development
-├── deploy.yml          # Release and deployment automation
-└── test-dependencies.yml # Dependency installation tests
+├── ci.yml          # Main CI orchestrator
+├── test-full.yml   # Full test suite
+├── test-quick.yml  # Quick test suite  
+├── release.yml     # Release automation
+└── dependencies.yml # Dependency validation
 ```
 
 ## Workflow Details
 
-### 1. CI Orchestrator (`ci.yml`)
-- **Purpose**: Routes to appropriate test suite based on context
+### 1. CI (`ci.yml`)
+- **Name**: CI
+- **Purpose**: Main orchestrator that routes to appropriate test suite
 - **Triggers**: Push, Pull Request, Manual
 - **Actions**: 
-  - Runs quick checks for feature branches
-  - Runs full CI for main branch and PRs
+  - Runs quick tests for feature branches
+  - Runs full tests for main branch and PRs
 
-### 2. Full CI (`full-ci.yml`)
+### 2. Test Suite - Full (`test-full.yml`)
+- **Name**: Test Suite (Full)
 - **Purpose**: Comprehensive testing across multiple environments
-- **Triggers**: Called by ci.yml, Push to main, Weekly schedule
+- **Triggers**: Called by CI, Push to main, Weekly schedule
 - **Test Matrix**:
   - OS: Ubuntu 22.04, Windows, macOS
   - Python: 3.11, 3.12
@@ -36,7 +38,8 @@ This document describes the GitHub Actions workflows used in the Tsukuyomi TTS p
   - Documentation build
   - Package build validation
 
-### 3. Quick Check (`quick-check.yml`)
+### 3. Test Suite - Quick (`test-quick.yml`)
+- **Name**: Test Suite (Quick)
 - **Purpose**: Fast feedback for developers
 - **Triggers**: Push to dev/feature branches, PRs to dev
 - **Tests**:
@@ -44,7 +47,8 @@ This document describes the GitHub Actions workflows used in the Tsukuyomi TTS p
   - Basic unit tests
   - Import checks
 
-### 4. Deploy (`deploy.yml`)
+### 4. Release (`release.yml`)
+- **Name**: Release
 - **Purpose**: Automated release process
 - **Triggers**: Push tags (v*), Manual
 - **Actions**:
@@ -53,7 +57,8 @@ This document describes the GitHub Actions workflows used in the Tsukuyomi TTS p
   - Publish to PyPI
   - Build and push Docker images
 
-### 5. Dependency Tests (`test-dependencies.yml`)
+### 5. Dependencies (`dependencies.yml`)
+- **Name**: Dependencies
 - **Purpose**: Ensure all dependencies install correctly
 - **Triggers**: 
   - Changes to requirements files
@@ -71,7 +76,7 @@ Add these badges to your README.md:
 
 ```markdown
 [![CI](https://github.com/ayutaz/tsukuyomi/actions/workflows/ci.yml/badge.svg)](https://github.com/ayutaz/tsukuyomi/actions/workflows/ci.yml)
-[![Dependency Tests](https://github.com/ayutaz/tsukuyomi/actions/workflows/test-dependencies.yml/badge.svg)](https://github.com/ayutaz/tsukuyomi/actions/workflows/test-dependencies.yml)
+[![Dependencies](https://github.com/ayutaz/tsukuyomi/actions/workflows/dependencies.yml/badge.svg)](https://github.com/ayutaz/tsukuyomi/actions/workflows/dependencies.yml)
 ```
 
 ## Development Workflow

@@ -1,4 +1,4 @@
-name: Quick Quality Check
+name: Test Suite (Quick)
 
 on:
   workflow_call:

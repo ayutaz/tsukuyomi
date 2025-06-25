@@ -1,4 +1,4 @@
-name: Comprehensive CI
+name: Test Suite (Full)
 
 on:
   workflow_call:
