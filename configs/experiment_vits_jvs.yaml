@@ -7,7 +7,7 @@ data:
   train_dir: "data/jvs_ljspeech"
   val_dir: "data/jvs_ljspeech"
   test_dir: "data/jvs_ljspeech"
-  transcript_file: "metadata_multispeaker.csv"
+  transcript_file: "metadata.csv"
   preprocessor: "openjtalk"
   max_duration: 10.0
   min_duration: 0.5
@@ -37,7 +37,7 @@ models:
   # VITS設定（実データ用）
   vits:
     n_vocab: 93  # トークナイザーの語彙サイズ
-    n_speakers: 100
+    n_speakers: 100  # JVSデータセットは100スピーカー
     hidden_channels: 192   # 標準サイズ
     filter_channels: 768   # 標準サイズ
     n_heads: 2
@@ -54,7 +54,7 @@ models:
 # 学習設定
 training:
   num_epochs: 5  # 短めのエポック数でテスト
-  batch_size: 16
+  batch_size: 16  # 実データ用に戻す
   gradient_accumulation_steps: 1
   gradient_clip: 1.0
   mixed_precision: "no"  # 一旦無効化（grad_scalerエラー回避）

@@ -182,10 +182,11 @@ class TsukuyomiDataset(Dataset):
                 if len(parts) >= 2:
                     audio_file = parts[0]
                     
-                    # Check format: if second field looks like speaker ID (jvs001), use it
-                    if len(parts) >= 3 and parts[1].startswith("jvs"):
-                        speaker_id = parts[1]
-                        text = parts[2]
+                    # JVSフォーマット: audio_id|text|normalized_text
+                    if len(parts) >= 3 and audio_file.startswith("jvs"):
+                        text = parts[1]  # オリジナルテキスト
+                        # スピーカーIDをファイル名から抽出
+                        speaker_id = audio_file.split("_")[0]
                     else:
                         # Standard LJSpeech format
                         text = parts[1]
@@ -226,13 +227,26 @@ class TsukuyomiDataset(Dataset):
                     parts = line.split("|")
                     if len(parts) >= 2:
                         audio_id = parts[0]
-                        text = parts[1]  # Use original text
-
-                        # For JVS dataset, extract speaker ID from audio filename
-                        if audio_id.startswith("jvs"):
-                            # e.g., jvs001_001 -> speaker_id = jvs001
-                            speaker_id = audio_id.split("_")[0]
+                        
+                        # デバッグ: 最初の数行のフォーマットを表示
+                        if len(samples) < 3:
+                            logger.info(f"CSV line {len(samples)+1}: {len(parts)} parts - {parts[:3]}")
+                        
+                        # JVSフォーマット: もしかしたら audio_id|speaker_id|text の順？
+                        if len(parts) >= 3 and audio_id.startswith("jvs"):
+                            # カラム2がスピーカーIDっぽいかチェック
+                            if parts[1].startswith("jvs") and len(parts[1]) <= 10:
+                                # audio_id|speaker_id|text フォーマット
+                                speaker_id = parts[1]
+                                text = parts[2] if len(parts) > 2 else ""
+                                logger.info(f"Format detected: audio|speaker|text")
+                            else:
+                                # audio_id|text|normalized_text フォーマット
+                                text = parts[1]
+                                speaker_id = audio_id.split("_")[0]
                         else:
+                            # 標準LJSpeechフォーマット
+                            text = parts[1]
                             speaker_id = "default"
 
                         # Add .wav extension if not present

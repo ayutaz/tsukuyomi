@@ -33,6 +33,7 @@ from src.data.dataset import TsukuyomiDataset
 from src.data.collate import tts_collate_fn
 from src.data.text_tokenizer import JapaneseTextTokenizer
 from src.data.audio_processor import AudioProcessor
+from src.utils.text_preprocessor import simple_text_to_katakana
 from src.models.f0_bert import F0BERT
 from src.models.xphonebert import XPhoneBERTEncoder as XPhoneBERT
 from src.models.vits import VITS
@@ -146,9 +147,26 @@ class TTSTrainer:
         if self.config.models.acoustic_model == "dummy":
             models['acoustic'] = DummyAcousticModel()
         elif self.config.models.acoustic_model == "vits":
+            # データセットから実際のスピーカー数を取得
+            try:
+                dataset = TsukuyomiDataset(
+                    data_root=Path(self.config.data.train_dir),
+                    transcript_file=self.config.data.transcript_file,
+                    sample_rate=self.config.data.sample_rate,
+                    cache_audio=False,
+                )
+                actual_n_speakers = len(dataset.get_speaker_ids())
+                logger.info(f"Detected {actual_n_speakers} speakers in dataset")
+                
+                # 設定値と実際の値の大きい方を使用
+                n_speakers = max(actual_n_speakers, self.config.models.vits.n_speakers)
+            except Exception as e:
+                logger.warning(f"Failed to detect speakers: {e}")
+                n_speakers = self.config.models.vits.n_speakers
+            
             models['acoustic'] = VITS(
                 n_vocab=self.config.models.vits.n_vocab,
-                n_speakers=self.config.models.vits.n_speakers,
+                n_speakers=n_speakers,
                 hidden_channels=self.config.models.vits.hidden_channels,
                 filter_channels=self.config.models.vits.filter_channels,
                 n_heads=self.config.models.vits.n_heads,
@@ -341,9 +359,18 @@ class TTSTrainer:
                 try:
                     # テキストをトークン化
                     texts = batch['text']
-                    logger.info(f"Sample texts: {texts[:2]}")  # 最初の2つのテキストを表示
+                    logger.info(f"Batch size: {len(texts)}, First 2 texts: {texts[:2]}")
+                    
+                    # スピーカーIDも確認
+                    if 'speaker_ids' in batch:
+                        logger.info(f"Speaker IDs: {batch['speaker_ids'][:2]}")
+                    
+                    # テキストをカタカナに変換
+                    katakana_texts = [simple_text_to_katakana(text) for text in texts]
+                    logger.info(f"Katakana texts: {katakana_texts[:2]}")
+                    
                     text_encoding = self.text_tokenizer.batch_encode(
-                        texts,
+                        katakana_texts,  # カタカナ変換済みテキストを使用
                         add_special_tokens=True,
                         max_length=None,  # 自動的に最大長を決定
                         padding=True,
@@ -504,8 +531,10 @@ class TTSTrainer:
                 if 'acoustic' in models and self.config.models.acoustic_model == "vits":
                     # VITSモデルの場合
                     texts = batch['text']
+                    # テキストをカタカナに変換
+                    katakana_texts = [simple_text_to_katakana(text) for text in texts]
                     text_encoding = self.text_tokenizer.batch_encode(
-                        texts,
+                        katakana_texts,  # カタカナ変換済みテキストを使用
                         add_special_tokens=True,
                         max_length=None,  # 自動的に最大長を決定
                         padding=True,
