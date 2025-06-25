@@ -341,10 +341,11 @@ class TTSTrainer:
                 try:
                     # テキストをトークン化
                     texts = batch['text']
+                    logger.info(f"Sample texts: {texts[:2]}")  # 最初の2つのテキストを表示
                     text_encoding = self.text_tokenizer.batch_encode(
                         texts,
                         add_special_tokens=True,
-                        max_length=200,  # 最大長を設定
+                        max_length=None,  # 自動的に最大長を決定
                         padding=True,
                         return_tensors=True
                     )
@@ -356,7 +357,7 @@ class TTSTrainer:
                     mel_lengths = batch['mel_lengths'].to(batch['audio'].device)
                     
                     # デバッグ情報
-                    logger.debug(f"VITS input shapes - text: {text_tokens.shape}, mel: {mel_spec.shape}, speaker_ids: {batch['speaker_ids'].shape}")
+                    logger.info(f"VITS input shapes - text: {text_tokens.shape}, text_lengths: {text_lengths}, mel: {mel_spec.shape}, mel_lengths: {mel_lengths}")
                     logger.debug(f"VITS config - hidden_channels: {self.config.models.vits.hidden_channels}, n_heads: {self.config.models.vits.n_heads}")
                     
                     # VITSフォワードパス
@@ -506,7 +507,7 @@ class TTSTrainer:
                     text_encoding = self.text_tokenizer.batch_encode(
                         texts,
                         add_special_tokens=True,
-                        max_length=200,
+                        max_length=None,  # 自動的に最大長を決定
                         padding=True,
                         return_tensors=True
                     )

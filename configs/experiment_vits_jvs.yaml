@@ -57,7 +57,7 @@ training:
   batch_size: 16
   gradient_accumulation_steps: 1
   gradient_clip: 1.0
-  mixed_precision: "fp16"
+  mixed_precision: "no"  # 一旦無効化（grad_scalerエラー回避）
   save_interval: 100
   checkpoint_dir: "checkpoints/vits_jvs"
   resume_from: null
