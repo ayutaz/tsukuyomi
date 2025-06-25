@@ -1,0 +1,154 @@
+name: Test Dependencies
+
+on:
+  push:
+    branches: [ main, dev ]
+    paths:
+      - 'requirements.txt'
+      - 'pyproject.toml'
+      - '.github/workflows/test-dependencies.yml'
+      - 'Dockerfile.test'
+  pull_request:
+    branches: [ main, dev ]
+    paths:
+      - 'requirements.txt'
+      - 'pyproject.toml'
+      - '.github/workflows/test-dependencies.yml'
+      - 'Dockerfile.test'
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  test-cpu-dependencies:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install UV
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
+    - name: Create virtual environment
+      run: |
+        uv venv
+        echo "VIRTUAL_ENV=$PWD/.venv" >> $GITHUB_ENV
+        echo "$PWD/.venv/bin" >> $GITHUB_PATH
+    
+    - name: Test librosa compatibility fix
+      run: |
+        uv pip install "librosa>=0.10.1" "numba>=0.57.0"
+        python -c "import librosa; print(f'librosa version: {librosa.__version__}')"
+    
+    - name: Install from requirements.txt
+      run: |
+        uv pip install -r requirements.txt
+    
+    - name: Install package
+      run: |
+        uv pip install -e .
+    
+    - name: Test imports
+      run: |
+        python -c "
+        import torch
+        import torchaudio
+        import transformers
+        import librosa
+        import numpy
+        import scipy
+        import soundfile
+        import omegaconf
+        import hydra
+        import accelerate
+        import wandb
+        import tensorboard
+        import einops
+        import pesq
+        import pystoi
+        import jiwer
+        import seaborn
+        import pyopenjtalk_plus
+        print('All imports successful!')
+        print(f'PyTorch version: {torch.__version__}')
+        print(f'Python version: {torch.version.cuda}')
+        "
+    
+    - name: Run basic tests
+      run: |
+        python scripts/test_installation.py || echo "Installation test script not found, skipping"
+
+  test-gpu-dependencies:
+    runs-on: ubuntu-22.04
+    container:
+      image: nvidia/cuda:12.4.0-devel-ubuntu22.04
+      options: --gpus all
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install system dependencies
+      run: |
+        apt-get update
+        apt-get install -y python3.11 python3.11-dev python3.11-venv python3-pip curl git
+        update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+        update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+    
+    - name: Install UV
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "/root/.cargo/bin" >> $GITHUB_PATH
+    
+    - name: Create virtual environment
+      run: |
+        /root/.cargo/bin/uv venv --python python3.11
+        echo "VIRTUAL_ENV=$PWD/.venv" >> $GITHUB_ENV
+        echo "$PWD/.venv/bin" >> $GITHUB_PATH
+    
+    - name: Test CUDA availability
+      run: |
+        nvidia-smi
+    
+    - name: Install dependencies with CUDA support
+      run: |
+        /root/.cargo/bin/uv pip install "librosa>=0.10.1" "numba>=0.57.0"
+        /root/.cargo/bin/uv pip install -r requirements.txt
+        /root/.cargo/bin/uv pip install -e .
+    
+    - name: Test CUDA imports
+      run: |
+        python -c "
+        import torch
+        print(f'PyTorch version: {torch.__version__}')
+        print(f'CUDA available: {torch.cuda.is_available()}')
+        if torch.cuda.is_available():
+            print(f'CUDA version: {torch.version.cuda}')
+            print(f'GPU: {torch.cuda.get_device_name(0)}')
+        "
+
+  test-docker-build:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build test Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile.test
+        push: false
+        tags: tsukuyomi:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max

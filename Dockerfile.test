@@ -1,0 +1,89 @@
+# Test Dockerfile for dependency validation
+FROM nvidia/cuda:12.4.0-devel-ubuntu22.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV CUDA_HOME=/usr/local/cuda
+ENV PATH=${CUDA_HOME}/bin:${PATH}
+ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3.11 \
+    python3.11-dev \
+    python3.11-venv \
+    python3-pip \
+    curl \
+    git \
+    build-essential \
+    libsndfile1 \
+    libsndfile1-dev \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Python 3.11 as default
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 && \
+    update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+
+# Install UV package manager
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements and project files
+COPY requirements.txt pyproject.toml ./
+COPY src ./src
+COPY scripts ./scripts
+
+# Create virtual environment with Python 3.11
+RUN uv venv --python python3.11
+ENV VIRTUAL_ENV=/app/.venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Install dependencies with fix for librosa
+RUN uv pip install "librosa>=0.10.1" "numba>=0.57.0" && \
+    uv pip install -r requirements.txt
+
+# Copy the rest of the application
+COPY . .
+
+# Install the package
+RUN uv pip install -e .
+
+# Run dependency tests
+RUN python -c "import torch; print(f'PyTorch: {torch.__version__}, CUDA: {torch.cuda.is_available()}')"
+RUN python -c "import librosa; print(f'librosa: {librosa.__version__}')"
+RUN python -c "import pyopenjtalk_plus; print('pyopenjtalk_plus imported successfully')"
+
+# Test all imports
+RUN python -c "
+import torch
+import torchaudio
+import transformers
+import librosa
+import numpy
+import scipy
+import soundfile
+import omegaconf
+import hydra
+import accelerate
+import wandb
+import tensorboard
+import einops
+import pesq
+import pystoi
+import jiwer
+import seaborn
+print('All imports successful!')
+print(f'Python: {numpy.__version__}')
+print(f'PyTorch: {torch.__version__}')
+print(f'CUDA available: {torch.cuda.is_available()}')
+if torch.cuda.is_available():
+    print(f'CUDA version: {torch.version.cuda}')
+"
+
+# Set default command
+CMD ["python", "-c", "print('Dependency test container ready')"]

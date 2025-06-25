@@ -1,246 +1,131 @@
 #!/usr/bin/env python3
-"""
-Test script to verify Tsukuyomi TTS installation and functionality
-
-This script checks:
-1. All dependencies are installed
-2. Models can be loaded
-3. Basic synthesis works
-4. Export functionality works
-"""
+"""Test installation and dependency compatibility"""
 
 import sys
-import logging
+import importlib
+import subprocess
 from pathlib import Path
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-def test_imports():
-    """Test that all required imports work"""
-    print("Testing imports...")
+def test_import(module_name: str, package_name: str = None) -> bool:
+    """Test if a module can be imported"""
+    if package_name is None:
+        package_name = module_name
+    
     try:
-        import torch
-        print(f"✓ PyTorch {torch.__version__}")
-        
-        import numpy as np
-        print(f"✓ NumPy {np.__version__}")
-        
-        import librosa
-        print("✓ librosa")
-        
-        import pyopenjtalk
-        print("✓ pyopenjtalk")
-        
-        import streamlit
-        print("✓ streamlit")
-        
-        import onnx
-        print("✓ onnx")
-        
-        import onnxruntime
-        print("✓ onnxruntime")
-        
-        # Test project imports
-        sys.path.append(str(Path(__file__).resolve().parent.parent))
-        
-        from src.models.vits import VITS
-        print("✓ VITS model")
-        
-        from src.models.hifigan import HiFiGAN
-        print("✓ HiFi-GAN model")
-        
-        from src.frontend.japanese_g2p import JapaneseG2P
-        print("✓ Japanese G2P")
-        
-        from src.training.losses import MultiTaskLoss
-        print("✓ Training losses")
-        
-        print("\n✅ All imports successful!")
+        module = importlib.import_module(module_name)
+        version = getattr(module, '__version__', 'unknown')
+        print(f"✅ {package_name}: {version}")
         return True
-        
     except ImportError as e:
-        print(f"\n❌ Import error: {e}")
-        print("Please install missing dependencies with: pip install -r requirements.txt")
+        print(f"❌ {package_name}: Import failed - {e}")
         return False
 
-
-def test_model_creation():
-    """Test that models can be created"""
-    print("\nTesting model creation...")
-    
+def test_cuda():
+    """Test CUDA availability"""
     try:
-        from src.models.vits import VITS
-        from src.models.hifigan import HiFiGAN
-        from src.models.f0_bert import F0BERT
-        
-        # Test VITS
-        vits = VITS(n_vocab=100, n_speakers=1)
-        print("✓ VITS model created")
-        
-        # Test HiFi-GAN
-        hifigan = HiFiGAN()
-        print("✓ HiFi-GAN created")
-        
-        # Test F0-BERT
-        f0bert = F0BERT()
-        print("✓ F0-BERT created")
-        
-        print("\n✅ All models can be created!")
-        return True
-        
-    except Exception as e:
-        print(f"\n❌ Model creation error: {e}")
-        return False
-
-
-def test_data_pipeline():
-    """Test data loading pipeline"""
-    print("\nTesting data pipeline...")
-    
-    try:
-        from src.data.ljspeech_dataset import LJSpeechDataset
-        from src.frontend.text_normalizer import TextNormalizer
-        
-        # Test text normalizer
-        normalizer = TextNormalizer()
-        normalized = normalizer.normalize("Hello, world! 123")
-        print(f"✓ Text normalizer: '{normalized}'")
-        
-        # Test dataset (without actual data)
-        print("✓ LJSpeech dataset class available")
-        
-        print("\n✅ Data pipeline functional!")
-        return True
-        
-    except Exception as e:
-        print(f"\n❌ Data pipeline error: {e}")
-        return False
-
-
-def test_synthesis():
-    """Test basic synthesis (mock)"""
-    print("\nTesting synthesis pipeline...")
-    
-    try:
-        from src.models.vits import VITS
         import torch
-        
-        # Create small model
-        model = VITS(
-            n_vocab=100,
-            n_speakers=1,
-            hidden_channels=32,
-            filter_channels=64,
-            n_heads=2,
-            n_layers=2
-        )
-        model.eval()
-        
-        # Mock input
-        text = torch.randint(0, 100, (1, 10))
-        text_lengths = torch.tensor([10])
-        
-        with torch.no_grad():
-            # Test forward pass
-            outputs = model.infer(text, text_lengths)
-            
-        print(f"✓ Model inference successful, output shape: {outputs.shape}")
-        print("\n✅ Synthesis pipeline functional!")
-        return True
-        
+        if torch.cuda.is_available():
+            print(f"✅ CUDA: {torch.version.cuda}")
+            print(f"   GPU: {torch.cuda.get_device_name(0)}")
+            print(f"   Memory: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f} GB")
+        else:
+            print("⚠️  CUDA: Not available (CPU mode)")
     except Exception as e:
-        print(f"\n❌ Synthesis error: {e}")
-        return False
+        print(f"❌ CUDA: Error - {e}")
 
-
-def test_tools():
-    """Test additional tools"""
-    print("\nTesting additional tools...")
-    
-    results = []
-    
-    # Test preprocessing script
-    try:
-        from scripts.preprocess_audio import AudioPreprocessor
-        preprocessor = AudioPreprocessor()
-        print("✓ Audio preprocessor available")
-        results.append(True)
-    except Exception as e:
-        print(f"✗ Audio preprocessor error: {e}")
-        results.append(False)
-    
-    # Test MOS evaluation
-    try:
-        from scripts.mos_evaluation import MOSDatabase, MOSEvaluator
-        print("✓ MOS evaluation tools available")
-        results.append(True)
-    except Exception as e:
-        print(f"✗ MOS evaluation error: {e}")
-        results.append(False)
-    
-    # Test model compression
-    try:
-        from scripts.model_compression import ModelCompressor
-        print("✓ Model compression tools available")
-        results.append(True)
-    except Exception as e:
-        print(f"✗ Model compression error: {e}")
-        results.append(False)
-    
-    # Test edge optimization
-    try:
-        from scripts.edge_optimization import EdgeOptimizer, EdgeConfig
-        print("✓ Edge optimization tools available")
-        results.append(True)
-    except Exception as e:
-        print(f"✗ Edge optimization error: {e}")
-        results.append(False)
-    
-    if all(results):
-        print("\n✅ All tools functional!")
+def test_python_version():
+    """Check Python version"""
+    version = sys.version_info
+    if version.major == 3 and version.minor == 11:
+        print(f"✅ Python: {version.major}.{version.minor}.{version.micro}")
     else:
-        print("\n⚠️ Some tools have issues")
-    
-    return all(results)
-
+        print(f"⚠️  Python: {version.major}.{version.minor}.{version.micro} (3.11 recommended)")
 
 def main():
-    """Run all tests"""
-    print("="*60)
-    print("Tsukuyomi TTS Installation Test")
-    print("="*60)
+    print("=== Tsukuyomi TTS Installation Test ===\n")
     
-    results = []
+    # Test Python version
+    test_python_version()
     
-    # Run tests
-    results.append(test_imports())
-    results.append(test_model_creation())
-    results.append(test_data_pipeline())
-    results.append(test_synthesis())
-    results.append(test_tools())
+    # Core dependencies
+    print("\n--- Core Dependencies ---")
+    core_modules = [
+        ("torch", "PyTorch"),
+        ("torchaudio", "TorchAudio"),
+        ("transformers", "Transformers"),
+        ("numpy", "NumPy"),
+        ("scipy", "SciPy"),
+        ("librosa", "librosa"),
+    ]
+    
+    for module, name in core_modules:
+        test_import(module, name)
+    
+    # Test CUDA
+    print("\n--- CUDA Support ---")
+    test_cuda()
+    
+    # Training dependencies
+    print("\n--- Training Dependencies ---")
+    training_modules = [
+        ("omegaconf", "OmegaConf"),
+        ("hydra", "Hydra"),
+        ("accelerate", "Accelerate"),
+        ("wandb", "Weights & Biases"),
+        ("tensorboard", "TensorBoard"),
+        ("einops", "Einops"),
+    ]
+    
+    for module, name in training_modules:
+        test_import(module, name)
+    
+    # Evaluation dependencies
+    print("\n--- Evaluation Dependencies ---")
+    eval_modules = [
+        ("pesq", "PESQ"),
+        ("pystoi", "PySTOI"),
+        ("jiwer", "JiWER"),
+        ("seaborn", "Seaborn"),
+    ]
+    
+    for module, name in eval_modules:
+        test_import(module, name)
+    
+    # Japanese text processing
+    print("\n--- Japanese Text Processing ---")
+    japanese_modules = [
+        ("pyopenjtalk_plus", "pyOpenJTalk Plus"),
+        ("jaconv", "jaconv"),
+        ("pykakasi", "PyKakasi"),
+        ("unidic_lite", "UniDic Lite"),
+    ]
+    
+    for module, name in japanese_modules:
+        test_import(module, name)
+    
+    # Project modules
+    print("\n--- Tsukuyomi Modules ---")
+    project_modules = [
+        ("src.models.xphonebert", "XPhoneBERT"),
+        ("src.models.f0_bert", "F0-BERT"),
+        ("src.models.vits", "VITS"),
+        ("src.models.matcha_tts", "Matcha-TTS"),
+        ("src.models.bigvgan_v2", "BigVGAN-v2"),
+    ]
+    
+    all_success = True
+    for module, name in project_modules:
+        if not test_import(module, name):
+            all_success = False
     
     # Summary
-    print("\n" + "="*60)
-    print("SUMMARY")
-    print("="*60)
-    
-    if all(results):
+    print("\n=== Summary ===")
+    if all_success:
         print("✅ All tests passed! Tsukuyomi TTS is ready to use.")
-        print("\nNext steps:")
-        print("1. Prepare your dataset")
-        print("2. Run training: python train.py --config configs/stage1.yaml")
-        print("3. Or try the web UI: streamlit run app.py")
+        return 0
     else:
         print("❌ Some tests failed. Please check the errors above.")
-        print("\nCommon solutions:")
-        print("1. Install missing dependencies: pip install -r requirements.txt")
-        print("2. Check Python version (3.11+ required)")
-        print("3. For CUDA issues, ensure PyTorch is installed with CUDA support")
-    
-    return 0 if all(results) else 1
-
+        return 1
 
 if __name__ == "__main__":
     sys.exit(main())

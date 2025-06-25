@@ -4,6 +4,7 @@
 # データ設定
 data:
   dataset: "jvs"
+  data_dir: "data/jvs_ljspeech"  # 追加
   train_dir: "data/jvs_ljspeech"
   val_dir: "data/jvs_ljspeech"
   test_dir: "data/jvs_ljspeech"
