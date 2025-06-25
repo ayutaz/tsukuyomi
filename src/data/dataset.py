@@ -181,10 +181,15 @@ class TsukuyomiDataset(Dataset):
                 parts = line.split("|")
                 if len(parts) >= 2:
                     audio_file = parts[0]
-                    text = parts[1]
-
-                    # Optional speaker ID as third field
-                    speaker_id = parts[2] if len(parts) > 2 else "default"
+                    
+                    # Check format: if second field looks like speaker ID (jvs001), use it
+                    if len(parts) >= 3 and parts[1].startswith("jvs"):
+                        speaker_id = parts[1]
+                        text = parts[2]
+                    else:
+                        # Standard LJSpeech format
+                        text = parts[1]
+                        speaker_id = parts[2] if len(parts) > 2 else "default"
 
                     # Handle various audio path formats
                     audio_path = self._resolve_audio_path(audio_file)
