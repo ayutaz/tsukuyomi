@@ -648,16 +648,37 @@ class MultiHeadAttention(nn.Module):
                 print(f"DEBUG attention mask shape before processing: {mask.shape}")
                 print(f"DEBUG scores shape: {scores.shape}")
             
-            # Ensure mask has the correct shape for broadcasting
-            if mask.dim() == 3:  # [B, 1, T]
-                mask = mask.unsqueeze(1)  # [B, 1, 1, T]
+            # Ensure mask has the correct shape for broadcasting with scores [B, n_heads, T_q, T_k]
+            if mask.dim() == 4 and mask.size(1) == 1 and mask.size(2) == 1:
+                # Already in correct shape [B, 1, 1, T]
+                pass
+            elif mask.dim() == 3:
+                if mask.size(1) == 1:  # [B, 1, T]
+                    mask = mask.unsqueeze(2)  # [B, 1, 1, T]
+                else:
+                    # This might be [B, T_q, T_k] - need to add head dimension
+                    mask = mask.unsqueeze(1)  # [B, 1, T_q, T_k]
             elif mask.dim() == 2:  # [B, T]
-                mask = mask.unsqueeze(1).unsqueeze(1)  # [B, 1, 1, T]
+                # This is likely a sequence mask, expand for attention
+                mask = mask.unsqueeze(1).unsqueeze(2)  # [B, 1, 1, T]
                 
             if b == 16:  # Only log for our problematic batch
                 print(f"DEBUG attention mask shape after processing: {mask.shape}")
                 
-            scores = scores.masked_fill(mask == 0, -1e4)
+            # Apply mask
+            try:
+                scores = scores.masked_fill(mask == 0, -1e4)
+            except RuntimeError as e:
+                print(f"ERROR in masked_fill: {e}")
+                print(f"  scores shape: {scores.shape}")
+                print(f"  mask shape: {mask.shape}")
+                print(f"  Trying to broadcast mask...")
+                # Try different broadcasting strategies
+                if scores.dim() == 4 and mask.dim() == 4:
+                    # Check which dimensions don't match
+                    for i in range(4):
+                        print(f"  Dim {i}: scores={scores.size(i)}, mask={mask.size(i)}")
+                raise
 
         p_attn = torch.softmax(scores, dim=-1)
         p_attn = self.drop(p_attn)
