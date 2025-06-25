@@ -1,25 +1,25 @@
-name: Test Dependencies
+name: Dependency Tests
 
 on:
   push:
     branches: [ main, dev ]
     paths:
       - 'requirements.txt'
+      - 'requirements-*.txt'
       - 'pyproject.toml'
       - '.github/workflows/test-dependencies.yml'
-      - 'Dockerfile.test'
       - 'scripts/test_installation.py'
   pull_request:
     branches: [ main, dev ]
     paths:
       - 'requirements.txt'
+      - 'requirements-*.txt'
       - 'pyproject.toml'
       - '.github/workflows/test-dependencies.yml'
-      - 'Dockerfile.test'
       - 'scripts/test_installation.py'
   workflow_dispatch:  # Manual trigger
   schedule:
-    - cron: '0 0 * * 0'  # Weekly on Sunday
+    - cron: '0 0 * * 0'  # Weekly on Sunday at 00:00 UTC
 
 jobs:
   test-cpu-dependencies:
@@ -95,68 +95,3 @@ jobs:
       run: |
         python scripts/test_installation.py || echo "Installation test script not found, skipping"
 
-  test-gpu-dependencies:
-    runs-on: ubuntu-22.04
-    if: false  # Disable GPU tests on GitHub Actions (no GPU runners available)
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install system dependencies
-      run: |
-        apt-get update
-        apt-get install -y python3.11 python3.11-dev python3.11-venv python3-pip curl git
-        update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
-        update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
-    
-    - name: Install UV
-      run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        echo "/root/.cargo/bin" >> $GITHUB_PATH
-    
-    - name: Create virtual environment
-      run: |
-        /root/.cargo/bin/uv venv --python python3.11
-        echo "VIRTUAL_ENV=$PWD/.venv" >> $GITHUB_ENV
-        echo "$PWD/.venv/bin" >> $GITHUB_PATH
-    
-    - name: Test CUDA availability
-      run: |
-        nvidia-smi
-    
-    - name: Install dependencies with CUDA support
-      run: |
-        /root/.cargo/bin/uv pip install "librosa>=0.10.1" "numba>=0.57.0"
-        /root/.cargo/bin/uv pip install -r requirements.txt
-        /root/.cargo/bin/uv pip install -e .
-    
-    - name: Test CUDA imports
-      run: |
-        python -c "
-        import torch
-        print(f'PyTorch version: {torch.__version__}')
-        print(f'CUDA available: {torch.cuda.is_available()}')
-        if torch.cuda.is_available():
-            print(f'CUDA version: {torch.version.cuda}')
-            print(f'GPU: {torch.cuda.get_device_name(0)}')
-        "
-
-  test-docker-build:
-    runs-on: ubuntu-22.04
-    if: false  # Temporarily disable Docker build tests (takes too long)
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Build test Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./Dockerfile.test
-        push: false
-        tags: tsukuyomi:test
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
