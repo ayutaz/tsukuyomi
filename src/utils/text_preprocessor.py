@@ -1,7 +1,6 @@
 """日本語テキスト前処理ユーティリティ"""
 
 import re
-from typing import List, Optional
 
 import MeCab
 import pykakasi

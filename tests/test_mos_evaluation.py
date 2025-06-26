@@ -2,7 +2,6 @@
 Tests for MOS (Mean Opinion Score) evaluation tools
 """
 
-import json
 import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch

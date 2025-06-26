@@ -6,7 +6,6 @@ import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-import numpy as np
 import onnx
 import onnxruntime as ort
 import pytest
@@ -20,10 +19,7 @@ from src.tools.edge_optimization import (
     ONNXConverter,
     OpenVINOConverter,
     TFLiteConverter,
-    convert_to_coreml,
     convert_to_onnx,
-    convert_to_openvino,
-    convert_to_tflite,
     optimize_for_edge,
 )
 

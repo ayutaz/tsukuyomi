@@ -103,7 +103,7 @@ class DurationPredictor(nn.Module):
     ) -> torch.Tensor:
         # Debug input shapes
         if x.size(0) == 16:
-            print(f"DEBUG DurationPredictor input:")
+            print("DEBUG DurationPredictor input:")
             print(f"  x shape: {x.shape}")
             print(f"  x_mask shape: {x_mask.shape}")
             print(f"  expected in_channels: {self.in_channels}")
@@ -179,7 +179,7 @@ class StochasticDurationPredictor(nn.Module):
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         # Debug input shapes
         if x.size(0) == 16:
-            print(f"DEBUG StochasticDurationPredictor input:")
+            print("DEBUG StochasticDurationPredictor input:")
             print(f"  x shape: {x.shape}")
             print(f"  x_mask shape: {x_mask.shape}")
             if g is not None:
@@ -324,7 +324,7 @@ class PosteriorEncoder(nn.Module):
         
         # Debug mask shape
         if x.size(0) == 16:
-            print(f"DEBUG PosteriorEncoder:")
+            print("DEBUG PosteriorEncoder:")
             print(f"  x shape: {x.shape}")
             print(f"  x_lengths: {x_lengths}")
             print(f"  x_mask shape: {x_mask.shape}")
@@ -727,7 +727,7 @@ class MultiHeadAttention(nn.Module):
                 print(f"ERROR in masked_fill: {e}")
                 print(f"  scores shape: {scores.shape}")
                 print(f"  mask shape: {mask.shape}")
-                print(f"  Trying to broadcast mask...")
+                print("  Trying to broadcast mask...")
                 # Try different broadcasting strategies
                 if scores.dim() == 4 and mask.dim() == 4:
                     # Check which dimensions don't match

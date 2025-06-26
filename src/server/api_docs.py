@@ -233,18 +233,18 @@ Authorization: Bearer YOUR_API_KEY
     @app.get("/docs", include_in_schema=False)
     async def custom_swagger_ui_html():
         return HTMLResponse(
-            content=f"""
+            content="""
 <!DOCTYPE html>
 <html>
 <head>
     <title>Tsukuyomi TTS API - Swagger UI</title>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@4/swagger-ui.css">
     <style>
-        .swagger-ui .topbar {{ display: none }}
-        .swagger-ui .info {{ margin-bottom: 20px }}
-        .swagger-ui .info .title {{ color: #6366f1 }}
-        .swagger-ui .btn.authorize {{ background-color: #6366f1; border-color: #6366f1 }}
-        .swagger-ui .btn.authorize:hover {{ background-color: #4f46e5; border-color: #4f46e5 }}
+        .swagger-ui .topbar { display: none }
+        .swagger-ui .info { margin-bottom: 20px }
+        .swagger-ui .info .title { color: #6366f1 }
+        .swagger-ui .btn.authorize { background-color: #6366f1; border-color: #6366f1 }
+        .swagger-ui .btn.authorize:hover { background-color: #4f46e5; border-color: #4f46e5 }
     </style>
 </head>
 <body>
@@ -252,8 +252,8 @@ Authorization: Bearer YOUR_API_KEY
     <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@4/swagger-ui-bundle.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@4/swagger-ui-standalone-preset.js"></script>
     <script>
-    window.onload = function() {{
-        window.ui = SwaggerUIBundle({{
+    window.onload = function() {
+        window.ui = SwaggerUIBundle({
             url: "/openapi.json",
             dom_id: '#swagger-ui',
             deepLinking: true,
@@ -267,11 +267,11 @@ Authorization: Bearer YOUR_API_KEY
             layout: "StandaloneLayout",
             tryItOutEnabled: true,
             supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
-            onComplete: function() {{
+            onComplete: function() {
                 console.log("Swagger UI loaded");
-            }}
-        }})
-    }}
+            }
+        })
+    }
     </script>
 </body>
 </html>
@@ -283,7 +283,7 @@ Authorization: Bearer YOUR_API_KEY
     @app.get("/redoc", include_in_schema=False)
     async def redoc_html():
         return HTMLResponse(
-            content=f"""
+            content="""
 <!DOCTYPE html>
 <html>
 <head>
@@ -291,31 +291,31 @@ Authorization: Bearer YOUR_API_KEY
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body {{ margin: 0; padding: 0; }}
-        #redoc-container .menu-content {{ background-color: #1e293b; }}
-        #redoc-container a {{ color: #6366f1; }}
+        body { margin: 0; padding: 0; }
+        #redoc-container .menu-content { background-color: #1e293b; }
+        #redoc-container a { color: #6366f1; }
     </style>
 </head>
 <body>
     <div id="redoc-container"></div>
     <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
     <script>
-        Redoc.init('/openapi.json', {{
+        Redoc.init('/openapi.json', {
             scrollYOffset: 50,
-            theme: {{
-                colors: {{
-                    primary: {{
+            theme: {
+                colors: {
+                    primary: {
                         main: '#6366f1'
-                    }}
-                }},
-                typography: {{
+                    }
+                },
+                typography: {
                     fontSize: '16px',
-                    headings: {{
+                    headings: {
                         fontFamily: 'system-ui, -apple-system, sans-serif'
-                    }}
-                }}
-            }}
-        }}, document.getElementById('redoc-container'))
+                    }
+                }
+            }
+        }, document.getElementById('redoc-container'))
     </script>
 </body>
 </html>

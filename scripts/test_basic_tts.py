@@ -17,7 +17,6 @@ import torch
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.frontend.japanese_g2p import create_japanese_g2p
-from src.frontend.phonemizer import create_phonemizer
 from src.models.acoustic_model import AcousticModel, AcousticModelConfig
 from src.models.xphonebert import XPhoneBERTEncoder
 from src.utils.audio import save_audio

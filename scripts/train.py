@@ -6,20 +6,16 @@
 """
 
 import argparse
-import json
 import logging
-import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 import torch
-import torch.distributed as dist
 import torch.nn as nn
 from accelerate import Accelerator
 from omegaconf import DictConfig, OmegaConf
-from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
 from torch.utils.data import DataLoader, DistributedSampler
@@ -269,25 +265,51 @@ class TTSTrainer:
         # transcript_fileを設定から取得（デフォルトは"metadata.csv"）
         transcript_file = self.config.data.get("transcript_file", "metadata.csv")
         
-        # 学習データセット
-        train_dataset = TsukuyomiDataset(
+        # CI環境やデータが少ない場合を考慮
+        if self.config.data.get('dataset') == 'test' or len(TsukuyomiDataset(
             data_root=Path(self.config.data.train_dir),
             transcript_file=transcript_file,
             sample_rate=self.config.data.sample_rate,
-            cache_audio=self.config.data.use_cache,
-            validation_split=0.1,  # 10%を検証用に
-            is_validation=False,
-        )
-        
-        # 検証データセット（同じデータから分割）
-        val_dataset = TsukuyomiDataset(
-            data_root=Path(self.config.data.val_dir),
-            transcript_file=transcript_file,
-            sample_rate=self.config.data.sample_rate,
-            cache_audio=self.config.data.use_cache,
-            validation_split=0.1,  # 10%を検証用に
-            is_validation=True,
-        )
+            cache_audio=False,
+        ).samples) < 10:
+            # テスト環境では分割しない
+            train_dataset = TsukuyomiDataset(
+                data_root=Path(self.config.data.train_dir),
+                transcript_file=transcript_file,
+                sample_rate=self.config.data.sample_rate,
+                cache_audio=self.config.data.use_cache,
+                validation_split=None,  # 分割しない
+                is_validation=False,
+            )
+            
+            val_dataset = TsukuyomiDataset(
+                data_root=Path(self.config.data.val_dir),
+                transcript_file=transcript_file,
+                sample_rate=self.config.data.sample_rate,
+                cache_audio=self.config.data.use_cache,
+                validation_split=None,  # 分割しない
+                is_validation=False,
+            )
+        else:
+            # 通常の環境では分割する
+            train_dataset = TsukuyomiDataset(
+                data_root=Path(self.config.data.train_dir),
+                transcript_file=transcript_file,
+                sample_rate=self.config.data.sample_rate,
+                cache_audio=self.config.data.use_cache,
+                validation_split=0.1,  # 10%を検証用に
+                is_validation=False,
+            )
+            
+            # 検証データセット（同じデータから分割）
+            val_dataset = TsukuyomiDataset(
+                data_root=Path(self.config.data.val_dir),
+                transcript_file=transcript_file,
+                sample_rate=self.config.data.sample_rate,
+                cache_audio=self.config.data.use_cache,
+                validation_split=0.1,  # 10%を検証用に
+                is_validation=True,
+            )
         
         # グローバルなスピーカーIDマッピングを作成
         all_speaker_ids = sorted(list(set(train_dataset.get_speaker_ids() + val_dataset.get_speaker_ids())))

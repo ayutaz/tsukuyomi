@@ -3,7 +3,6 @@
 Test script for Style-BERT-VITS2 integration
 """
 
-import os
 import sys
 from pathlib import Path
 

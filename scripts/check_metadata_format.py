@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """メタデータファイルのフォーマットを確認"""
 
-import csv
 from pathlib import Path
 
 

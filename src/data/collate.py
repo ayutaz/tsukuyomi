@@ -2,9 +2,8 @@
 Collate functions for TTS data loading.
 """
 
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
-import numpy as np
 import torch
 
 from .audio_processor import AudioProcessor

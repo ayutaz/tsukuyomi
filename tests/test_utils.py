@@ -12,7 +12,6 @@ import soundfile as sf
 import torch
 
 from src.utils.audio import (
-    TORCHAUDIO_AVAILABLE,
     audio_to_mel,
     compute_mel_spectrogram,
     load_audio,

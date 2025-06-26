@@ -2,10 +2,9 @@
 Japanese text tokenizer for TTS
 """
 
-import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import torch
 

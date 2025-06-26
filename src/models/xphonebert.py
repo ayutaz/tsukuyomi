@@ -7,15 +7,13 @@ other languages.
 """
 
 from collections.abc import Sequence
-from typing import Optional, Union
+from typing import Optional
 
-import numpy as np
 import torch
 import torch.nn as nn
 from transformers import AutoModel, AutoTokenizer
 
 # Import text2phonemesequence from frontend directory
-from ..frontend.text2phonemesequence import Text2PhonemeSequence
 
 
 class XPhoneBERTEncoder(nn.Module):
@@ -64,7 +62,7 @@ class XPhoneBERTEncoder(nn.Module):
                 self.model = AutoModel.from_pretrained(
                     model_name, trust_remote_code=True
                 )
-            except Exception as e2:
+            except Exception:
                 # If both fail, raise informative error
                 raise RuntimeError(
                     f"Failed to load XPhoneBERT model '{model_name}'. "

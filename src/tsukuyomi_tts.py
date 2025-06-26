@@ -6,11 +6,10 @@ Supports voice morphing, emotion control, and multi-speaker synthesis.
 
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 import numpy as np
 import torch
-import torch.nn.functional as F
 
 from .models.bigvgan_v2 import create_bigvgan_v2
 from .models.f0_bert import create_f0_bert

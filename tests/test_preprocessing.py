@@ -2,14 +2,12 @@
 Tests for preprocessing components
 """
 
-import struct
 import tempfile
 import wave
 from pathlib import Path
 
 import numpy as np
 import pytest
-import torch
 
 from src.tools.audio_preprocessing import (
     AudioAugmentation,

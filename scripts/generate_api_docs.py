@@ -111,11 +111,11 @@ setup(
                 "lib": ["ES2020"],
                 "outDir": "./dist",
                 "rootDir": "./",
-                "strict": true,
-                "esModuleInterop": true,
-                "skipLibCheck": true,
-                "forceConsistentCasingInFileNames": true,
-                "declaration": true,
+                "strict": True,
+                "esModuleInterop": True,
+                "skipLibCheck": True,
+                "forceConsistentCasingInFileNames": True,
+                "declaration": True,
             },
         }
         

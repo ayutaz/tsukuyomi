@@ -3,11 +3,9 @@ Audio processing utilities for TTS
 """
 
 import logging
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Optional
 
-import numpy as np
 import torch
-import torch.nn.functional as F
 import torchaudio
 import torchaudio.transforms as T
 

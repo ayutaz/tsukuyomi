@@ -6,12 +6,11 @@ H100-optimized BF16 support and efficient training/inference capabilities.
 """
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 @dataclass

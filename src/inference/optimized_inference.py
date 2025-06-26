@@ -13,7 +13,6 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
-import torch.nn as nn
 from torch.nn.utils.rnn import pad_sequence
 from transformers import AutoTokenizer
 

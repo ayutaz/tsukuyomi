@@ -1,6 +1,6 @@
 """Metrics for TTS evaluation"""
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional
 
 import librosa
 import numpy as np
@@ -15,7 +15,6 @@ except ImportError:
     import warnings
     warnings.warn("PESQ not available. PESQ metric calculation will be disabled.")
 from pystoi import stoi
-from scipy.spatial.distance import cosine
 from scipy.stats import pearsonr
 
 

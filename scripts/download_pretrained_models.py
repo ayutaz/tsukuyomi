@@ -3,10 +3,8 @@
 Download and setup pre-trained TTS models for immediate use
 """
 
-import hashlib
 import json
 import logging
-import os
 import sys
 import tarfile
 import urllib.request

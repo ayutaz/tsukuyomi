@@ -3,7 +3,6 @@
 from typing import Optional, Tuple
 
 import torch
-import torch.nn.functional as F
 
 
 def sequence_mask(

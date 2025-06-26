@@ -4,12 +4,10 @@ Supports fine-tuning from pre-trained models with various strategies
 """
 
 import logging
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 
 import torch
 import torch.nn as nn
-from omegaconf import DictConfig
 
 logger = logging.getLogger(__name__)
 

@@ -45,7 +45,7 @@ def check_directory_structure():
             # 音声ファイルを探す
             wav_files = list(path.rglob("*.wav"))[:5]
             if wav_files:
-                print(f"  Contains WAV files:")
+                print("  Contains WAV files:")
                 for wav in wav_files:
                     print(f"    - {wav.relative_to(path)}")
         else:

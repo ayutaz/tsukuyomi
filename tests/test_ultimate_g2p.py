@@ -2,9 +2,7 @@
 Tests for Ultimate Japanese G2P with 97%+ accuracy target
 """
 
-from pathlib import Path
 
-import numpy as np
 import pytest
 import torch
 

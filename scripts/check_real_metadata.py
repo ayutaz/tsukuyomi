@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """実際のJVSメタデータファイルを確認"""
 
-import csv
 from pathlib import Path
 
 
@@ -30,12 +29,12 @@ def check_metadata():
                         break
                     lines.append(line.strip())
                 
-                print(f"\n最初の10行:")
+                print("\n最初の10行:")
                 for i, line in enumerate(lines):
                     print(f"{i+1}: {line}")
                 
                 # 各行のカラム数を確認
-                print(f"\nカラム分析:")
+                print("\nカラム分析:")
                 for i, line in enumerate(lines[:5]):
                     parts = line.split('|')
                     print(f"行{i+1}: {len(parts)}カラム")
@@ -56,7 +55,7 @@ def check_metadata():
     wavs_dir = data_root / "wavs"
     if wavs_dir.exists():
         wav_files = list(wavs_dir.glob("*.wav"))
-        print(f"\n\n=== WAVファイル ===")
+        print("\n\n=== WAVファイル ===")
         print(f"総数: {len(wav_files)}")
         print("最初の10ファイル:")
         for wav in sorted(wav_files)[:10]:

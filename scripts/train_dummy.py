@@ -5,11 +5,9 @@ This script uses simplified models and synthetic data to verify the training pip
 """
 
 import logging
-from pathlib import Path
 
 import torch
 import torch.nn as nn
-from omegaconf import OmegaConf
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

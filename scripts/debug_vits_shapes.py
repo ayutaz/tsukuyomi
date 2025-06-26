@@ -53,7 +53,7 @@ def debug_vits_forward():
     mel_lengths = torch.full((batch_size,), mel_len, dtype=torch.long)
     speaker_ids = torch.randint(0, n_speakers, (batch_size,))
     
-    print(f"\nInput shapes:")
+    print("\nInput shapes:")
     print(f"  text: {text.shape}")
     print(f"  text_lengths: {text_lengths.shape}")
     print(f"  mel: {mel.shape}")
@@ -135,7 +135,7 @@ def test_specific_case():
     text_tokens = encoding['input_ids']
     text_lengths = encoding['lengths']
     
-    print(f"\nToken shapes:")
+    print("\nToken shapes:")
     print(f"  text_tokens: {text_tokens.shape}")
     print(f"  text_lengths: {text_lengths}")
     

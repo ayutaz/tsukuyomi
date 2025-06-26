@@ -7,7 +7,6 @@ from pathlib import Path
 # プロジェクトルートをPythonパスに追加
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-import torch
 
 from src.data.audio_processor import AudioProcessor
 from src.data.collate import tts_collate_fn
@@ -25,7 +24,7 @@ def main():
         n_mels=80,
     )
     
-    print(f"AudioProcessor initialized:")
+    print("AudioProcessor initialized:")
     print(f"  Sample rate: {audio_processor.sample_rate}")
     print(f"  Hop length: {audio_processor.hop_length}")
     print(f"  Mel bins: {audio_processor.n_mels}")
@@ -53,7 +52,7 @@ def main():
     if len(dataset) > 0:
         # 単一サンプルのテスト
         sample = dataset[0]
-        print(f"\n=== 単一サンプルのテスト ===")
+        print("\n=== 単一サンプルのテスト ===")
         print(f"テキスト: {sample['text']}")
         print(f"音声shape: {sample['audio'].shape}")
         
@@ -62,7 +61,7 @@ def main():
         print(f"メルスペクトログラムshape: {mel.shape}")
         
         # バッチテスト
-        print(f"\n=== バッチ処理のテスト ===")
+        print("\n=== バッチ処理のテスト ===")
         batch_size = min(2, len(dataset))
         batch = [dataset[i] for i in range(batch_size)]
         
@@ -76,7 +75,7 @@ def main():
         print(f"メル長: {collated['mel_lengths']}")
         
         # 正規化の確認
-        print(f"\n=== 正規化の確認 ===")
+        print("\n=== 正規化の確認 ===")
         mel_min = collated['mel_targets'].min().item()
         mel_max = collated['mel_targets'].max().item()
         mel_mean = collated['mel_targets'].mean().item()

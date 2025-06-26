@@ -66,7 +66,7 @@ def main():
         
         if len(dataset) > 0:
             sample = dataset[0]
-            print(f"\nサンプル例:")
+            print("\nサンプル例:")
             print(f"  テキスト: {sample['text']}")
             print(f"  話者ID: {sample['speaker_id']}")
             print(f"  音声shape: {sample['audio'].shape}")

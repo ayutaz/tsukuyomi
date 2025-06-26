@@ -4,17 +4,15 @@ Based on: https://arxiv.org/abs/2106.06103
 """
 
 import math
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 from .commons import generate_path, monotonic_align, rand_slice_segments, sequence_mask
-from .f0_bert import F0BERT, F0BERTConfig
 from .hifigan import Generator as HiFiGANGenerator
 from .modules import (
-    DurationPredictor,
     PosteriorEncoder,
     ResidualCouplingBlock,
     StochasticDurationPredictor,
@@ -164,7 +162,7 @@ class VITS(nn.Module):
         
         # Debug shapes
         if text.size(0) == 16:  # Debug for batch size 16
-            print(f"DEBUG VITS forward:")
+            print("DEBUG VITS forward:")
             print(f"  text shape: {text.shape}")
             print(f"  text_lengths: {text_lengths}")
             print(f"  x shape after encoder: {x.shape}")
@@ -206,7 +204,7 @@ class VITS(nn.Module):
 
             # Duration loss
             if text.size(0) == 16:  # Debug
-                print(f"DEBUG before duration predictor:")
+                print("DEBUG before duration predictor:")
                 print(f"  x shape: {x.shape}")
                 print(f"  x_mask shape: {x_mask.shape}")
                 if g is not None:

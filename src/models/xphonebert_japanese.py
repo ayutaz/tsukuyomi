@@ -11,9 +11,8 @@ This module implements a Japanese-optimized version of XPhoneBERT with:
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Union
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -21,10 +20,7 @@ from transformers import (
     AutoConfig,
     AutoModel,
     AutoTokenizer,
-    PretrainedConfig,
-    PreTrainedModel,
 )
-from transformers.modeling_outputs import BaseModelOutputWithPooling
 
 # CUDA 12.1+ optimizations
 try:

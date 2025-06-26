@@ -3,18 +3,16 @@
 Based on the paper: https://arxiv.org/abs/2309.03199
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .commons import generate_path, rand_slice_segments, sequence_mask
+from .commons import generate_path, sequence_mask
 from .modules import (
     DurationPredictor,
-    Encoder,
     LayerNorm,
-    PosteriorEncoder,
     TextEncoder,
 )
 

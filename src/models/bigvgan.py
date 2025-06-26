@@ -4,13 +4,12 @@ Based on: https://arxiv.org/abs/2206.04658
 This is a wrapper around HiFi-GAN with BigVGAN improvements
 """
 
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .hifigan import Generator as HiFiGANGenerator
 from .hifigan import (
     MultiPeriodDiscriminator,
     MultiScaleDiscriminator,

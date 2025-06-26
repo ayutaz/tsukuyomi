@@ -17,7 +17,6 @@ import torch
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from src.export.onnx_export import ExportConfig, ONNXExporter
-from src.models.bigvgan import BigVGAN
 from src.models.hifigan import HiFiGAN
 from src.models.vits import VITS
 
@@ -208,12 +207,12 @@ def main():
     print("\n" + "="*50)
     print("Export successful! To use the ONNX model:")
     print("\nPython (onnxruntime):")
-    print(f"  import onnxruntime as ort")
+    print("  import onnxruntime as ort")
     print(f"  session = ort.InferenceSession('{output_path}')")
-    print(f"  outputs = session.run(None, inputs)")
+    print("  outputs = session.run(None, inputs)")
     print("\nUnity (Sentis):")
     print(f"  1. Copy {output_path} to Assets/")
-    print(f"  2. Use Unity.Sentis.ModelLoader.Load()")
+    print("  2. Use Unity.Sentis.ModelLoader.Load()")
     print("="*50)
 
 

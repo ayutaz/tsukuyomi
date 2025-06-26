@@ -15,7 +15,6 @@ import torch
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from src.inference.realtime_streaming import StreamingConfig
 from src.models.advanced_tts import AdvancedTTS
 
 

@@ -5,10 +5,9 @@ Tests the XPhoneBERT wrapper for multilingual phoneme embeddings,
 including forward pass, feature extraction, and error handling.
 """
 
-from typing import List, Tuple
+from typing import Tuple
 from unittest.mock import MagicMock, patch
 
-import numpy as np
 import pytest
 import torch
 

@@ -6,8 +6,6 @@ JVSコーパスをTsukuyomi TTSの学習形式に変換します。
 
 import argparse
 import json
-import os
-import shutil
 import sys
 from pathlib import Path
 from typing import Dict, List, Tuple

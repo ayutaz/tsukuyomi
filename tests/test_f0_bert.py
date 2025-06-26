@@ -2,9 +2,7 @@
 Tests for F0-BERT pitch prediction model
 """
 
-from pathlib import Path
 
-import numpy as np
 import pytest
 import torch
 

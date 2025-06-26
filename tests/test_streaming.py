@@ -2,9 +2,8 @@
 Tests for streaming and real-time inference
 """
 
-import asyncio
 import time
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import numpy as np
 import pytest
@@ -18,7 +17,6 @@ from src.inference.realtime_streaming import (
     StreamingVITS,
     measure_latency,
 )
-from src.models.bigvgan import BigVGANv2
 from src.models.vits import VITS
 
 

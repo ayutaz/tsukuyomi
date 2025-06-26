@@ -10,20 +10,18 @@ This script provides:
 """
 
 import argparse
-import json
 import logging
 import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional
 
 import coremltools as ct
 import numpy as np
 import onnx
 import onnxruntime as ort
 import torch
-import torch.nn as nn
 from onnxruntime.quantization import QuantType, quantize_dynamic
 
 logging.basicConfig(level=logging.INFO)
@@ -338,7 +336,6 @@ class EdgeOptimizer:
         level: int
     ) -> str:
         """General ONNX optimizations"""
-        from onnxruntime.transformers import optimizer
         
         # Load model
         model = onnx.load(onnx_path)

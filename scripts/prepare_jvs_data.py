@@ -6,14 +6,12 @@ JVS (Japanese versatile speech) コーパスをダウンロードして準備
 
 import argparse
 import json
-import os
 import shutil
 import sys
 import zipfile
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-import requests
 import soundfile as sf
 from tqdm import tqdm
 
@@ -239,7 +237,7 @@ def main():
     with open(metadata_path, 'w', encoding='utf-8') as f:
         json.dump(metadata, f, ensure_ascii=False, indent=2)
         
-    print(f"\nデータセット統計:")
+    print("\nデータセット統計:")
     print(f"- 話者数: {len(metadata['speakers'])}")
     print(f"- 総ファイル数: {metadata['total_files']}")
     print(f"- 総時間: {metadata['total_duration'] / 3600:.1f}時間")
@@ -252,7 +250,7 @@ def main():
     subset_dir = create_experiment_subset(jvs_dir, data_dir, args.speakers, args.subset_size)
     
     print("\n✅ JVSデータセットの準備が完了しました！")
-    print(f"\n実験を開始するには:")
+    print("\n実験を開始するには:")
     print(f"python scripts/train_jvs_experiment.py --config configs/experiment_jvs_4070ti.yaml --data-dir {subset_dir}")
 
 

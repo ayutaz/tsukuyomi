@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """正しいフォーマットのメタデータファイルを作成"""
 
-import csv
 from pathlib import Path
 
 

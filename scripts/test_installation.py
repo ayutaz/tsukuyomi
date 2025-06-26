@@ -2,9 +2,7 @@
 """Test installation and dependency compatibility"""
 
 import importlib
-import subprocess
 import sys
-from pathlib import Path
 
 
 def test_import(module_name: str, package_name: str = None) -> bool:

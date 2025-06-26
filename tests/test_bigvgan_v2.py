@@ -2,7 +2,6 @@
 Tests for BigVGAN-v2 vocoder
 """
 
-from pathlib import Path
 
 import numpy as np
 import pytest

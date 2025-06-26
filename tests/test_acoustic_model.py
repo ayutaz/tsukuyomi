@@ -5,10 +5,7 @@ Tests the acoustic model architecture including Conformer blocks,
 attention mechanisms, and flow-based generation.
 """
 
-from typing import Dict, Optional, Tuple
-from unittest.mock import MagicMock, patch
 
-import numpy as np
 import pytest
 import torch
 import torch.nn as nn

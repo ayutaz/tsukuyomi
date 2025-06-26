@@ -11,7 +11,7 @@ import pytest
 import soundfile as sf
 import torch
 
-from src.data.dataset import AudioSample, SpeakerMetadata, TsukuyomiDataset
+from src.data.dataset import SpeakerMetadata, TsukuyomiDataset
 
 
 class TestDataset:

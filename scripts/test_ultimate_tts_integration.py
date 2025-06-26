@@ -6,7 +6,6 @@ Tests the complete pipeline from text to audio synthesis.
 """
 
 import logging
-import os
 import sys
 import time
 from pathlib import Path
@@ -14,7 +13,6 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import numpy as np
 import torch
 
 from src.models.bigvgan_v2 import create_bigvgan_v2

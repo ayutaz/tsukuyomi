@@ -8,11 +8,8 @@ Features:
 - Download capabilities
 """
 
-import base64
 import io
-import json
-from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import gradio as gr
 import matplotlib.pyplot as plt

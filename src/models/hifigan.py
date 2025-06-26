@@ -3,7 +3,7 @@
 Based on: https://arxiv.org/abs/2010.05646
 """
 
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import torch
 import torch.nn as nn

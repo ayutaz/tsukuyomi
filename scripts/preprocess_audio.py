@@ -16,8 +16,6 @@ import argparse
 import json
 import logging
 import multiprocessing as mp
-import os
-import shutil
 import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -361,7 +359,7 @@ class DatasetBuilder:
         with open(output_dir / "preprocessing_stats.json", 'w') as f:
             json.dump(stats, f, indent=2)
             
-        logger.info(f"Dataset built successfully!")
+        logger.info("Dataset built successfully!")
         logger.info(f"Total files: {stats['total_files']}")
         logger.info(f"Successful: {stats['successful']}")
         logger.info(f"Rejected: {stats['rejected']}")

@@ -8,8 +8,6 @@ all components for end-to-end text-to-speech synthesis.
 import json
 import os
 import warnings
-from collections.abc import Sequence
-from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 import numpy as np

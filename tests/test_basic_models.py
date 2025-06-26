@@ -1,6 +1,5 @@
 """Basic tests for TTS models"""
 
-import pytest
 import torch
 
 from src.models.bigvgan_v2 import BigVGANv2

@@ -4,7 +4,6 @@ Setup script for Tsukuyomi TTS training environment.
 Checks system requirements and prepares the environment for training.
 """
 
-import json
 import os
 import platform
 import shutil

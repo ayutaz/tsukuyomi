@@ -200,7 +200,7 @@ def create_file_lists(
         for entry in test_entries:
             f.write(f"{entry[0]}\n")
             
-    print(f"\nデータ分割:")
+    print("\nデータ分割:")
     print(f"  - Train: {len(train_entries)} files")
     print(f"  - Val: {len(val_entries)} files")
     print(f"  - Test: {len(test_entries)} files")
@@ -213,7 +213,7 @@ def convert_jvs_to_ljspeech(
     include_nonpara: bool = False
 ):
     """JVSデータセット全体をLJSpeech形式に変換"""
-    print(f"JVSデータセットをLJSpeech形式に変換中...")
+    print("JVSデータセットをLJSpeech形式に変換中...")
     print(f"入力: {jvs_dir}")
     print(f"出力: {output_dir}")
     print(f"話者: {speakers}")
@@ -252,7 +252,7 @@ def convert_jvs_to_ljspeech(
     create_file_lists(all_metadata_entries, output_dir)
     
     # 統計情報
-    print(f"\n変換完了!")
+    print("\n変換完了!")
     print(f"総ファイル数: {len(all_metadata_entries)}")
     
     # サンプル表示
@@ -367,8 +367,8 @@ def main():
         
     # 使用例の表示
     print("\n使用例:")
-    print(f"python scripts/train_jvs_experiment.py \\")
-    print(f"    --config configs/experiment_jvs_4070ti.yaml \\")
+    print("python scripts/train_jvs_experiment.py \\")
+    print("    --config configs/experiment_jvs_4070ti.yaml \\")
     print(f"    --data-dir {output_dir}")
 
 

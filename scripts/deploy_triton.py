@@ -138,7 +138,7 @@ def test_deployment(triton_url: str = "localhost:8001"):
     # モデルメタデータの確認
     try:
         metadata = client.get_model_metadata("tsukuyomi_tts")
-        print(f"\nモデルメタデータ:")
+        print("\nモデルメタデータ:")
         print(f"  名前: {metadata['name']}")
         print(f"  プラットフォーム: {metadata['platform']}")
         print(f"  バージョン: {metadata['versions']}")

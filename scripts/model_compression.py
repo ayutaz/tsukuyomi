@@ -14,17 +14,13 @@ import json
 import logging
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional
 
 import numpy as np
-import onnx
-import onnxruntime as ort
 import torch
 import torch.nn as nn
 import torch.nn.utils.prune as prune
-import torch.quantization as quantization
 from sklearn.metrics import mean_squared_error
-from torch.nn.utils import prune as pruning_utils
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -613,7 +609,6 @@ class ModelCompressor:
         
         if optimize:
             # Optimize ONNX model
-            import onnx
             from onnxruntime.transformers import optimizer
             
             opt_model = optimizer.optimize_model(

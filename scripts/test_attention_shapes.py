@@ -21,7 +21,7 @@ def test_attention_shapes():
     n_heads = 2
     seq_len = 50
     
-    print(f"Testing MultiHeadAttention with:")
+    print("Testing MultiHeadAttention with:")
     print(f"  Batch size: {batch_size}")
     print(f"  Channels: {channels}")
     print(f"  Heads: {n_heads}")

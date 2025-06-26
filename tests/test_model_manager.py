@@ -1,13 +1,11 @@
 """Tests for model management and versioning."""
 
-import json
 import shutil
 import tempfile
 from datetime import datetime
 from pathlib import Path
 
 import pytest
-import torch
 import torch.nn as nn
 
 from src.utils.model_manager import (

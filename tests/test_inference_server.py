@@ -2,8 +2,7 @@
 
 import base64
 import io
-import json
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
@@ -13,9 +12,7 @@ from fastapi.testclient import TestClient
 
 from src.server.inference_server import (
     InferenceServer,
-    MorphRequest,
     ServerConfig,
-    TTSRequest,
 )
 
 

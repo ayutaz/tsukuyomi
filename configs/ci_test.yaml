@@ -1,0 +1,79 @@
+# Minimal configuration for CI testing
+data:
+  dataset: "test"
+  train_dir: "tests/data/dummy"
+  val_dir: "tests/data/dummy"
+  sample_rate: 22050
+  hop_length: 256
+  n_mels: 80
+  n_fft: 1024
+  win_length: 1024
+  use_cache: false
+  num_workers: 0
+  max_duration: null
+  min_duration: null
+  transcript_file: "metadata.csv"
+
+models:
+  acoustic_model: "vits"
+  vocoder: "bigvgan"
+  xphonebert:
+    enabled: false
+  f0_bert:
+    enabled: false
+  vits:
+    n_vocab: 50
+    n_speakers: 2
+    hidden_channels: 32
+    filter_channels: 64
+    n_heads: 1
+    n_layers: 1
+    kernel_size: 3
+    p_dropout: 0.1
+    n_flows: 2
+  bigvgan:
+    num_mels: 80
+    upsample_initial_channel: 64
+    resblock_kernel_sizes: [3]
+    resblock_dilation_sizes: [[1, 3]]
+    upsample_rates: [8, 4]
+    upsample_kernel_sizes: [16, 8]
+
+training:
+  num_epochs: 1
+  batch_size: 1
+  gradient_accumulation_steps: 1
+  gradient_clip: 1.0
+  mixed_precision: "no"
+  save_interval: 100
+  checkpoint_dir: "checkpoints/ci_test"
+  resume_from: null
+  loss_weights:
+    total: 1.0
+  optimizers:
+    default:
+      lr: 1e-4
+      beta1: 0.8
+      beta2: 0.99
+      eps: 1e-9
+      weight_decay: 0.01
+  schedulers:
+    default:
+      type: "cosine_annealing"
+      T_max: 1
+      eta_min: 1e-6
+  logging:
+    log_interval: 1
+    trackers: "tensorboard"
+  memory_optimization:
+    gradient_checkpointing: false
+
+paths:
+  checkpoints: "checkpoints/ci_test"
+  tensorboard: "logs/ci_test"
+  model_registry: "models/ci_test/registry.db"
+
+evaluation:
+  metrics: []
+  save_samples: false
+  num_samples: 0

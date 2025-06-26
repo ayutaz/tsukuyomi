@@ -1,12 +1,11 @@
 """Tests for demo UI."""
 
 import io
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import gradio as gr
 import numpy as np
 import pytest
-import requests
 import soundfile as sf
 
 from src.web.demo_ui import (

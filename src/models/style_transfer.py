@@ -3,9 +3,8 @@
 話者の声質やスタイルを転送・混合するためのコンポーネント
 """
 
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

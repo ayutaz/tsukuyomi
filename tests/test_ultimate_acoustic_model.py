@@ -2,9 +2,7 @@
 Tests for Ultimate Acoustic Model (Matcha-TTS/VITS integration)
 """
 
-from pathlib import Path
 
-import numpy as np
 import pytest
 import torch
 

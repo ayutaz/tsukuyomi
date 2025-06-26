@@ -9,9 +9,7 @@ Features:
 - Admin management interface
 """
 
-import asyncio
 import hashlib
-import json
 import logging
 import secrets
 import sqlite3
@@ -19,9 +17,8 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import wraps
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional
 
 import jwt
 import redis
@@ -204,7 +201,7 @@ class AuthManager:
         try:
             self.create_user(admin_user)
             logger.info("Created admin user")
-        except Exception as e:
+        except Exception:
             # Admin might already exist
             pass
 

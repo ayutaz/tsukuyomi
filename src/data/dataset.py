@@ -242,7 +242,7 @@ class TsukuyomiDataset(Dataset):
                                 speaker_id = parts[1]
                                 text = parts[2] if len(parts) > 2 else ""
                                 if not format_logged:
-                                    logger.info(f"Format detected: audio|speaker|text")
+                                    logger.info("Format detected: audio|speaker|text")
                                     format_logged = True
                             else:
                                 # audio_id|text|normalized_text フォーマット

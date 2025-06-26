@@ -9,11 +9,9 @@ Implementation of BigVGAN-v2 with:
 """
 
 import logging
-import math
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

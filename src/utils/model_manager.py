@@ -14,19 +14,15 @@ import json
 import logging
 import shutil
 import tempfile
-import zipfile
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
-import requests
 import torch
 import torch.nn as nn
-import yaml
 from packaging import version
-from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 

@@ -5,11 +5,10 @@ Tests for Web UI components
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
-import streamlit as st
 from streamlit.testing.v1 import AppTest
 
 # Import web UI modules

@@ -4,12 +4,11 @@
 """
 
 import asyncio
-import queue
 import threading
 import time
 from collections import deque
 from dataclasses import dataclass
-from typing import AsyncIterator, Callable, Dict, List, Optional, Tuple, Union
+from typing import AsyncIterator, Dict, Tuple, Union
 
 import numpy as np
 import torch

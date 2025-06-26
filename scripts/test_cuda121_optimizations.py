@@ -25,7 +25,7 @@ from src.models.ultimate_acoustic_model import (
     UltimateAcousticConfig,
     UltimateAcousticModel,
 )
-from src.models.xphonebert_japanese import XPhoneBERTJapanese, XPhoneBERTJapaneseConfig
+from src.models.xphonebert_japanese import XPhoneBERTJapanese
 
 
 def check_cuda_version():

@@ -124,7 +124,6 @@ class TestBasicTraining:
     @pytest.fixture()
     def dummy_dataset(self):
         """Create a dummy dataset for testing"""
-        import csv
         
         # Create temporary directory with dummy data
         with tempfile.TemporaryDirectory() as tmpdir:

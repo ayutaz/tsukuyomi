@@ -149,7 +149,7 @@ def run_experiment(config_path: Path, data_dir: Path, num_epochs: int = 10):
     if num_epochs:
         trainer.config.training.num_epochs = num_epochs
         
-    logger.info(f"\n実験設定:")
+    logger.info("\n実験設定:")
     logger.info(f"  - エポック数: {trainer.config.training.num_epochs}")
     logger.info(f"  - バッチサイズ: {trainer.config.training.batch_size}")
     logger.info(f"  - 勾配累積: {trainer.config.training.gradient_accumulation_steps}")

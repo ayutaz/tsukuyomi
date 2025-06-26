@@ -5,7 +5,6 @@ Tests the text normalization pipeline including number conversion,
 symbol handling, and various Japanese-specific text processing.
 """
 
-from typing import List, Tuple
 from unittest.mock import MagicMock, patch
 
 import pytest

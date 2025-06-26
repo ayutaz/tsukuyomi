@@ -90,7 +90,7 @@ def main():
         print(f"Average latency: {results['avg_latency']:.3f}s")
         
         if torch.cuda.is_available():
-            print(f"\nGPU Memory Usage:")
+            print("\nGPU Memory Usage:")
             print(f"Allocated: {results['gpu_memory_allocated']:.2f} GB")
             print(f"Reserved: {results['gpu_memory_reserved']:.2f} GB")
     

@@ -1,6 +1,5 @@
 """Test voice morphing capabilities in Ultimate Acoustic Model."""
 
-import numpy as np
 import pytest
 import torch
 

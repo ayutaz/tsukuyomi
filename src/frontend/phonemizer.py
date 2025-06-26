@@ -10,9 +10,8 @@ import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Union
+from typing import Optional
 
-import numpy as np
 
 # Language-specific imports
 try:
