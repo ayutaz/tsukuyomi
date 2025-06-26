@@ -634,20 +634,39 @@ class TTSTrainer:
                             batch['mel_targets'],
                         )
                     
-                    # MCD計算
-                    for pred, target in zip(outputs['acoustic']['mel'], batch['mel_targets']):
-                        mcd = mcd_evaluator.calculate(
-                            pred.cpu().numpy(),
-                            target.cpu().numpy(),
-                        )
-                        mcd_scores.append(mcd)
+                    # MCD計算 - VITSの場合はmel_outputsを使用
+                    if 'mel_outputs' in outputs['acoustic']:
+                        mel_outputs = outputs['acoustic']['mel_outputs']
+                    elif 'mel' in outputs['acoustic']:
+                        mel_outputs = outputs['acoustic']['mel']
+                    else:
+                        mel_outputs = None
+                        
+                    if mel_outputs is not None and 'mel_targets' in batch:
+                        for pred, target in zip(mel_outputs, batch['mel_targets']):
+                            mcd = mcd_evaluator.calculate(
+                                pred.cpu().numpy(),
+                                target.cpu().numpy(),
+                            )
+                            mcd_scores.append(mcd)
                         
                 if 'vocoder' in models and 'acoustic' in outputs:
-                    outputs['vocoder'] = models['vocoder'](outputs['acoustic']['mel'])
-                    losses['vocoder'] = loss_fn.compute_vocoder_loss(
-                        outputs['vocoder'],
-                        batch['audio_targets'],
-                    )
+                    # VITSの場合はmel_outputsを使用
+                    if 'mel_outputs' in outputs['acoustic']:
+                        mel_outputs = outputs['acoustic']['mel_outputs']
+                    elif 'mel' in outputs['acoustic']:
+                        mel_outputs = outputs['acoustic']['mel']
+                    else:
+                        # VITSは直接音声を生成するのでvocoderはスキップ
+                        mel_outputs = None
+                        
+                    if mel_outputs is not None:
+                        outputs['vocoder'] = models['vocoder'](mel_outputs)
+                        # Vocoder loss is not implemented in validation for now
+                        # losses['vocoder'] = loss_fn.compute_vocoder_loss(
+                        #     outputs['vocoder'],
+                        #     batch['audio_targets'],
+                        # )
                     
                 # 総損失
                 if losses:
