@@ -25,7 +25,7 @@ from src.tools.audio_preprocessing import (
 class TestAudioPreprocessor:
     """Test audio preprocessing pipeline"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def audio_data(self):
         """Create dummy audio data"""
         # Generate 1 second of audio at 22050 Hz
@@ -43,7 +43,7 @@ class TestAudioPreprocessor:
 
         return audio.astype(np.float32), sample_rate
 
-    @pytest.fixture
+    @pytest.fixture()
     def temp_audio_file(self, audio_data):
         """Create temporary audio file"""
         audio, sample_rate = audio_data

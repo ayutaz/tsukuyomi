@@ -216,7 +216,7 @@ class TsukuyomiDataset(Dataset):
             f.seek(0)  # Reset to beginning
 
             # Check if it's LJSpeech format (starts with audio ID like "LJ001-0001")
-            if "|" in first_line and not "," in first_line:
+            if "|" in first_line and "," not in first_line:
                 # LJSpeech format: audio_id|text|normalized_text
                 logger.info("Detected LJSpeech format (pipe-delimited)")
                 format_logged = False  # フォーマットログを1回だけ出力するためのフラグ

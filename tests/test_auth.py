@@ -83,7 +83,7 @@ class TestUser:
 class TestAuthManager:
     """Test AuthManager class."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def temp_db_path(self):
         """Create temporary database path."""
         temp_dir = tempfile.mkdtemp()
@@ -93,7 +93,7 @@ class TestAuthManager:
 
         shutil.rmtree(temp_dir)
 
-    @pytest.fixture
+    @pytest.fixture()
     def auth_config(self, temp_db_path):
         """Create test auth config."""
         return AuthConfig(
@@ -102,7 +102,7 @@ class TestAuthManager:
             admin_api_key="admin_test_key",
         )
 
-    @pytest.fixture
+    @pytest.fixture()
     def auth_manager(self, auth_config):
         """Create auth manager."""
         return AuthManager(auth_config)
@@ -376,7 +376,7 @@ class TestAuthManager:
 class TestFastAPIDependencies:
     """Test FastAPI dependency functions."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_authenticate_dependency(self):
         """Test authenticate dependency."""
         with patch("src.server.auth.AuthManager") as mock_manager_class:
@@ -405,7 +405,7 @@ class TestFastAPIDependencies:
             assert user == mock_user
             mock_manager.authenticate_request.assert_called_once()
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_require_admin_dependency(self):
         """Test require_admin dependency."""
         # Admin user
@@ -441,7 +441,7 @@ class TestFastAPIDependencies:
 class TestRateLimitMiddleware:
     """Test RateLimitMiddleware class."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_rate_limit_middleware(self):
         """Test rate limiting middleware."""
         # Mock auth manager
@@ -474,7 +474,7 @@ class TestRateLimitMiddleware:
         assert response.status_code == 200
         mock_auth_manager.check_rate_limit.assert_called()
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_rate_limit_exceeded(self):
         """Test rate limit exceeded."""
         # Mock auth manager

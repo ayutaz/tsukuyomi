@@ -15,7 +15,7 @@ from src.inference import TsukuyomiTTS
 class TestPerformance:
     """Performance-related tests"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_fast_components(self):
         """Mock components with controlled timing"""
         with (
@@ -97,7 +97,7 @@ class TestPerformance:
         assert rtf < 10  # Generous limit for mocked components
         assert inference_time < 1.0  # Should complete within 1 second
 
-    @pytest.mark.benchmark
+    @pytest.mark.benchmark()
     def test_component_timing(self, mock_fast_components):
         """Benchmark individual components"""
         tts = TsukuyomiTTS(device="cpu")
@@ -162,7 +162,7 @@ class TestPerformance:
         expected_sequential_time = 0.08 * batch_size  # Based on mock timings
         assert batch_time < expected_sequential_time
 
-    @pytest.mark.slow
+    @pytest.mark.slow()
     def test_memory_usage(self, mock_fast_components):
         """Test memory usage during synthesis"""
         tts = TsukuyomiTTS(device="cpu")
@@ -226,7 +226,7 @@ class TestPerformance:
             # Time should not scale super-linearly
             assert time_ratio < length_ratio * 1.5
 
-    @pytest.mark.gpu
+    @pytest.mark.gpu()
     def test_gpu_performance(self, mock_fast_components):
         """Test GPU performance improvements"""
         if not torch.cuda.is_available():

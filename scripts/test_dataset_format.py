@@ -9,6 +9,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from src.data.dataset import TsukuyomiDataset
 
+
 def main():
     """データセットのロードをテスト"""
     data_root = Path("data/jvs_ljspeech")

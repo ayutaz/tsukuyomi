@@ -3,15 +3,16 @@
 Test script for Style-BERT-VITS2 integration
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.integrations.style_bert_vits2 import create_style_bert_vits2_tts
 import logging
+
+from src.integrations.style_bert_vits2 import create_style_bert_vits2_tts
 
 logging.basicConfig(level=logging.INFO)
 

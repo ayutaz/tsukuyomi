@@ -6,21 +6,22 @@ This script tests the basic functionality of the Tsukuyomi TTS system
 with the newly implemented components.
 """
 
+import logging
 import sys
 from pathlib import Path
-import logging
-import torch
+
 import numpy as np
+import torch
 
 # Add src to path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.frontend.japanese_g2p import create_japanese_g2p
 from src.frontend.phonemizer import create_phonemizer
-from src.models.xphonebert import XPhoneBERTEncoder
 from src.models.acoustic_model import AcousticModel, AcousticModelConfig
-from src.vocoder.vocoder_wrapper import create_vocoder
+from src.models.xphonebert import XPhoneBERTEncoder
 from src.utils.audio import save_audio
+from src.vocoder.vocoder_wrapper import create_vocoder
 
 
 def test_g2p():

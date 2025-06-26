@@ -4,6 +4,7 @@
 import os
 from pathlib import Path
 
+
 def check_directory_structure():
     """ディレクトリ構造を詳しく確認"""
     base_path = Path("data/jvs_ljspeech")

@@ -29,7 +29,7 @@ if os.environ.get("DISABLE_TORCHAUDIO", "").lower() in ("1", "true", "yes"):
 class TestAudioUtils:
     """Test audio utility functions"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def sample_audio_data(self):
         """Generate sample audio data"""
         sample_rate = 22050
@@ -39,7 +39,7 @@ class TestAudioUtils:
         audio = 0.5 * np.sin(2 * np.pi * 440 * t).astype(np.float32)
         return audio, sample_rate
 
-    @pytest.fixture
+    @pytest.fixture()
     def temp_audio_file(self, sample_audio_data):
         """Create a temporary audio file"""
         audio, sr = sample_audio_data

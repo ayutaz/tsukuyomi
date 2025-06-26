@@ -4,8 +4,8 @@
 import argparse
 import json
 import sys
-from pathlib import Path
 import time
+from pathlib import Path
 from typing import Dict, List
 
 import numpy as np
@@ -13,7 +13,7 @@ import torch
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from src.inference.optimized_inference import OptimizedInferenceEngine, InferenceConfig
+from src.inference.optimized_inference import InferenceConfig, OptimizedInferenceEngine
 
 
 def benchmark_configurations(

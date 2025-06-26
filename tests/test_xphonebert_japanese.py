@@ -105,7 +105,7 @@ class TestLoRALayer:
 class TestJapanesePhonemeAdapter:
     """Test Japanese phoneme adapter."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def adapter(self):
         """Create test adapter."""
         config = XPhoneBERTJapaneseConfig()
@@ -201,7 +201,7 @@ class TestJapanesePhonemeAdapter:
 class TestXPhoneBERTJapanese:
     """Test complete XPhoneBERT Japanese model."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         """Create test model."""
         config = XPhoneBERTJapaneseConfig()
@@ -357,7 +357,7 @@ class TestCreateXPhoneBERTJapanese:
 class TestIntegration:
     """Integration tests."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         """Create model for integration tests."""
         return create_xphonebert_japanese(device="cpu")

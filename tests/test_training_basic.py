@@ -2,29 +2,30 @@
 Basic training tests to ensure the training loop can start and run.
 """
 
-import pytest
-import torch
 import tempfile
 from pathlib import Path
+
+import pytest
+import torch
 from omegaconf import OmegaConf
+from torch.utils.data import DataLoader
 
 from scripts.train import TTSTrainer
-from src.data.dataset import TsukuyomiDataset
 from src.data.collate import tts_collate_fn
-from torch.utils.data import DataLoader
+from src.data.dataset import TsukuyomiDataset
 
 
 class TestBasicTraining:
     """Test basic training functionality"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def minimal_config(self):
         """Create minimal configuration for testing"""
         config = OmegaConf.create({
             "data": {
                 "dataset": "test",
                 "train_dir": "data/test",  # This will be overridden in tests
-                "val_dir": "data/test",    # This will be overridden in tests  
+                "val_dir": "data/test",    # This will be overridden in tests
                 "data_dir": "data/test",   # Add data_dir for compatibility
                 "test_dir": "data/test",   # Add test_dir for compatibility
                 "transcript_file": "metadata.csv",  # テスト用のメタデータファイル
@@ -120,10 +121,9 @@ class TestBasicTraining:
         })
         return config
 
-    @pytest.fixture
+    @pytest.fixture()
     def dummy_dataset(self):
         """Create a dummy dataset for testing"""
-        import tempfile
         import csv
         
         # Create temporary directory with dummy data
@@ -154,6 +154,7 @@ class TestBasicTraining:
                         
                         # Always create a valid WAV file that can be read by soundfile
                         import wave
+
                         import numpy as np
                         
                         # Convert to 16-bit PCM
@@ -352,7 +353,7 @@ class TestBasicTraining:
         assert 'total' in losses
         assert losses['total'].requires_grad
 
-    @pytest.mark.slow
+    @pytest.mark.slow()
     def test_training_loop_runs(self, minimal_config, dummy_dataset):
         """Test that the full training loop can run for one epoch"""
         minimal_config.data.train_dir = str(dummy_dataset)
@@ -452,3 +453,4 @@ def test_collate_function():
     assert collated['audio'].shape[1] == 15000  # max audio length
     assert len(collated['text']) == 2
     assert collated['speaker_ids'].shape[0] == 2
+

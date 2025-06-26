@@ -85,19 +85,19 @@ class TestModelMetadata:
 class TestModelRegistry:
     """Test ModelRegistry class."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def temp_registry_dir(self):
         """Create temporary registry directory."""
         temp_dir = tempfile.mkdtemp()
         yield Path(temp_dir)
         shutil.rmtree(temp_dir)
 
-    @pytest.fixture
+    @pytest.fixture()
     def registry(self, temp_registry_dir):
         """Create registry instance."""
         return ModelRegistry(temp_registry_dir)
 
-    @pytest.fixture
+    @pytest.fixture()
     def sample_metadata(self):
         """Create sample metadata."""
         return ModelMetadata(
@@ -277,7 +277,7 @@ class TestModelRegistry:
 class TestModelVersionManager:
     """Test ModelVersionManager class."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def version_manager(self, registry):
         """Create version manager."""
         return ModelVersionManager(registry)

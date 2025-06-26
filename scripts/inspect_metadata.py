@@ -4,6 +4,7 @@
 import csv
 from pathlib import Path
 
+
 def inspect_metadata_file(file_path):
     """メタデータファイルの内容を調査"""
     print(f"\n=== {file_path.name} ===")

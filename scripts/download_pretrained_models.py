@@ -3,15 +3,15 @@
 Download and setup pre-trained TTS models for immediate use
 """
 
+import hashlib
+import json
+import logging
 import os
 import sys
-import json
+import tarfile
 import urllib.request
 import zipfile
-import tarfile
 from pathlib import Path
-import hashlib
-import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

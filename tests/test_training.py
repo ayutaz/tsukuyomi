@@ -167,7 +167,7 @@ class TestFineTuning:
 class TestTrainer:
     """Test trainer functionality"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def trainer_setup(self):
         """Setup trainer with dummy models"""
         with tempfile.TemporaryDirectory() as tmpdir:

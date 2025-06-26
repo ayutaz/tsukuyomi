@@ -52,7 +52,7 @@ class TestUltimateAcousticConfig:
 class TestConditionalFlowMatching:
     """Test Conditional Flow Matching module."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def flow_module(self):
         """Create test flow module."""
         config = UltimateAcousticConfig()
@@ -106,7 +106,7 @@ class TestConditionalFlowMatching:
 class TestStochasticDurationPredictor:
     """Test Stochastic Duration Predictor."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def duration_predictor(self):
         """Create test duration predictor."""
         config = UltimateAcousticConfig()
@@ -152,7 +152,7 @@ class TestStochasticDurationPredictor:
 class TestMultiSpeakerEncoder:
     """Test Multi-Speaker Encoder."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def speaker_encoder(self):
         """Create test speaker encoder."""
         config = UltimateAcousticConfig()
@@ -215,7 +215,7 @@ class TestMultiSpeakerEncoder:
 class TestPosteriorEncoder:
     """Test Posterior Encoder (VAE)."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def posterior_encoder(self):
         """Create test posterior encoder."""
         return PosteriorEncoder(
@@ -248,7 +248,7 @@ class TestPosteriorEncoder:
 class TestUltimateAcousticModel:
     """Test complete Ultimate Acoustic Model."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         """Create test model."""
         config = UltimateAcousticConfig()

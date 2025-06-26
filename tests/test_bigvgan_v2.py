@@ -168,7 +168,7 @@ class TestGeneratorBlock:
 class TestBigVGANv2Generator:
     """Test BigVGAN-v2 generator."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def generator(self):
         """Create test generator."""
         config = BigVGANv2Config()
@@ -226,7 +226,7 @@ class TestBigVGANv2Generator:
 class TestMultiPeriodDiscriminator:
     """Test Multi-Period Discriminator."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def mpd(self):
         """Create test MPD."""
         config = BigVGANv2Config()
@@ -256,7 +256,7 @@ class TestMultiPeriodDiscriminator:
 class TestMultiResolutionDiscriminator:
     """Test Multi-Resolution Discriminator."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def mrd(self):
         """Create test MRD."""
         config = BigVGANv2Config()
@@ -282,7 +282,7 @@ class TestMultiResolutionDiscriminator:
 class TestBigVGANv2:
     """Test complete BigVGAN-v2 model."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         """Create test model."""
         config = BigVGANv2Config()
@@ -423,7 +423,7 @@ class TestCreateBigVGANv2:
 class TestIntegration:
     """Integration tests for BigVGAN-v2."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         """Create model for integration tests."""
         config = BigVGANv2Config()

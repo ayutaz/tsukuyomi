@@ -18,7 +18,7 @@ from src.models.xphonebert import XPhoneBERTEncoder
 class TestXPhoneBERTEncoder:
     """Test suite for XPhoneBERTEncoder."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_model_and_tokenizer(self) -> Tuple[MagicMock, MagicMock]:
         """Create mock model and tokenizer for testing."""
         # Mock tokenizer
@@ -35,12 +35,12 @@ class TestXPhoneBERTEncoder:
         mock_outputs.last_hidden_state = torch.randn(2, 10, 768)
         mock_model.return_value = mock_outputs
         mock_model.to = lambda *args, **kwargs: mock_model
-        mock_model.parameters = lambda: []
+        mock_model.parameters = list
         mock_model.eval = lambda: None
 
         return mock_model, mock_tokenizer
 
-    @pytest.fixture
+    @pytest.fixture()
     def encoder(
         self, mock_model_and_tokenizer: Tuple[MagicMock, MagicMock]
     ) -> XPhoneBERTEncoder:
@@ -196,7 +196,7 @@ class TestXPhoneBERTIntegration:
         assert torch.allclose(output1, output2)
 
 
-@pytest.mark.benchmark
+@pytest.mark.benchmark()
 class TestXPhoneBERTPerformance:
     """Performance benchmarks for XPhoneBERT."""
 

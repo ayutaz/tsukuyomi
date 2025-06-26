@@ -18,13 +18,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
-import numpy as np
-import torch
-import torch.nn as nn
 import coremltools as ct
+import numpy as np
 import onnx
 import onnxruntime as ort
-from onnxruntime.quantization import quantize_dynamic, QuantType
+import torch
+import torch.nn as nn
+from onnxruntime.quantization import QuantType, quantize_dynamic
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -338,7 +338,6 @@ class EdgeOptimizer:
         level: int
     ) -> str:
         """General ONNX optimizations"""
-        import onnx
         from onnxruntime.transformers import optimizer
         
         # Load model
@@ -410,10 +409,9 @@ class EdgeOptimizer:
     def _convert_to_tflite(self, model_path: str, output_dir: Path) -> Optional[str]:
         """Convert model to TensorFlow Lite"""
         try:
-            import tensorflow as tf
-            
             # Convert ONNX to TF
             import onnx
+            import tensorflow as tf
             from onnx_tf.backend import prepare
             
             onnx_model = onnx.load(model_path)

@@ -49,7 +49,7 @@ class TestF0BERTConfig:
 class TestContinuousF0Encoder:
     """Test continuous F0 encoder."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def encoder(self):
         """Create test encoder."""
         config = F0BERTConfig()
@@ -96,7 +96,7 @@ class TestContinuousF0Encoder:
 class TestStyleConditioningModule:
     """Test style conditioning module."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def module(self):
         """Create test module."""
         config = F0BERTConfig()
@@ -143,7 +143,7 @@ class TestStyleConditioningModule:
 class TestF0PredictionHead:
     """Test F0 prediction head."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def head(self):
         """Create test prediction head."""
         config = F0BERTConfig()
@@ -194,7 +194,7 @@ class TestF0PredictionHead:
 class TestF0BERT:
     """Test complete F0-BERT model."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         """Create test model."""
         config = F0BERTConfig()
@@ -395,7 +395,7 @@ class TestCreateF0BERT:
 class TestIntegration:
     """Integration tests for F0-BERT."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         """Create model for integration tests."""
         return create_f0_bert(device="cpu")

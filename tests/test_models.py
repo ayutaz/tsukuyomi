@@ -16,7 +16,7 @@ from src.models.xphonebert import XPhoneBERTEncoder as XPhoneBERT
 class TestXPhoneBERT:
     """XPhoneBERTのテスト"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         return XPhoneBERT(
             model_name="vinai/xphonebert-base",
@@ -74,7 +74,7 @@ class TestXPhoneBERT:
 class TestF0BERT:
     """F0-BERTのテスト"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         return F0BERT(
             hidden_size=256,
@@ -138,7 +138,7 @@ class TestF0BERT:
 class TestVITS:
     """VITSのテスト"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         return VITS(
             n_vocab=256,
@@ -222,7 +222,7 @@ class TestVITS:
 class TestMatchaTTS:
     """Matcha-TTSのテスト"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         return MatchaTTS(
             n_vocab=256,
@@ -286,7 +286,7 @@ class TestMatchaTTS:
 class TestBigVGANv2:
     """BigVGAN-v2のテスト"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         return BigVGANv2(
             num_mels=128,

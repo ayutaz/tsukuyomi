@@ -4,11 +4,12 @@ Test script for Tsukuyomi TTS synthesis
 """
 
 import argparse
-import time
-import torch
-import soundfile as sf
-from pathlib import Path
 import sys
+import time
+from pathlib import Path
+
+import soundfile as sf
+import torch
 
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent))

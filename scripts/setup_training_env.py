@@ -4,15 +4,17 @@ Setup script for Tsukuyomi TTS training environment.
 Checks system requirements and prepares the environment for training.
 """
 
-import os
-import sys
-import platform
-import subprocess
-import shutil
-from pathlib import Path
-import torch
-import psutil
 import json
+import os
+import platform
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+import psutil
+import torch
+
 
 # Colors for terminal output
 class Colors:
@@ -90,12 +92,12 @@ def check_disk_space():
 def check_docker():
     """Check if Docker is installed."""
     try:
-        result = subprocess.run(['docker', '--version'], capture_output=True, text=True)
+        result = subprocess.run(['docker', '--version'], capture_output=True, text=True, check=False)
         if result.returncode == 0:
             print_colored(f"✓ Docker installed: {result.stdout.strip()}", Colors.GREEN)
             
             # Check for NVIDIA Docker
-            result = subprocess.run(['docker', 'info'], capture_output=True, text=True)
+            result = subprocess.run(['docker', 'info'], capture_output=True, text=True, check=False)
             if 'nvidia' in result.stdout.lower():
                 print_colored("  NVIDIA Docker runtime available", Colors.GREEN)
             else:
@@ -207,7 +209,7 @@ def check_windows_specific():
         
         # Check for WSL2
         try:
-            result = subprocess.run(['wsl', '--status'], capture_output=True, text=True)
+            result = subprocess.run(['wsl', '--status'], capture_output=True, text=True, check=False)
             if result.returncode == 0:
                 print_colored("✓ WSL2 available", Colors.GREEN)
             else:

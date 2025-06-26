@@ -222,7 +222,7 @@ def main():
         
     # プロファイリング
     if args.profile:
-        from torch.profiler import profile, ProfilerActivity, tensorboard_trace_handler
+        from torch.profiler import ProfilerActivity, profile, tensorboard_trace_handler
         
         with profile(
             activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],

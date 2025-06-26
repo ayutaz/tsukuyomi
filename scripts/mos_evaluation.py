@@ -21,14 +21,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
+import soundfile as sf
 import streamlit as st
 from scipy import stats
 from sklearn.metrics import cohen_kappa_score
-import soundfile as sf
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -91,7 +91,7 @@ class MOSDatabase:
         conn.commit()
         conn.close()
         
-    def add_evaluator(self, name: str, email: str = None, 
+    def add_evaluator(self, name: str, email: str = None,
                      experience: str = "beginner",
                      language: str = "ja") -> str:
         """Add new evaluator"""
@@ -489,7 +489,7 @@ class MOSEvaluator:
             <h2>Inter-rater Reliability</h2>
         """
         
-        if 'inter_rater' in stats and stats['inter_rater']:
+        if stats.get('inter_rater'):
             html += '<div class="metric">'
             for metric, value in stats['inter_rater'].items():
                 html += f"<p>{metric}: {value:.3f}</p>"
@@ -526,7 +526,7 @@ class MOSEvaluator:
         plt.close()
         
         # 2. Aspect radar chart
-        aspects = ['naturalness', 'intelligibility', 'speaker_similarity', 
+        aspects = ['naturalness', 'intelligibility', 'speaker_similarity',
                   'emotion_appropriateness', 'overall_quality']
         
         systems = df['system_name'].unique()
@@ -565,7 +565,7 @@ class MOSEvaluator:
             plt.xlabel('Average MOS Score')
             plt.ylabel('Evaluator')
             plt.title('Evaluator Rating Tendencies')
-            plt.axvline(x=df['score'].mean(), color='r', linestyle='--', 
+            plt.axvline(x=df['score'].mean(), color='r', linestyle='--',
                        label=f'Overall Mean: {df["score"].mean():.2f}')
             plt.legend()
             plt.tight_layout()

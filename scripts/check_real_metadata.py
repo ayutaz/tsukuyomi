@@ -4,6 +4,7 @@
 import csv
 from pathlib import Path
 
+
 def check_metadata():
     """メタデータファイルの内容を詳しく確認"""
     data_root = Path("data/jvs_ljspeech")
@@ -42,7 +43,7 @@ def check_metadata():
                         # 日本語を含むかチェック
                         has_japanese = any(
                             '\u3040' <= c <= '\u309f' or  # ひらがな
-                            '\u30a0' <= c <= '\u30ff' or  # カタカナ  
+                            '\u30a0' <= c <= '\u30ff' or  # カタカナ
                             '\u4e00' <= c <= '\u9fff'     # 漢字
                             for c in part
                         )

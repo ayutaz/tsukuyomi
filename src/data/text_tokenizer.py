@@ -80,8 +80,8 @@ class JapaneseTextTokenizer:
         return tokens
     
     def encode(
-        self, 
-        text: str, 
+        self,
+        text: str,
         add_special_tokens: bool = True,
         max_length: Optional[int] = None,
         padding: bool = False,

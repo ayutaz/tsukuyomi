@@ -52,14 +52,14 @@ class MockModel(nn.Module):
 class TestONNXExporter:
     """Test ONNX exporter."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def temp_dir(self):
         """Create temporary directory."""
         temp_dir = tempfile.mkdtemp()
         yield Path(temp_dir)
         shutil.rmtree(temp_dir)
 
-    @pytest.fixture
+    @pytest.fixture()
     def export_config(self, temp_dir):
         """Create export configuration."""
         return ExportConfig(
@@ -69,7 +69,7 @@ class TestONNXExporter:
             quantize=False,
         )
 
-    @pytest.fixture
+    @pytest.fixture()
     def exporter(self, export_config):
         """Create exporter instance."""
         return ONNXExporter(export_config)
@@ -152,7 +152,7 @@ class TestONNXExporter:
 class TestExportIntegration:
     """Integration tests for export functionality."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def checkpoint_path(self, tmp_path):
         """Create mock checkpoint."""
         checkpoint = {

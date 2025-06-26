@@ -8,14 +8,15 @@ import argparse
 import asyncio
 import sys
 from pathlib import Path
-import torch
+
 import numpy as np
 import soundfile as sf
+import torch
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from src.models.advanced_tts import AdvancedTTS
 from src.inference.realtime_streaming import StreamingConfig
+from src.models.advanced_tts import AdvancedTTS
 
 
 def demo_emotion_control(model: AdvancedTTS, output_dir: Path):

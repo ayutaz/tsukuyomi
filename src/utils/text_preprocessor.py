@@ -2,8 +2,10 @@
 
 import re
 from typing import List, Optional
+
 import MeCab
 import pykakasi
+
 
 class JapaneseTextPreprocessor:
     """日本語テキストの前処理を行うクラス"""

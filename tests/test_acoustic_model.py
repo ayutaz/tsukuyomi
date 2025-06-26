@@ -45,12 +45,12 @@ class TestAcousticModelConfig:
 class TestConformerBlock:
     """Test suite for ConformerBlock."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def config(self) -> AcousticModelConfig:
         """Create test configuration."""
         return AcousticModelConfig(hidden_dim=256, n_heads=4)
 
-    @pytest.fixture
+    @pytest.fixture()
     def conformer_block(self, config: AcousticModelConfig) -> ConformerBlock:
         """Create ConformerBlock instance."""
         return ConformerBlock(config)
@@ -109,7 +109,7 @@ class TestConformerBlock:
 class TestDurationPredictor:
     """Test suite for DurationPredictor."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def duration_predictor(self) -> nn.Module:
         """Create DurationPredictor instance."""
         # Import here to avoid circular imports
@@ -138,14 +138,14 @@ class TestDurationPredictor:
 class TestAcousticModel:
     """Test suite for complete AcousticModel."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def config(self) -> AcousticModelConfig:
         """Create test configuration."""
         return AcousticModelConfig(
             hidden_dim=128, n_layers=2, n_heads=4, use_bf16=False
         )
 
-    @pytest.fixture
+    @pytest.fixture()
     def acoustic_model(self, config: AcousticModelConfig) -> AcousticModel:
         """Create AcousticModel instance."""
         return AcousticModel(config)
@@ -253,7 +253,7 @@ class TestAcousticModel:
         assert outputs["mel_outputs"].dtype == torch.bfloat16
 
 
-@pytest.mark.integration
+@pytest.mark.integration()
 class TestAcousticModelIntegration:
     """Integration tests for acoustic model with other components."""
 

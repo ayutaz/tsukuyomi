@@ -17,14 +17,14 @@ from src.data.dataset import AudioSample, SpeakerMetadata, TsukuyomiDataset
 class TestDataset:
     """Test suite for dataset loading."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def temp_dataset_dir(self):
         """Create temporary dataset directory."""
         temp_dir = tempfile.mkdtemp()
         yield Path(temp_dir)
         shutil.rmtree(temp_dir)
 
-    @pytest.fixture
+    @pytest.fixture()
     def sample_audio_files(self, temp_dataset_dir):
         """Create sample audio files."""
         audio_dir = temp_dataset_dir / "audio"

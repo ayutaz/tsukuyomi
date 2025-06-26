@@ -14,7 +14,7 @@ from src.vocoder.bigvgan import BigVGANVocoder
 class TestBigVGANVocoder:
     """Test BigVGAN vocoder wrapper"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_bigvgan(self):
         """Mock bigvgan module"""
         with patch("src.vocoder.bigvgan.bigvgan") as mock_bg:
@@ -95,7 +95,7 @@ class TestBigVGANVocoder:
             assert isinstance(waveform, np.ndarray)
             assert len(waveform) == output_samples
 
-    @pytest.mark.gpu
+    @pytest.mark.gpu()
     def test_gpu_inference(self, mock_bigvgan):
         """Test GPU inference"""
         if not torch.cuda.is_available():
@@ -112,7 +112,7 @@ class TestBigVGANVocoder:
         assert isinstance(waveform, np.ndarray)
         assert waveform.dtype == np.float32
 
-    @pytest.mark.bf16
+    @pytest.mark.bf16()
     def test_bf16_inference(self, mock_bigvgan):
         """Test BF16 inference"""
         if not (torch.cuda.is_available() and torch.cuda.is_bf16_supported()):
@@ -207,7 +207,7 @@ class TestBigVGANVocoder:
 
         np.testing.assert_array_almost_equal(waveform1, waveform2)
 
-    @pytest.mark.slow
+    @pytest.mark.slow()
     def test_large_batch_inference(self, mock_bigvgan):
         """Test inference with large batches"""
         vocoder = BigVGANVocoder(device="cpu")

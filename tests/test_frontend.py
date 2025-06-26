@@ -26,7 +26,7 @@ pytestmark = pytest.mark.skipif(
 class TestJapaneseTextNormalizer:
     """Test Japanese text normalization"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def normalizer(self):
         """Create a normalizer instance"""
         return JapaneseTextNormalizer()

@@ -37,19 +37,19 @@ def device():
     return torch.device("cpu")
 
 
-@pytest.fixture
+@pytest.fixture()
 def sample_text_ja():
     """Sample Japanese text for testing"""
     return "こんにちは、テストです。"
 
 
-@pytest.fixture
+@pytest.fixture()
 def sample_text_en():
     """Sample English text for testing"""
     return "Hello, this is a test."
 
 
-@pytest.fixture
+@pytest.fixture()
 def sample_texts():
     """Sample texts in multiple languages"""
     return {
@@ -59,7 +59,7 @@ def sample_texts():
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def sample_mel_spectrogram():
     """Create a sample mel spectrogram"""
     # 80 mel bins, 100 time frames
@@ -67,7 +67,7 @@ def sample_mel_spectrogram():
     return mel
 
 
-@pytest.fixture
+@pytest.fixture()
 def sample_audio():
     """Create sample audio data"""
     # 1 second of audio at 22050 Hz
@@ -75,13 +75,13 @@ def sample_audio():
     return audio, 22050
 
 
-@pytest.fixture
+@pytest.fixture()
 def sample_phonemes():
     """Sample phoneme sequence"""
     return "k o n n i ch i w a"
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_model_config():
     """Mock model configuration"""
     return {
@@ -108,7 +108,7 @@ def mock_model_config():
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def bf16_available():
     """Check if BF16 is available"""
     try:

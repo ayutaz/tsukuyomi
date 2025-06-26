@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Test installation and dependency compatibility"""
 
-import sys
 import importlib
 import subprocess
+import sys
 from pathlib import Path
+
 
 def test_import(module_name: str, package_name: str = None) -> bool:
     """Test if a module can be imported"""

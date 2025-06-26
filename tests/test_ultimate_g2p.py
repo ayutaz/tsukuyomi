@@ -43,7 +43,7 @@ class TestUltimateG2PConfig:
 class TestAccentBERT:
     """Test AccentBERT module."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         """Create test model."""
         config = UltimateG2PConfig()
@@ -85,7 +85,7 @@ class TestAccentBERT:
 class TestNeuralPhonemeCorrectorRNN:
     """Test neural phoneme corrector."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         """Create test model."""
         config = UltimateG2PConfig()
@@ -117,7 +117,7 @@ class TestNeuralPhonemeCorrectorRNN:
 class TestContextualPhonemeEncoder:
     """Test contextual phoneme encoder."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         """Create test model."""
         config = UltimateG2PConfig()
@@ -155,7 +155,7 @@ class TestContextualPhonemeEncoder:
 class TestUltimateJapaneseG2P:
     """Test complete Ultimate G2P system."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         """Create test model."""
         config = UltimateG2PConfig()
@@ -264,7 +264,7 @@ class TestCreateUltimateG2P:
 class TestIntegration:
     """Integration tests for complete pipeline."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         """Create model for integration tests."""
         return create_ultimate_g2p(device="cpu")

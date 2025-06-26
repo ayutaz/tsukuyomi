@@ -22,7 +22,7 @@ from src.server.inference_server import (
 class TestInferenceServer:
     """Test suite for inference server."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def config(self):
         """Create test configuration."""
         return ServerConfig(
@@ -31,7 +31,7 @@ class TestInferenceServer:
             enable_gpu=False,  # CPU for tests
         )
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_tts(self):
         """Create mock TTS system."""
         mock = Mock()
@@ -48,14 +48,14 @@ class TestInferenceServer:
 
         return mock
 
-    @pytest.fixture
+    @pytest.fixture()
     def server(self, config, mock_tts):
         """Create server instance with mocked TTS."""
         with patch("src.server.inference_server.TsukuyomiTTS", return_value=mock_tts):
             server = InferenceServer(config)
             return server
 
-    @pytest.fixture
+    @pytest.fixture()
     def client(self, server):
         """Create test client."""
         return TestClient(server.app)
@@ -253,7 +253,7 @@ class TestInferenceServer:
         assert "normal" in data["styles"]
         assert "energetic" in data["styles"]
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_rate_limiting(self, client, server):
         """Test rate limiting."""
         # Set low rate limit for testing
@@ -312,7 +312,7 @@ class TestInferenceServer:
 class TestCaching:
     """Test caching functionality."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def redis_mock(self):
         """Mock Redis client."""
         mock = Mock()
@@ -321,7 +321,7 @@ class TestCaching:
         mock.setex.return_value = True
         return mock
 
-    @pytest.fixture
+    @pytest.fixture()
     def server_with_cache(self, mock_tts, redis_mock):
         """Create server with mocked cache."""
         config = ServerConfig(cache_enabled=True)
@@ -333,7 +333,7 @@ class TestCaching:
                 server.cache = redis_mock
                 return server
 
-    @pytest.fixture
+    @pytest.fixture()
     def client_with_cache(self, server_with_cache):
         """Create test client with cache enabled."""
         return TestClient(server_with_cache.app)

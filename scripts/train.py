@@ -29,16 +29,17 @@ from tqdm import tqdm
 # プロジェクトルートをPythonパスに追加
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from src.data.dataset import TsukuyomiDataset
-from src.data.collate import tts_collate_fn
-from src.data.text_tokenizer import JapaneseTextTokenizer
 from src.data.audio_processor import AudioProcessor
-from src.utils.text_preprocessor import simple_text_to_katakana
-from src.models.f0_bert import F0BERT
-from src.models.xphonebert import XPhoneBERTEncoder as XPhoneBERT
-from src.models.vits import VITS
-from src.models.matcha_tts import MatchaTTS
+from src.data.collate import tts_collate_fn
+from src.data.dataset import TsukuyomiDataset
+from src.data.text_tokenizer import JapaneseTextTokenizer
 from src.models.bigvgan_v2 import BigVGANv2Generator as BigVGANv2
+from src.models.f0_bert import F0BERT
+from src.models.matcha_tts import MatchaTTS
+from src.models.vits import VITS
+from src.models.xphonebert import XPhoneBERTEncoder as XPhoneBERT
+from src.utils.text_preprocessor import simple_text_to_katakana
+
 
 # ダミーモデル（動作確認用）
 class DummyAcousticModel(nn.Module):
@@ -64,10 +65,10 @@ class DummyAcousticModel(nn.Module):
         dummy_mel = torch.randn(batch_size, 80, 100).to(self.fc.weight.device)
         
         return {'mel': dummy_mel, 'loss': loss}
+from src.evaluation.metrics import MelCepstralDistortion
 from src.training.losses import MultiTaskLoss
 from src.training.metrics import TrainingMetrics
 from src.utils.model_manager import ModelRegistry
-from src.evaluation.metrics import MelCepstralDistortion
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -340,7 +341,7 @@ class TTSTrainer:
         for model in models.values():
             model.train()
             
-        epoch_losses = {name: 0.0 for name in models.keys()}
+        epoch_losses = {name: 0.0 for name in models}
         epoch_losses['total'] = 0.0
         
         # プログレスバー
@@ -544,7 +545,7 @@ class TTSTrainer:
         for model in models.values():
             model.eval()
             
-        val_losses = {name: 0.0 for name in models.keys()}
+        val_losses = {name: 0.0 for name in models}
         val_losses['total'] = 0.0
         
         # MCD評価器
@@ -922,3 +923,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

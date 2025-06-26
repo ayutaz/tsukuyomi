@@ -7,10 +7,10 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from src.serving.triton_server import TritonModelExporter, create_docker_compose_triton
-from src.models.vits import VITS
 from src.models.bigvgan import BigVGANv2
+from src.models.vits import VITS
 from src.models.xphonebert import XPhoneBERT
+from src.serving.triton_server import TritonModelExporter, create_docker_compose_triton
 
 
 def deploy_models(checkpoint_path: Path, model_repository: Path):

@@ -4,6 +4,7 @@
 import csv
 from pathlib import Path
 
+
 def check_metadata_format():
     """各メタデータファイルのフォーマットを確認"""
     data_root = Path("data/jvs_ljspeech")

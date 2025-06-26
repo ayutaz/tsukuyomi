@@ -11,16 +11,20 @@ This script checks:
 6. Model optimization features
 """
 
-import torch
 import sys
 from pathlib import Path
+
+import torch
 
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.models.ultimate_acoustic_model import UltimateAcousticModel, UltimateAcousticConfig
-from src.models.bigvgan_v2 import BigVGANv2Generator, BigVGANv2Config
+from src.models.bigvgan_v2 import BigVGANv2Config, BigVGANv2Generator
 from src.models.f0_bert import F0BERT, F0BERTConfig
+from src.models.ultimate_acoustic_model import (
+    UltimateAcousticConfig,
+    UltimateAcousticModel,
+)
 from src.models.xphonebert_japanese import XPhoneBERTJapanese, XPhoneBERTJapaneseConfig
 
 

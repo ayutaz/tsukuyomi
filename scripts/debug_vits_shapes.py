@@ -8,8 +8,9 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 import torch
-from src.models.vits import VITS
+
 from src.data.text_tokenizer import JapaneseTextTokenizer
+from src.models.vits import VITS
 from src.utils.text_preprocessor import simple_text_to_katakana
 
 

@@ -28,7 +28,7 @@ from src.evaluation.metrics import (
 class TestEvaluationMetrics:
     """Test evaluation metrics."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def sample_audio(self):
         """Create sample audio for testing."""
         sr = 48000
@@ -189,7 +189,7 @@ class TestEvaluationMetrics:
 class TestBenchmark:
     """Test benchmarking functionality."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def temp_dir(self):
         """Create temporary directory."""
         temp_dir = tempfile.mkdtemp()
@@ -198,7 +198,7 @@ class TestBenchmark:
 
         shutil.rmtree(temp_dir)
 
-    @pytest.fixture
+    @pytest.fixture()
     def benchmark_config(self, temp_dir):
         """Create benchmark configuration."""
         return BenchmarkConfig(
@@ -212,7 +212,7 @@ class TestBenchmark:
             compute_quality_metrics=False,
         )
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_model(self):
         """Create mock model."""
         model = MagicMock()

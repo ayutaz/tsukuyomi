@@ -16,7 +16,7 @@ from src.inference import TsukuyomiTTS
 class TestTsukuyomiTTSIntegration:
     """Integration tests for the complete TTS system"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_components(self):
         """Mock all TTS components"""
         with (
@@ -178,7 +178,7 @@ class TestTsukuyomiTTSIntegration:
             assert "language" in call_args[1]
             assert call_args[1]["language"] == language
 
-    @pytest.mark.gpu
+    @pytest.mark.gpu()
     def test_gpu_synthesis(self, mock_components):
         """Test synthesis on GPU"""
         if not torch.cuda.is_available():
@@ -190,7 +190,7 @@ class TestTsukuyomiTTSIntegration:
         audio, sr = tts.synthesize("GPUテスト")
         assert isinstance(audio, np.ndarray)
 
-    @pytest.mark.bf16
+    @pytest.mark.bf16()
     def test_bf16_synthesis(self, mock_components):
         """Test BF16 synthesis"""
         if not (torch.cuda.is_available() and torch.cuda.is_bf16_supported()):
@@ -288,7 +288,7 @@ class TestTsukuyomiTTSIntegration:
             if hasattr(param, "grad"):
                 assert param.grad is None or param.grad.sum() == 0
 
-    @pytest.mark.slow
+    @pytest.mark.slow()
     def test_long_text_synthesis(self, mock_components):
         """Test synthesis of long text"""
         tts = TsukuyomiTTS(device="cpu")

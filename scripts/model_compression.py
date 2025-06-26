@@ -17,14 +17,14 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
+import onnx
+import onnxruntime as ort
 import torch
 import torch.nn as nn
 import torch.nn.utils.prune as prune
 import torch.quantization as quantization
-from torch.nn.utils import prune as pruning_utils
-import onnx
-import onnxruntime as ort
 from sklearn.metrics import mean_squared_error
+from torch.nn.utils import prune as pruning_utils
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

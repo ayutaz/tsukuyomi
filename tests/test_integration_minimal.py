@@ -2,22 +2,23 @@
 Minimal integration tests for CI/CD
 """
 
-import pytest
-import torch
 import tempfile
 from pathlib import Path
+
 import numpy as np
+import pytest
+import torch
 
 
 def test_imports():
     """Test that all major modules can be imported"""
     try:
-        from src.models.vits import VITS
-        from src.models.f0_bert import F0BERT
-        from src.models.bigvgan_v2 import BigVGANv2Generator
-        from src.data.dataset import TsukuyomiDataset
-        from src.data.collate import tts_collate_fn
         from scripts.train import TTSTrainer
+        from src.data.collate import tts_collate_fn
+        from src.data.dataset import TsukuyomiDataset
+        from src.models.bigvgan_v2 import BigVGANv2Generator
+        from src.models.f0_bert import F0BERT
+        from src.models.vits import VITS
     except ImportError as e:
         pytest.fail(f"Failed to import module: {e}")
 

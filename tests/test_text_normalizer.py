@@ -16,7 +16,7 @@ from src.frontend.text_normalizer import JapaneseTextNormalizer
 class TestJapaneseTextNormalizer:
     """Test suite for Japanese text normalization."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def normalizer(self) -> JapaneseTextNormalizer:
         """Create JapaneseTextNormalizer instance."""
         # Mock MeCab if not available
@@ -151,7 +151,7 @@ class TestJapaneseTextNormalizer:
 class TestTextNormalizerEdgeCases:
     """Test edge cases for text normalizer."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def normalizer(self) -> JapaneseTextNormalizer:
         """Create normalizer with mocked MeCab."""
         with patch("src.frontend.text_normalizer.MeCab") as mock_mecab:
@@ -206,7 +206,7 @@ class TestTextNormalizerEdgeCases:
 class TestTextNormalizerPerformance:
     """Performance tests for text normalizer."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def normalizer(self) -> JapaneseTextNormalizer:
         """Create normalizer for performance testing."""
         with patch("src.frontend.text_normalizer.MeCab") as mock_mecab:
@@ -219,7 +219,7 @@ class TestTextNormalizerPerformance:
             normalizer = JapaneseTextNormalizer()
         return normalizer
 
-    @pytest.mark.benchmark
+    @pytest.mark.benchmark()
     def test_normalization_speed(
         self, normalizer: JapaneseTextNormalizer, benchmark
     ) -> None:

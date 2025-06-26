@@ -32,7 +32,7 @@ class TextPreprocessor:
 class TestAudioPreprocessor:
     """音声前処理のテスト"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def preprocessor(self):
         return AudioPreprocessor(
             sample_rate=48000,
@@ -105,7 +105,7 @@ class TestAudioPreprocessor:
 class TestTextPreprocessor:
     """テキスト前処理のテスト"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def preprocessor(self):
         return TextPreprocessor(language="ja")
 
@@ -171,7 +171,7 @@ class TestTextPreprocessor:
 class TestVoiceDataset:
     """音声データセットのテスト"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def temp_dataset(self):
         """テスト用の一時データセット作成"""
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -279,7 +279,7 @@ class TestVoiceDataset:
 class TestAudioAugmentation:
     """音声拡張のテスト"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def augmentation(self):
         return AudioAugmentation(
             pitch_shift_range=(-2, 2),

@@ -23,15 +23,15 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import librosa
+import noisereduce as nr
 import numpy as np
+import pyloudnorm as pyln
 import soundfile as sf
 import webrtcvad
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
 from scipy.signal import butter, filtfilt
 from tqdm import tqdm
-import noisereduce as nr
-import pyloudnorm as pyln
 
 # Add project root to path
 sys.path.append(str(Path(__file__).resolve().parent.parent))

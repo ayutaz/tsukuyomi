@@ -8,11 +8,12 @@ LJSpeech形式:
 
 import argparse
 import csv
+import re
 import shutil
 import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
-import re
+
 import soundfile as sf
 from tqdm import tqdm
 

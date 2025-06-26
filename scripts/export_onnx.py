@@ -16,10 +16,10 @@ import torch
 # Add project root to path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from src.export.onnx_export import ONNXExporter, ExportConfig
-from src.models.vits import VITS
-from src.models.hifigan import HiFiGAN
+from src.export.onnx_export import ExportConfig, ONNXExporter
 from src.models.bigvgan import BigVGAN
+from src.models.hifigan import HiFiGAN
+from src.models.vits import VITS
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

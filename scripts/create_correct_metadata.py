@@ -4,6 +4,7 @@
 import csv
 from pathlib import Path
 
+
 def create_metadata_from_existing():
     """既存のメタデータから正しいフォーマットを作成"""
     data_root = Path("data/jvs_ljspeech")

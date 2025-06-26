@@ -7,6 +7,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 try:
     from pesq import pesq
 except ImportError:
@@ -62,7 +63,7 @@ class TrainingMetrics:
 
         # Also support old interface with metrics_dict
         if isinstance(outputs, dict) and all(
-            key in self.metrics for key in outputs.keys()
+            key in self.metrics for key in outputs
         ):
             for key, value in outputs.items():
                 if key in self.metrics:

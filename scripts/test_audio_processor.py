@@ -8,9 +8,10 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 import torch
+
 from src.data.audio_processor import AudioProcessor
-from src.data.dataset import TsukuyomiDataset
 from src.data.collate import tts_collate_fn
+from src.data.dataset import TsukuyomiDataset
 
 
 def main():

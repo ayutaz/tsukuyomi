@@ -15,11 +15,11 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from src.data.ljspeech_dataset import create_ljspeech_datasets
-from src.models.vits import VITS
-from src.models.matcha_tts import MatchaTTS
 from src.models.bigvgan import BigVGAN
-from src.models.xphonebert import XPhoneBERT
 from src.models.f0_bert import F0BERT
+from src.models.matcha_tts import MatchaTTS
+from src.models.vits import VITS
+from src.models.xphonebert import XPhoneBERT
 from src.training.trainer import TTSTrainer
 
 logging.basicConfig(level=logging.INFO)

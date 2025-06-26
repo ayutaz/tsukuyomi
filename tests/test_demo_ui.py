@@ -23,7 +23,7 @@ from src.web.demo_ui import (
 class TestDemoUI:
     """Test suite for demo UI."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_response(self):
         """Create mock response for API calls."""
         # Create dummy audio
@@ -36,7 +36,7 @@ class TestDemoUI:
         mock.content = buffer.getvalue()
         return mock
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_requests(self, mock_response):
         """Mock requests module."""
         with patch("src.web.demo_ui.requests") as mock:
@@ -235,7 +235,7 @@ class TestDemoUI:
 class TestIntegration:
     """Integration tests for demo UI."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def demo_interface(self):
         """Create demo interface for testing."""
         return build_demo()

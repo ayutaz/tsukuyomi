@@ -13,7 +13,7 @@ from src.models.ultimate_acoustic_model import (
 class TestVoiceMorphing:
     """Test suite for voice morphing functionality."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def config(self):
         """Create test configuration."""
         return UltimateAcousticConfig(
@@ -26,7 +26,7 @@ class TestVoiceMorphing:
             vae_layers=8,
         )
 
-    @pytest.fixture
+    @pytest.fixture()
     def model(self, config):
         """Create acoustic model instance."""
         return UltimateAcousticModel(config)

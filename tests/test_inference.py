@@ -102,7 +102,7 @@ class TestInferenceConfig:
 class TestOptimizedInferenceEngine:
     """最適化推論エンジンのテスト"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_model_path(self):
         """モックモデルパスの作成"""
         with tempfile.NamedTemporaryFile(suffix=".pt") as f:
@@ -242,7 +242,7 @@ class TestOptimizedInferenceEngine:
 class TestStreamingInference:
     """ストリーミング推論のテスト"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_engine(self):
         """モック推論エンジン"""
         engine = MagicMock()
@@ -286,7 +286,7 @@ class TestStreamingInference:
 class TestTritonModelExporter:
     """Tritonモデルエクスポーターのテスト"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def temp_model_repo(self):
         """一時モデルリポジトリ"""
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -428,7 +428,7 @@ class TestTritonTTSClient:
 class TestPerformance:
     """パフォーマンステスト"""
 
-    @pytest.mark.benchmark
+    @pytest.mark.benchmark()
     def test_inference_speed(self):
         """推論速度のベンチマーク"""
         with (

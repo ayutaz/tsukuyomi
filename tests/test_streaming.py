@@ -90,7 +90,7 @@ class TestChunkedAttention:
 class TestStreamingVITS:
     """Test streaming VITS model"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def streaming_vits(self):
         """Create streaming VITS model"""
         base_vits = VITS(
@@ -174,7 +174,7 @@ class TestStreamingVITS:
 class TestStreamingPipeline:
     """Test streaming pipeline"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def pipeline(self):
         """Create streaming pipeline"""
         # Create mock models
@@ -218,7 +218,7 @@ class TestStreamingPipeline:
         assert audio.dtype == np.float32
         assert len(audio) > 0
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_stream_synthesis(self, pipeline):
         """Test streaming synthesis"""
 
@@ -261,7 +261,7 @@ class TestStreamingPipeline:
 class TestOptimizedVocoder:
     """Test optimized vocoder for streaming"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def optimized_vocoder(self):
         """Create optimized vocoder"""
         base_vocoder = Mock()

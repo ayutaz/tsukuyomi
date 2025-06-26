@@ -5,24 +5,25 @@ Integration test script for the Ultimate TTS system
 Tests the complete pipeline from text to audio synthesis.
 """
 
-import sys
-import os
-from pathlib import Path
-import time
 import logging
+import os
+import sys
+import time
+from pathlib import Path
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import torch
 import numpy as np
+import torch
+
+from src.models.bigvgan_v2 import create_bigvgan_v2
+from src.models.f0_bert import create_f0_bert
+from src.models.ultimate_acoustic_model import create_ultimate_acoustic_model
 
 # Import all components
 from src.models.ultimate_g2p import create_ultimate_g2p
-from src.models.f0_bert import create_f0_bert
 from src.models.xphonebert_japanese import create_xphonebert_japanese
-from src.models.ultimate_acoustic_model import create_ultimate_acoustic_model
-from src.models.bigvgan_v2 import create_bigvgan_v2
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
