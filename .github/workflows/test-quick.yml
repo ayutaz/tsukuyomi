@@ -178,7 +178,8 @@ jobs:
       
       - name: Quick training test
         run: |
-          pytest tests/test_training_basic.py::test_collate_function -v
+          # Use minimal test file to avoid heavy dependencies
+          pytest tests/test_collate_minimal.py -v
 
   check-files:
     name: File Validation & Security Scan
