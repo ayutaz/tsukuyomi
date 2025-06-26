@@ -1,0 +1,114 @@
+# VITSモデル実データ学習用設定（T4最適化版）
+
+# データ設定
+data:
+  dataset: "jvs"
+  data_dir: "data/jvs_ljspeech"
+  train_dir: "data/jvs_ljspeech"
+  val_dir: "data/jvs_ljspeech"
+  test_dir: "data/jvs_ljspeech"
+  transcript_file: "metadata_multispeaker.csv"
+  preprocessor: "openjtalk"
+  max_duration: 10.0
+  min_duration: 0.5
+  
+  # 音声設定
+  sample_rate: 22050
+  hop_length: 256
+  n_mels: 80
+  n_fft: 1024
+  win_length: 1024
+  
+  # キャッシュ設定
+  use_cache: true
+  num_workers: 2  # T4では少なめに
+
+# モデル設定（軽量化）
+models:
+  acoustic_model: "vits"
+  vocoder: null
+  
+  xphonebert:
+    enabled: false
+    
+  f0_bert:
+    enabled: false
+    
+  # VITS設定（T4用に軽量化）
+  vits:
+    n_vocab: 93
+    n_speakers: 100
+    hidden_channels: 128  # 192から削減
+    filter_channels: 512  # 768から削減
+    n_heads: 2
+    n_layers: 4  # 6から削減
+    kernel_size: 3
+    p_dropout: 0.1
+    n_flows: 3  # 4から削減
+    # 追加パラメータ
+    speaker_embedding_dim: 128  # 256から削減
+    duration_predictor_filter_channels: 128  # 256から削減
+    duration_predictor_kernel_size: 3
+    duration_predictor_dropout: 0.5
+
+# 学習設定（T4最適化）
+training:
+  num_epochs: 50  # 100から削減（品質確認用）
+  batch_size: 16  # 32から削減（メモリ節約）
+  gradient_accumulation_steps: 2  # 実効バッチサイズ32を維持
+  gradient_clip: 1.0
+  mixed_precision: "fp16"  # 必須
+  save_interval: 500  # より頻繁に保存
+  checkpoint_dir: "checkpoints/vits_jvs_t4"
+  resume_from: null
+  
+  # 損失重み
+  loss_weights:
+    total: 1.0
+    
+  # オプティマイザー設定
+  optimizers:
+    default:
+      lr: 2e-4
+      beta1: 0.8
+      beta2: 0.99
+      eps: 1e-9
+      weight_decay: 0.0
+      
+  # スケジューラー設定（より積極的な学習率減衰）
+  schedulers:
+    default:
+      type: "exponential"
+      gamma: 0.9998  # より速い減衰
+      
+  # ロギング設定
+  logging:
+    log_interval: 50  # より頻繁にログ
+    trackers: "tensorboard"
+    
+  # メモリ最適化（T4用）
+  memory_optimization:
+    gradient_checkpointing: true  # メモリ節約
+    find_unused_parameters: false
+    clear_cache_interval: 50  # より頻繁にクリア
+    empty_cache_on_validation: true
+
+# パス設定
+paths:
+  checkpoints: "checkpoints/vits_jvs_t4"
+  tensorboard: "logs/vits_jvs_t4/tensorboard"
+  model_registry: "models/vits_jvs_t4/registry.db"
+  
+# 評価設定
+evaluation:
+  metrics: ["mcd"]  # 最小限に
+  save_samples: true
+  num_samples: 5  # 少なめに
+  validation_interval: 500  # より頻繁に検証
+
+# 早期終了設定（追加）
+early_stopping:
+  enabled: true
+  patience: 10  # 10回改善しなければ停止
+  metric: "val_loss"
+  mode: "min"

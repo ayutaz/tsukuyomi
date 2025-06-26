@@ -10,7 +10,7 @@ from src.models.bigvgan_v2 import BigVGANv2
 from src.models.f0_bert import F0BERT
 from src.models.matcha_tts import MatchaTTS
 from src.models.vits import VITS
-from src.models.xphonebert import XPhoneBERT
+from src.models.xphonebert import XPhoneBERTEncoder as XPhoneBERT
 
 
 class TestXPhoneBERT:
