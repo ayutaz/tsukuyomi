@@ -12,7 +12,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
-
 # Language-specific imports
 try:
     from phonemizer import phonemize

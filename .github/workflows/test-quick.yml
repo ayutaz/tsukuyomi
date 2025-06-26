@@ -44,6 +44,8 @@ jobs:
           # Explicitly install CPU-only versions
           pip install --no-cache-dir torch==2.2.0+cpu torchaudio==2.2.0+cpu --index-url https://download.pytorch.org/whl/cpu
           pip install transformers librosa soundfile
+          # Install project dependencies including omegaconf
+          pip install -r requirements.txt
           pip install -e .
       
       - name: Check code formatting
