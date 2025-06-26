@@ -159,7 +159,7 @@ class VITS(nn.Module):
 
         # Text encoding
         x, m_p, logs_p, x_mask = self.text_encoder(text, text_lengths, g)
-        
+
         # Debug shapes
         if text.size(0) == 16:  # Debug for batch size 16
             print("DEBUG VITS forward:")
@@ -209,7 +209,7 @@ class VITS(nn.Module):
                 print(f"  x_mask shape: {x_mask.shape}")
                 if g is not None:
                     print(f"  g shape: {g.shape}")
-            
+
             log_w, log_w_std = self.duration_predictor(x, x_mask, g=g)
             log_duration_targets = torch.log(w.float() + 1e-6) * x_mask
 
@@ -307,7 +307,7 @@ class VITS(nn.Module):
         if log_duration_prediction.size(1) > 1:
             # Take only the mean (first channel) for loss calculation
             log_duration_prediction = log_duration_prediction[:, :1, :]
-        
+
         duration_loss = F.mse_loss(
             log_duration_prediction * duration_mask,
             log_duration_targets * duration_mask,

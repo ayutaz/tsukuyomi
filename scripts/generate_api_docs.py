@@ -27,39 +27,39 @@ def main():
         default="all",
         help="生成フォーマット",
     )
-    
+
     args = parser.parse_args()
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # FastAPIアプリケーションの作成
     app = create_app()
-    
+
     # OpenAPI仕様の取得
     openapi_spec = app.openapi()
-    
+
     # OpenAPI JSONの保存
     if args.format in ["openapi", "all"]:
         openapi_path = output_dir / "openapi.json"
         with open(openapi_path, "w") as f:
             json.dump(openapi_spec, f, indent=2, ensure_ascii=False)
         print(f"Generated OpenAPI specification: {openapi_path}")
-        
+
         # 人間が読みやすいMarkdown版も生成
         generate_markdown_docs(openapi_spec, output_dir / "api-reference.md")
-        
+
     # Postmanコレクションの生成
     if args.format in ["postman", "all"]:
         postman_path = output_dir / "tsukuyomi-tts.postman_collection.json"
         generate_postman_collection(openapi_spec, postman_path)
-        
+
     # Python SDKの生成
     if args.format in ["sdk-python", "all"]:
         sdk_dir = output_dir / "sdk" / "python"
         generate_client_sdk(openapi_spec, "python", sdk_dir)
-        
+
         # setup.pyも生成
-        setup_content = '''from setuptools import setup, find_packages
+        setup_content = """from setuptools import setup, find_packages
 
 setup(
     name="tsukuyomi-tts-client",
@@ -72,15 +72,15 @@ setup(
     ],
     python_requires=">=3.8",
 )
-'''
+"""
         with open(sdk_dir / "setup.py", "w") as f:
             f.write(setup_content)
-            
+
     # TypeScript SDKの生成
     if args.format in ["sdk-typescript", "all"]:
         sdk_dir = output_dir / "sdk" / "typescript"
         generate_client_sdk(openapi_spec, "typescript", sdk_dir)
-        
+
         # package.jsonも生成
         package_json = {
             "name": "tsukuyomi-tts-client",
@@ -99,10 +99,10 @@ setup(
                 "typescript": "^5.0.0",
             },
         }
-        
+
         with open(sdk_dir / "package.json", "w") as f:
             json.dump(package_json, f, indent=2)
-            
+
         # tsconfig.jsonも生成
         tsconfig = {
             "compilerOptions": {
@@ -118,10 +118,10 @@ setup(
                 "declaration": True,
             },
         }
-        
+
         with open(sdk_dir / "tsconfig.json", "w") as f:
             json.dump(tsconfig, f, indent=2)
-            
+
     print(f"\n✅ APIドキュメントの生成が完了しました: {output_dir}")
 
 
@@ -154,82 +154,90 @@ Authorization: Bearer YOUR_JWT_TOKEN
 ## エンドポイント
 
 """
-    
+
     # エンドポイントの一覧
     for path, methods in openapi_spec.get("paths", {}).items():
         for method, operation in methods.items():
             if method in ["get", "post", "put", "delete", "patch"]:
                 md_content += f"### {method.upper()} {path}\n\n"
                 md_content += f"{operation.get('summary', '')}\n\n"
-                
-                if operation.get('description'):
+
+                if operation.get("description"):
                     md_content += f"{operation['description']}\n\n"
-                    
+
                 # パラメータ
-                if operation.get('parameters'):
+                if operation.get("parameters"):
                     md_content += "**パラメータ:**\n\n"
-                    for param in operation['parameters']:
-                        required = "必須" if param.get('required') else "任意"
+                    for param in operation["parameters"]:
+                        required = "必須" if param.get("required") else "任意"
                         md_content += f"- `{param['name']}` ({param.get('schema', {}).get('type', 'string')}, {required}): {param.get('description', '')}\n"
                     md_content += "\n"
-                    
+
                 # リクエストボディ
-                if operation.get('requestBody'):
+                if operation.get("requestBody"):
                     md_content += "**リクエストボディ:**\n\n"
-                    content = operation['requestBody'].get('content', {})
-                    if 'application/json' in content:
-                        schema = content['application/json'].get('schema', {})
-                        if '$ref' in schema:
-                            ref_name = schema['$ref'].split('/')[-1]
+                    content = operation["requestBody"].get("content", {})
+                    if "application/json" in content:
+                        schema = content["application/json"].get("schema", {})
+                        if "$ref" in schema:
+                            ref_name = schema["$ref"].split("/")[-1]
                             md_content += f"See [{ref_name}](#schemas) schema\n\n"
-                        elif 'example' in schema:
+                        elif "example" in schema:
                             md_content += "```json\n"
-                            md_content += json.dumps(schema['example'], indent=2, ensure_ascii=False)
+                            md_content += json.dumps(
+                                schema["example"], indent=2, ensure_ascii=False
+                            )
                             md_content += "\n```\n\n"
-                            
+
                 # レスポンス
-                if operation.get('responses'):
+                if operation.get("responses"):
                     md_content += "**レスポンス:**\n\n"
-                    for status, response in operation['responses'].items():
-                        md_content += f"- `{status}`: {response.get('description', '')}\n"
+                    for status, response in operation["responses"].items():
+                        md_content += (
+                            f"- `{status}`: {response.get('description', '')}\n"
+                        )
                     md_content += "\n"
-                    
+
                 md_content += "---\n\n"
-                
+
     # スキーマ定義
     md_content += "## スキーマ定義 {#schemas}\n\n"
-    
-    for schema_name, schema in openapi_spec.get("components", {}).get("schemas", {}).items():
+
+    for schema_name, schema in (
+        openapi_spec.get("components", {}).get("schemas", {}).items()
+    ):
         md_content += f"### {schema_name}\n\n"
-        
-        if schema.get('description'):
+
+        if schema.get("description"):
             md_content += f"{schema['description']}\n\n"
-            
-        if schema.get('properties'):
+
+        if schema.get("properties"):
             md_content += "| フィールド | 型 | 必須 | 説明 |\n"
             md_content += "|-----------|-----|------|------|\n"
-            
-            required_fields = schema.get('required', [])
-            
-            for prop_name, prop_schema in schema['properties'].items():
-                prop_type = prop_schema.get('type', 'string')
+
+            required_fields = schema.get("required", [])
+
+            for prop_name, prop_schema in schema["properties"].items():
+                prop_type = prop_schema.get("type", "string")
                 required = "✓" if prop_name in required_fields else ""
-                description = prop_schema.get('description', '')
-                
+                description = prop_schema.get("description", "")
+
                 # 配列の場合
-                if prop_type == 'array':
-                    items_type = prop_schema.get('items', {}).get('type', 'any')
+                if prop_type == "array":
+                    items_type = prop_schema.get("items", {}).get("type", "any")
                     prop_type = f"array<{items_type}>"
-                    
-                md_content += f"| {prop_name} | {prop_type} | {required} | {description} |\n"
-                
-        if 'example' in schema:
+
+                md_content += (
+                    f"| {prop_name} | {prop_type} | {required} | {description} |\n"
+                )
+
+        if "example" in schema:
             md_content += "\n**例:**\n```json\n"
-            md_content += json.dumps(schema['example'], indent=2, ensure_ascii=False)
+            md_content += json.dumps(schema["example"], indent=2, ensure_ascii=False)
             md_content += "\n```\n"
-            
+
         md_content += "\n"
-        
+
     # エラーコード
     md_content += """## エラーコード
 
@@ -289,10 +297,10 @@ curl -X POST https://api.tsukuyomi-tts.com/v1/synthesis \\
   }'
 ```
 """
-    
+
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(md_content)
-        
+
     print(f"Generated Markdown documentation: {output_path}")
 
 

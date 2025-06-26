@@ -75,10 +75,13 @@ jobs:
           sample_rate: 22050
           hop_length: 256
           n_mels: 80
+          n_fft: 1024
+          win_length: 1024
           use_cache: false
           num_workers: 0
           max_duration: null
           min_duration: null
+          transcript_file: "metadata.csv"
         
         models:
           acoustic_model: "vits"
@@ -113,11 +116,16 @@ jobs:
           mixed_precision: "no"
           save_interval: 100
           checkpoint_dir: "checkpoints/ci_test"
+          resume_from: null
           loss_weights:
             total: 1.0
           optimizers:
             default:
               lr: 1e-4
+              beta1: 0.8
+              beta2: 0.99
+              eps: 1e-9
+              weight_decay: 0.01
           schedulers:
             default:
               type: "cosine_annealing"

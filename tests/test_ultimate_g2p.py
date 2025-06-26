@@ -2,7 +2,6 @@
 Tests for Ultimate Japanese G2P with 97%+ accuracy target
 """
 
-
 import pytest
 import torch
 

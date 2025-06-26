@@ -26,6 +26,7 @@ try:
 except ImportError:
     pesq = None
     import warnings
+
     warnings.warn("PESQ not available. PESQ metric calculation will be disabled.")
 from pystoi import stoi
 from scipy.stats import pearsonr

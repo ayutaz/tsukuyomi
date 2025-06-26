@@ -181,7 +181,7 @@ class TsukuyomiDataset(Dataset):
                 parts = line.split("|")
                 if len(parts) >= 2:
                     audio_file = parts[0]
-                    
+
                     # JVSフォーマット: audio_id|text|normalized_text
                     if len(parts) >= 3 and audio_file.startswith("jvs"):
                         text = parts[1]  # オリジナルテキスト
@@ -220,7 +220,7 @@ class TsukuyomiDataset(Dataset):
                 # LJSpeech format: audio_id|text|normalized_text
                 logger.info("Detected LJSpeech format (pipe-delimited)")
                 format_logged = False  # フォーマットログを1回だけ出力するためのフラグ
-                
+
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -229,11 +229,13 @@ class TsukuyomiDataset(Dataset):
                     parts = line.split("|")
                     if len(parts) >= 2:
                         audio_id = parts[0]
-                        
+
                         # デバッグ: 最初の数行のフォーマットを表示
                         if len(samples) < 3:
-                            logger.info(f"CSV line {len(samples)+1}: {len(parts)} parts - {parts[:3]}")
-                        
+                            logger.info(
+                                f"CSV line {len(samples)+1}: {len(parts)} parts - {parts[:3]}"
+                            )
+
                         # JVSフォーマット: もしかしたら audio_id|speaker_id|text の順？
                         if len(parts) >= 3 and audio_id.startswith("jvs"):
                             # カラム2がスピーカーIDっぽいかチェック
@@ -268,7 +270,9 @@ class TsukuyomiDataset(Dataset):
                             )
                         else:
                             if len(samples) < 5:  # 最初の数個だけ詳細ログ
-                                logger.warning(f"Audio file not found: {audio_id} (searched in {self.data_root})")
+                                logger.warning(
+                                    f"Audio file not found: {audio_id} (searched in {self.data_root})"
+                                )
             else:
                 # Standard CSV format
                 f.seek(0)
@@ -390,12 +394,12 @@ class TsukuyomiDataset(Dataset):
             audio_path = self.data_root / speaker_id / audio_file
             if audio_path.exists():
                 return audio_path
-            
+
             # wavs/スピーカーID/ファイル名 形式も試す
             audio_path = self.data_root / "wavs" / speaker_id / audio_file
             if audio_path.exists():
                 return audio_path
-            
+
             # JVSの複雑なファイル名形式に対応
             # e.g., jvs001_001 -> jvs001_*_001.wav のパターンマッチング
             base_name = Path(audio_file).stem  # 拡張子を除く
@@ -406,7 +410,7 @@ class TsukuyomiDataset(Dataset):
                     suffix = parts[-1]
                     # パターンマッチング: jvs001_*_001.wav
                     pattern = f"{speaker}_*_{suffix}.wav"
-                    
+
                     # wavsディレクトリで検索
                     wavs_dir = self.data_root / "wavs"
                     if wavs_dir.exists():
@@ -422,11 +426,11 @@ class TsukuyomiDataset(Dataset):
             audio_path = self.data_root / audio_file
             if audio_path.exists():
                 return audio_path
-        
+
         # ログに詳細を出力
         if not hasattr(self, "_logged_paths"):
             self._logged_paths = set()
-        
+
         if audio_file not in self._logged_paths:
             self._logged_paths.add(audio_file)
             logger.debug(f"Tried paths for {audio_file}:")
@@ -435,7 +439,7 @@ class TsukuyomiDataset(Dataset):
             if audio_file.startswith("jvs") and "_" in audio_file:
                 speaker_id = audio_file.split("_")[0]
                 logger.debug(f"  - {self.data_root / speaker_id / audio_file}")
-                parts = audio_file.split('_')
+                parts = audio_file.split("_")
                 if len(parts) >= 2:
                     pattern = f"{speaker_id}_*_{parts[-1]}"
                     logger.debug(f"  - Pattern: {self.data_root / 'wavs' / pattern}")

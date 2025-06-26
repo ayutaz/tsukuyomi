@@ -109,7 +109,7 @@ class DurationPredictor(nn.Module):
             print(f"  expected in_channels: {self.in_channels}")
             if g is not None:
                 print(f"  g shape before expand: {g.shape}")
-        
+
         if g is not None:
             g = g.expand(-1, -1, x.size(2))
             x = torch.cat([x, g], dim=1)
@@ -127,12 +127,12 @@ class DurationPredictor(nn.Module):
         if x.size(0) == 16:
             print(f"  x shape before proj: {x.shape}")
             print(f"  self.proj weight shape: {self.proj.weight.shape}")
-            
+
         x = self.proj(x * x_mask)
-        
+
         if x.size(0) == 16:
             print(f"  x shape after proj: {x.shape}")
-            
+
         return x * x_mask
 
 
@@ -162,7 +162,9 @@ class StochasticDurationPredictor(nn.Module):
 
         # Projection layers
         # NOTE: The encoder outputs 1 channel, not filter_channels!
-        self.proj = nn.Conv1d(1, filter_channels * 2, 1)  # Changed from filter_channels to 1
+        self.proj = nn.Conv1d(
+            1, filter_channels * 2, 1
+        )  # Changed from filter_channels to 1
 
         # Normalizing flow
         self.flows = nn.ModuleList()
@@ -184,20 +186,20 @@ class StochasticDurationPredictor(nn.Module):
             print(f"  x_mask shape: {x_mask.shape}")
             if g is not None:
                 print(f"  g shape: {g.shape}")
-        
+
         # Encode
         h = self.encoder(x, x_mask, g)
-        
+
         if x.size(0) == 16:
             print(f"  h shape after encoder: {h.shape}")
             print(f"  self.proj weight shape: {self.proj.weight.shape}")
 
         # Project to mean and log_std
         stats = self.proj(h) * x_mask
-        
+
         if x.size(0) == 16:
             print(f"  stats shape after proj: {stats.shape}")
-        
+
         m, logs = torch.split(stats, stats.size(1) // 2, dim=1)
 
         if not reverse:
@@ -321,7 +323,7 @@ class PosteriorEncoder(nn.Module):
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         # Create mask
         x_mask = sequence_mask(x_lengths, x.size(2)).unsqueeze(1).to(x.dtype)
-        
+
         # Debug mask shape
         if x.size(0) == 16:
             print("DEBUG PosteriorEncoder:")
@@ -624,8 +626,10 @@ class Encoder(nn.Module):
                     attn_mask = attn_mask.unsqueeze(1)  # [B, 1, T]
                 elif attn_mask.dim() == 3 and attn_mask.size(1) != 1:
                     # Something wrong with mask shape
-                    print(f"WARNING: Unexpected mask shape in Encoder layer {i}: {attn_mask.shape}")
-                    
+                    print(
+                        f"WARNING: Unexpected mask shape in Encoder layer {i}: {attn_mask.shape}"
+                    )
+
             y = self.attn_layers[i](x, x, attn_mask)
             y = self.drop(y)
             x = self.norm_layers_1[i](x + y)
@@ -669,12 +673,16 @@ class MultiHeadAttention(nn.Module):
         q = self.conv_q(x)
         k = self.conv_k(c)
         v = self.conv_v(c)
-        
+
         # Debug shapes
-        if attn_mask is not None and hasattr(attn_mask, 'shape'):
+        if attn_mask is not None and hasattr(attn_mask, "shape"):
             if x.size(0) == 16:  # Only log for our problematic batch
-                print(f"DEBUG MHA: x shape: {x.shape}, c shape: {c.shape}, mask shape: {attn_mask.shape}")
-                print(f"DEBUG MHA: q shape: {q.shape}, k shape: {k.shape}, v shape: {v.shape}")
+                print(
+                    f"DEBUG MHA: x shape: {x.shape}, c shape: {c.shape}, mask shape: {attn_mask.shape}"
+                )
+                print(
+                    f"DEBUG MHA: q shape: {q.shape}, k shape: {k.shape}, v shape: {v.shape}"
+                )
 
         x, _ = self.attention(q, k, v, mask=attn_mask)
 
@@ -702,7 +710,7 @@ class MultiHeadAttention(nn.Module):
             if b == 16:  # Only log for our problematic batch
                 print(f"DEBUG attention mask shape before processing: {mask.shape}")
                 print(f"DEBUG scores shape: {scores.shape}")
-            
+
             # Ensure mask has the correct shape for broadcasting with scores [B, n_heads, T_q, T_k]
             if mask.dim() == 4 and mask.size(1) == 1 and mask.size(2) == 1:
                 # Already in correct shape [B, 1, 1, T]
@@ -716,10 +724,10 @@ class MultiHeadAttention(nn.Module):
             elif mask.dim() == 2:  # [B, T]
                 # This is likely a sequence mask, expand for attention
                 mask = mask.unsqueeze(1).unsqueeze(2)  # [B, 1, 1, T]
-                
+
             if b == 16:  # Only log for our problematic batch
                 print(f"DEBUG attention mask shape after processing: {mask.shape}")
-                
+
             # Apply mask
             try:
                 scores = scores.masked_fill(mask == 0, -1e4)
@@ -732,7 +740,9 @@ class MultiHeadAttention(nn.Module):
                 if scores.dim() == 4 and mask.dim() == 4:
                     # Check which dimensions don't match
                     for i in range(4):
-                        print(f"  Dim {i}: scores={scores.size(i)}, mask={mask.size(i)}")
+                        print(
+                            f"  Dim {i}: scores={scores.size(i)}, mask={mask.size(i)}"
+                        )
                 raise
 
         p_attn = torch.softmax(scores, dim=-1)

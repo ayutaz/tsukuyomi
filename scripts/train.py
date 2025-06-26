@@ -40,27 +40,30 @@ from src.utils.text_preprocessor import simple_text_to_katakana
 # ダミーモデル（動作確認用）
 class DummyAcousticModel(nn.Module):
     """Dummy acoustic model for testing"""
+
     def __init__(self, hidden_dim=128):
         super().__init__()
         self.fc = nn.Linear(hidden_dim, hidden_dim)
-        
+
     def forward(self, *args, **kwargs):
         # ダミー出力
         batch_size = 1
-        if args and hasattr(args[0], 'shape'):
+        if args and hasattr(args[0], "shape"):
             batch_size = args[0].shape[0]
-        
+
         # fcレイヤーを通すことで勾配を有効にする
         dummy_input = torch.randn(batch_size, 128).to(self.fc.weight.device)
         dummy_output = self.fc(dummy_input)
-        
+
         # 損失計算（requires_grad=Trueになる）
-        loss = torch.mean(dummy_output ** 2)
-        
+        loss = torch.mean(dummy_output**2)
+
         # ダミーメル出力
         dummy_mel = torch.randn(batch_size, 80, 100).to(self.fc.weight.device)
-        
-        return {'mel': dummy_mel, 'loss': loss}
+
+        return {"mel": dummy_mel, "loss": loss}
+
+
 from src.evaluation.metrics import MelCepstralDistortion
 from src.training.losses import MultiTaskLoss
 from src.training.metrics import TrainingMetrics
@@ -72,17 +75,17 @@ logger = logging.getLogger(__name__)
 
 class TTSTrainer:
     """TTS学習を管理するクラス"""
-    
+
     def __init__(self, config: DictConfig):
         self.config = config
-        
+
         # ログディレクトリの作成
         log_dir = Path(config.paths.tensorboard).parent
         log_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # テキストトークナイザーの初期化
         self.text_tokenizer = JapaneseTextTokenizer()
-        
+
         # 音声プロセッサーの初期化
         self.audio_processor = AudioProcessor(
             sample_rate=config.data.sample_rate,
@@ -91,58 +94,59 @@ class TTSTrainer:
             hop_length=config.data.hop_length,
             n_mels=config.data.n_mels,
         )
-        
+
         # ログトラッカーの設定を修正
         log_with = config.training.logging.trackers
         if isinstance(log_with, list) and len(log_with) == 1:
             log_with = log_with[0]  # 単一要素のリストは文字列に変換
-            
+
         self.accelerator = Accelerator(
             mixed_precision=config.training.mixed_precision,
             gradient_accumulation_steps=config.training.gradient_accumulation_steps,
             log_with=log_with,
             project_dir=str(log_dir),
         )
-        
+
         # モデルレジストリの初期化
         self.model_registry = ModelRegistry(Path(config.paths.model_registry))
-        
+
         # TensorBoardの設定
         self.writer = None
         if self.accelerator.is_main_process:
             self.writer = SummaryWriter(config.paths.tensorboard)
-        
+
         # チェックポイントディレクトリの作成
         self.checkpoint_dir = Path(config.paths.checkpoints)
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
-        
+
     def setup_models(self) -> Dict[str, nn.Module]:
         """モデルの初期化"""
         models = {}
-        
+
         # XPhoneBERTの初期化
         if self.config.models.xphonebert.enabled:
-            models['xphonebert'] = XPhoneBERT(
+            models["xphonebert"] = XPhoneBERT(
                 model_name=self.config.models.xphonebert.model_name,
                 hidden_size=self.config.models.xphonebert.hidden_size,
                 num_layers=self.config.models.xphonebert.num_layers,
                 num_heads=self.config.models.xphonebert.num_heads,
             )
-            
+
         # F0-BERTの初期化
         if self.config.models.f0_bert.enabled:
             from src.models.f0_bert import F0BERTConfig
+
             f0_bert_config = F0BERTConfig(
                 hidden_size=self.config.models.f0_bert.hidden_size,
                 num_hidden_layers=self.config.models.f0_bert.num_layers,
                 num_attention_heads=self.config.models.f0_bert.num_heads,
                 f0_bins=self.config.models.f0_bert.pitch_bins,  # pitch_bins -> f0_bins
             )
-            models['f0_bert'] = F0BERT(config=f0_bert_config)
-            
+            models["f0_bert"] = F0BERT(config=f0_bert_config)
+
         # 音響モデルの初期化
         if self.config.models.acoustic_model == "dummy":
-            models['acoustic'] = DummyAcousticModel()
+            models["acoustic"] = DummyAcousticModel()
         elif self.config.models.acoustic_model == "vits":
             # データセットから実際のスピーカー数を取得
             try:
@@ -154,14 +158,14 @@ class TTSTrainer:
                 )
                 actual_n_speakers = len(dataset.get_speaker_ids())
                 logger.info(f"Detected {actual_n_speakers} speakers in dataset")
-                
+
                 # 設定値と実際の値の大きい方を使用
                 n_speakers = max(actual_n_speakers, self.config.models.vits.n_speakers)
             except Exception as e:
                 logger.warning(f"Failed to detect speakers: {e}")
                 n_speakers = self.config.models.vits.n_speakers
-            
-            models['acoustic'] = VITS(
+
+            models["acoustic"] = VITS(
                 n_vocab=self.config.models.vits.n_vocab,
                 n_speakers=n_speakers,
                 hidden_channels=self.config.models.vits.hidden_channels,
@@ -173,16 +177,20 @@ class TTSTrainer:
                 n_flows=self.config.models.vits.n_flows,
             )
         elif self.config.models.acoustic_model == "matcha":
-            models['acoustic'] = MatchaTTS(
+            models["acoustic"] = MatchaTTS(
                 n_vocab=self.config.models.matcha.n_vocab,
                 n_speakers=self.config.models.matcha.n_speakers,
                 hidden_channels=self.config.models.matcha.hidden_channels,
                 filter_channels=self.config.models.matcha.filter_channels,
             )
-            
+
         # ボコーダーの初期化
-        if self.config.models.get('vocoder') and self.config.models.vocoder == "bigvgan":
+        if (
+            self.config.models.get("vocoder")
+            and self.config.models.vocoder == "bigvgan"
+        ):
             from src.models.bigvgan_v2 import BigVGANv2Config
+
             bigvgan_config = BigVGANv2Config(
                 n_mel_channels=self.config.models.bigvgan.num_mels,
                 hidden_channels=self.config.models.bigvgan.upsample_initial_channel,
@@ -191,43 +199,51 @@ class TTSTrainer:
                 upsample_rates=self.config.models.bigvgan.upsample_rates,
                 upsample_kernel_sizes=self.config.models.bigvgan.upsample_kernel_sizes,
             )
-            models['vocoder'] = BigVGANv2(config=bigvgan_config)
-            
+            models["vocoder"] = BigVGANv2(config=bigvgan_config)
+
         return models
-    
-    def setup_optimizers(self, models: Dict[str, nn.Module]) -> Dict[str, torch.optim.Optimizer]:
+
+    def setup_optimizers(
+        self, models: Dict[str, nn.Module]
+    ) -> Dict[str, torch.optim.Optimizer]:
         """オプティマイザーの設定"""
         optimizers = {}
-        
+
         for name, model in models.items():
-            optimizer_config = self.config.training.optimizers.get(name, self.config.training.optimizers.default)
-            
+            optimizer_config = self.config.training.optimizers.get(
+                name, self.config.training.optimizers.default
+            )
+
             # パラメータグループの設定
             param_groups = []
-            
+
             # 事前学習済みパラメータと新規パラメータを分ける
             pretrained_params = []
             new_params = []
-            
+
             for param_name, param in model.named_parameters():
                 if param.requires_grad:
-                    if 'bert' in name and 'bert' in param_name:
+                    if "bert" in name and "bert" in param_name:
                         pretrained_params.append(param)
                     else:
                         new_params.append(param)
-                        
+
             if pretrained_params:
-                param_groups.append({
-                    'params': pretrained_params,
-                    'lr': optimizer_config.lr * 0.1,  # 事前学習済みは学習率を下げる
-                })
-                
+                param_groups.append(
+                    {
+                        "params": pretrained_params,
+                        "lr": optimizer_config.lr * 0.1,  # 事前学習済みは学習率を下げる
+                    }
+                )
+
             if new_params:
-                param_groups.append({
-                    'params': new_params,
-                    'lr': optimizer_config.lr,
-                })
-                
+                param_groups.append(
+                    {
+                        "params": new_params,
+                        "lr": optimizer_config.lr,
+                    }
+                )
+
             # オプティマイザーの作成
             optimizers[name] = AdamW(
                 param_groups,
@@ -235,16 +251,20 @@ class TTSTrainer:
                 eps=optimizer_config.eps,
                 weight_decay=optimizer_config.weight_decay,
             )
-            
+
         return optimizers
-    
-    def setup_schedulers(self, optimizers: Dict[str, torch.optim.Optimizer]) -> Dict[str, torch.optim.lr_scheduler._LRScheduler]:
+
+    def setup_schedulers(
+        self, optimizers: Dict[str, torch.optim.Optimizer]
+    ) -> Dict[str, torch.optim.lr_scheduler._LRScheduler]:
         """学習率スケジューラーの設定"""
         schedulers = {}
-        
+
         for name, optimizer in optimizers.items():
-            scheduler_config = self.config.training.schedulers.get(name, self.config.training.schedulers.default)
-            
+            scheduler_config = self.config.training.schedulers.get(
+                name, self.config.training.schedulers.default
+            )
+
             if scheduler_config.type == "cosine_annealing_warm_restarts":
                 schedulers[name] = CosineAnnealingWarmRestarts(
                     optimizer,
@@ -257,21 +277,27 @@ class TTSTrainer:
                     optimizer,
                     gamma=scheduler_config.gamma,
                 )
-                
+
         return schedulers
-    
+
     def setup_data_loaders(self) -> Tuple[DataLoader, DataLoader]:
         """データローダーの設定"""
         # transcript_fileを設定から取得（デフォルトは"metadata.csv"）
         transcript_file = self.config.data.get("transcript_file", "metadata.csv")
-        
+
         # CI環境やデータが少ない場合を考慮
-        if self.config.data.get('dataset') == 'test' or len(TsukuyomiDataset(
-            data_root=Path(self.config.data.train_dir),
-            transcript_file=transcript_file,
-            sample_rate=self.config.data.sample_rate,
-            cache_audio=False,
-        ).samples) < 10:
+        if (
+            self.config.data.get("dataset") == "test"
+            or len(
+                TsukuyomiDataset(
+                    data_root=Path(self.config.data.train_dir),
+                    transcript_file=transcript_file,
+                    sample_rate=self.config.data.sample_rate,
+                    cache_audio=False,
+                ).samples
+            )
+            < 10
+        ):
             # テスト環境では分割しない
             train_dataset = TsukuyomiDataset(
                 data_root=Path(self.config.data.train_dir),
@@ -281,7 +307,7 @@ class TTSTrainer:
                 validation_split=None,  # 分割しない
                 is_validation=False,
             )
-            
+
             val_dataset = TsukuyomiDataset(
                 data_root=Path(self.config.data.val_dir),
                 transcript_file=transcript_file,
@@ -300,7 +326,7 @@ class TTSTrainer:
                 validation_split=0.1,  # 10%を検証用に
                 is_validation=False,
             )
-            
+
             # 検証データセット（同じデータから分割）
             val_dataset = TsukuyomiDataset(
                 data_root=Path(self.config.data.val_dir),
@@ -310,20 +336,36 @@ class TTSTrainer:
                 validation_split=0.1,  # 10%を検証用に
                 is_validation=True,
             )
-        
+
         # グローバルなスピーカーIDマッピングを作成
-        all_speaker_ids = sorted(list(set(train_dataset.get_speaker_ids() + val_dataset.get_speaker_ids())))
-        self.speaker_to_id = {speaker: idx for idx, speaker in enumerate(all_speaker_ids)}
+        all_speaker_ids = sorted(
+            list(set(train_dataset.get_speaker_ids() + val_dataset.get_speaker_ids()))
+        )
+        self.speaker_to_id = {
+            speaker: idx for idx, speaker in enumerate(all_speaker_ids)
+        }
         logger.info(f"Total speakers: {len(all_speaker_ids)}")
-        
+
         # 分散学習用のサンプラー
-        train_sampler = DistributedSampler(train_dataset) if self.accelerator.distributed_type != "NO" else None
-        val_sampler = DistributedSampler(val_dataset, shuffle=False) if self.accelerator.distributed_type != "NO" else None
-        
+        train_sampler = (
+            DistributedSampler(train_dataset)
+            if self.accelerator.distributed_type != "NO"
+            else None
+        )
+        val_sampler = (
+            DistributedSampler(val_dataset, shuffle=False)
+            if self.accelerator.distributed_type != "NO"
+            else None
+        )
+
         # カスタムcollate関数（audio_processorとspeaker_to_idを含む）
         def collate_fn_with_processor(batch):
-            return tts_collate_fn(batch, audio_processor=self.audio_processor, speaker_to_id=self.speaker_to_id)
-        
+            return tts_collate_fn(
+                batch,
+                audio_processor=self.audio_processor,
+                speaker_to_id=self.speaker_to_id,
+            )
+
         # データローダー
         train_loader = DataLoader(
             train_dataset,
@@ -335,7 +377,7 @@ class TTSTrainer:
             drop_last=True,
             collate_fn=collate_fn_with_processor,
         )
-        
+
         val_loader = DataLoader(
             val_dataset,
             batch_size=self.config.training.batch_size,
@@ -345,9 +387,9 @@ class TTSTrainer:
             pin_memory=True,
             collate_fn=collate_fn_with_processor,
         )
-        
+
         return train_loader, val_loader
-    
+
     def train_epoch(
         self,
         epoch: int,
@@ -362,118 +404,141 @@ class TTSTrainer:
         # 学習モード
         for model in models.values():
             model.train()
-            
+
         epoch_losses = {name: 0.0 for name in models}
-        epoch_losses['total'] = 0.0
-        
+        epoch_losses["total"] = 0.0
+
         # プログレスバー
-        pbar = tqdm(train_loader, desc=f"Epoch {epoch}", disable=not self.accelerator.is_main_process)
-        
+        pbar = tqdm(
+            train_loader,
+            desc=f"Epoch {epoch}",
+            disable=not self.accelerator.is_main_process,
+        )
+
         for batch_idx, batch in enumerate(pbar):
             # バッチのデバッグ
             if batch is None:
                 logger.error(f"Batch {batch_idx} is None!")
                 continue
-            
+
             if batch_idx == 0:
-                logger.info(f"First batch keys: {list(batch.keys()) if isinstance(batch, dict) else 'not a dict'}")
+                logger.info(
+                    f"First batch keys: {list(batch.keys()) if isinstance(batch, dict) else 'not a dict'}"
+                )
                 if isinstance(batch, dict):
                     for key, value in batch.items():
                         if isinstance(value, torch.Tensor):
-                            logger.info(f"  {key}: shape={value.shape}, dtype={value.dtype}")
+                            logger.info(
+                                f"  {key}: shape={value.shape}, dtype={value.dtype}"
+                            )
                         else:
-                            logger.info(f"  {key}: type={type(value)}, len={len(value) if hasattr(value, '__len__') else 'N/A'}")
-            
+                            logger.info(
+                                f"  {key}: type={type(value)}, len={len(value) if hasattr(value, '__len__') else 'N/A'}"
+                            )
+
             # 勾配のリセット
             for optimizer in optimizers.values():
                 optimizer.zero_grad()
-                
+
             # 前向き計算
             outputs = {}
             losses = {}
-            
+
             # ダミーモデルの場合
-            if 'acoustic' in models and self.config.models.acoustic_model == "dummy":
-                outputs['acoustic'] = models['acoustic'](batch['audio'])
-                losses['total'] = outputs['acoustic']['loss']
+            if "acoustic" in models and self.config.models.acoustic_model == "dummy":
+                outputs["acoustic"] = models["acoustic"](batch["audio"])
+                losses["total"] = outputs["acoustic"]["loss"]
             # VITSモデルの場合
-            elif 'acoustic' in models and self.config.models.acoustic_model == "vits":
+            elif "acoustic" in models and self.config.models.acoustic_model == "vits":
                 try:
                     # テキストをトークン化
-                    texts = batch['text']
+                    texts = batch["text"]
                     logger.info(f"Batch size: {len(texts)}, First 2 texts: {texts[:2]}")
-                    
+
                     # スピーカーIDも確認
-                    if 'speaker_ids' in batch:
-                        logger.info(f"Speaker IDs shape: {batch['speaker_ids'].shape}, First 2: {batch['speaker_ids'][:2].tolist()}")
-                    
+                    if "speaker_ids" in batch:
+                        logger.info(
+                            f"Speaker IDs shape: {batch['speaker_ids'].shape}, First 2: {batch['speaker_ids'][:2].tolist()}"
+                        )
+
                     # テキストをカタカナに変換
                     katakana_texts = [simple_text_to_katakana(text) for text in texts]
                     logger.info(f"Katakana texts: {katakana_texts[:2]}")
-                    
+
                     text_encoding = self.text_tokenizer.batch_encode(
                         katakana_texts,  # カタカナ変換済みテキストを使用
                         add_special_tokens=True,
                         max_length=None,  # 自動的に最大長を決定
                         padding=True,
-                        return_tensors=True
+                        return_tensors=True,
                     )
-                    text_tokens = text_encoding['input_ids'].to(batch['audio'].device)
-                    text_lengths = text_encoding['lengths'].to(batch['audio'].device)
-                    
+                    text_tokens = text_encoding["input_ids"].to(batch["audio"].device)
+                    text_lengths = text_encoding["lengths"].to(batch["audio"].device)
+
                     # メルスペクトログラムを取得
-                    mel_spec = batch['mel_targets'].to(batch['audio'].device)
-                    mel_lengths = batch['mel_lengths'].to(batch['audio'].device)
-                    
+                    mel_spec = batch["mel_targets"].to(batch["audio"].device)
+                    mel_lengths = batch["mel_lengths"].to(batch["audio"].device)
+
                     # デバッグ情報
-                    logger.info(f"VITS input shapes - text: {text_tokens.shape}, text_lengths: {text_lengths}, mel: {mel_spec.shape}, mel_lengths: {mel_lengths}")
-                    logger.info(f"VITS speaker_ids shape: {batch['speaker_ids'].shape}, dtype: {batch['speaker_ids'].dtype}, device: {batch['speaker_ids'].device}")
-                    logger.debug(f"VITS config - hidden_channels: {self.config.models.vits.hidden_channels}, n_heads: {self.config.models.vits.n_heads}")
-                    
+                    logger.info(
+                        f"VITS input shapes - text: {text_tokens.shape}, text_lengths: {text_lengths}, mel: {mel_spec.shape}, mel_lengths: {mel_lengths}"
+                    )
+                    logger.info(
+                        f"VITS speaker_ids shape: {batch['speaker_ids'].shape}, dtype: {batch['speaker_ids'].dtype}, device: {batch['speaker_ids'].device}"
+                    )
+                    logger.debug(
+                        f"VITS config - hidden_channels: {self.config.models.vits.hidden_channels}, n_heads: {self.config.models.vits.n_heads}"
+                    )
+
                     # VITSフォワードパス
-                    outputs['acoustic'] = models['acoustic'](
+                    outputs["acoustic"] = models["acoustic"](
                         text=text_tokens,
                         text_lengths=text_lengths,
                         mel=mel_spec,
                         mel_lengths=mel_lengths,
-                        speaker_ids=batch['speaker_ids'],
+                        speaker_ids=batch["speaker_ids"],
                     )
-                    
+
                     # デバッグ: VITSの出力を確認
                     logger.info(f"VITS output keys: {list(outputs['acoustic'].keys())}")
-                    if 'losses' in outputs['acoustic']:
-                        logger.info(f"VITS losses: {list(outputs['acoustic']['losses'].keys())}")
+                    if "losses" in outputs["acoustic"]:
+                        logger.info(
+                            f"VITS losses: {list(outputs['acoustic']['losses'].keys())}"
+                        )
                 except Exception as e:
                     import traceback
+
                     logger.error(f"VITS forward error: {e}")
                     logger.error(f"Traceback:\n{traceback.format_exc()}")
                     # エラー時はダミー出力（勾配を持つように修正）
-                    dummy_loss = torch.tensor(1.0, device=batch['audio'].device, requires_grad=True)
-                    outputs['acoustic'] = {'loss': dummy_loss}
-                    losses['total'] = dummy_loss
-                
+                    dummy_loss = torch.tensor(
+                        1.0, device=batch["audio"].device, requires_grad=True
+                    )
+                    outputs["acoustic"] = {"loss": dummy_loss}
+                    losses["total"] = dummy_loss
+
                 # 簡略化した損失（VITSの出力から）
-                if 'losses' in outputs['acoustic']:
+                if "losses" in outputs["acoustic"]:
                     # VITSは複数の損失を返す
-                    vits_losses = outputs['acoustic']['losses']
+                    vits_losses = outputs["acoustic"]["losses"]
                     # 損失を安全に取得
                     if isinstance(vits_losses, dict):
-                        if 'kl' in vits_losses:
-                            losses['kl'] = vits_losses['kl']
-                        if 'duration' in vits_losses:
-                            losses['duration'] = vits_losses['duration']
+                        if "kl" in vits_losses:
+                            losses["kl"] = vits_losses["kl"]
+                        if "duration" in vits_losses:
+                            losses["duration"] = vits_losses["duration"]
                     # 総損失を計算
                     if losses:
-                        losses['total'] = sum(losses.values())
+                        losses["total"] = sum(losses.values())
                     else:
                         # 勾配を持つダミー損失
-                        dummy_param = next(models['acoustic'].parameters())
-                        losses['total'] = dummy_param.sum() * 0.0
+                        dummy_param = next(models["acoustic"].parameters())
+                        losses["total"] = dummy_param.sum() * 0.0
                 else:
                     # ダミー損失（勾配が必要）
-                    dummy_param = next(models['acoustic'].parameters())
-                    losses['total'] = dummy_param.sum() * 0.0  # 勾配を持つダミー損失
-                
+                    dummy_param = next(models["acoustic"].parameters())
+                    losses["total"] = dummy_param.sum() * 0.0  # 勾配を持つダミー損失
+
             # ボコーダー（一時的に無効化）
             # TODO: VITSの出力形式に合わせて修正
             # if 'vocoder' in models and 'acoustic' in outputs and 'mel' in outputs['acoustic']:
@@ -482,78 +547,89 @@ class TTSTrainer:
             #         outputs['vocoder'],
             #         batch['audio_targets'],
             #     )
-                
+
             # 総損失の計算
-            if 'total' in losses and losses['total'] is not None:
-                total_loss = losses['total']
+            if "total" in losses and losses["total"] is not None:
+                total_loss = losses["total"]
             elif losses:
                 # 'total'がない場合は他の損失を合計
-                valid_losses = [v for k, v in losses.items() if k != 'total' and v is not None and v.requires_grad]
+                valid_losses = [
+                    v
+                    for k, v in losses.items()
+                    if k != "total" and v is not None and v.requires_grad
+                ]
                 if valid_losses:
                     total_loss = sum(valid_losses)
-                    losses['total'] = total_loss
+                    losses["total"] = total_loss
                 else:
                     # 勾配を持つダミー損失
-                    dummy_param = next(models['acoustic'].parameters())
+                    dummy_param = next(models["acoustic"].parameters())
                     total_loss = dummy_param.sum() * 0.0
-                    losses['total'] = total_loss
+                    losses["total"] = total_loss
             else:
                 # 損失がない場合はダミー損失
-                dummy_param = next(models['acoustic'].parameters())
+                dummy_param = next(models["acoustic"].parameters())
                 total_loss = dummy_param.sum() * 0.0
-                losses['total'] = total_loss
-            
+                losses["total"] = total_loss
+
             # バックプロパゲーション
             self.accelerator.backward(total_loss)
-            
+
             # 勾配クリッピング
             for model in models.values():
                 torch.nn.utils.clip_grad_norm_(
                     model.parameters(),
                     self.config.training.gradient_clip,
                 )
-                
+
             # パラメータ更新
             for optimizer in optimizers.values():
                 optimizer.step()
-                
+
             # 損失の記録
             for name, loss in losses.items():
                 if name not in epoch_losses:
                     epoch_losses[name] = 0.0
                 epoch_losses[name] += loss.item()
-                
+
             # メトリクスの更新（エラー回避のため一時的に無効化）
             # TODO: 実際のメトリクス計算を実装
             # metrics.update(outputs, batch)
-            
+
             # プログレスバーの更新
             if batch_idx % 10 == 0:
-                current_losses = {k: v / (batch_idx + 1) for k, v in epoch_losses.items()}
+                current_losses = {
+                    k: v / (batch_idx + 1) for k, v in epoch_losses.items()
+                }
                 pbar.set_postfix(current_losses)
-                
+
             # TensorBoardへの記録
-            if self.writer and batch_idx % self.config.training.logging.log_interval == 0:
+            if (
+                self.writer
+                and batch_idx % self.config.training.logging.log_interval == 0
+            ):
                 global_step = epoch * len(train_loader) + batch_idx
                 for name, loss in losses.items():
-                    self.writer.add_scalar(f'train/loss_{name}', loss.item(), global_step)
-                    
+                    self.writer.add_scalar(
+                        f"train/loss_{name}", loss.item(), global_step
+                    )
+
                 # 学習率の記録
                 for name, optimizer in optimizers.items():
-                    lr = optimizer.param_groups[0]['lr']
-                    self.writer.add_scalar(f'train/lr_{name}', lr, global_step)
-                    
+                    lr = optimizer.param_groups[0]["lr"]
+                    self.writer.add_scalar(f"train/lr_{name}", lr, global_step)
+
         # スケジューラーの更新
         for scheduler in schedulers.values():
             scheduler.step()
-            
+
         # エポック平均の計算
         num_batches = len(train_loader)
         for name in epoch_losses:
             epoch_losses[name] /= num_batches
-            
+
         return epoch_losses
-    
+
     def validate(
         self,
         epoch: int,
@@ -566,49 +642,56 @@ class TTSTrainer:
         # 評価モード
         for model in models.values():
             model.eval()
-            
+
         val_losses = {name: 0.0 for name in models}
-        val_losses['total'] = 0.0
-        
+        val_losses["total"] = 0.0
+
         # MCD評価器
         mcd_evaluator = MelCepstralDistortion()
         mcd_scores = []
-        
+
         with torch.no_grad():
-            for batch in tqdm(val_loader, desc="Validation", disable=not self.accelerator.is_main_process):
+            for batch in tqdm(
+                val_loader,
+                desc="Validation",
+                disable=not self.accelerator.is_main_process,
+            ):
                 outputs = {}
                 losses = {}
-                
+
                 # ダミーモデルの場合
-                if 'acoustic' in models and self.config.models.acoustic_model == "dummy":
-                    outputs['acoustic'] = models['acoustic'](batch['audio'])
-                    losses['total'] = outputs['acoustic']['loss']
+                if (
+                    "acoustic" in models
+                    and self.config.models.acoustic_model == "dummy"
+                ):
+                    outputs["acoustic"] = models["acoustic"](batch["audio"])
+                    losses["total"] = outputs["acoustic"]["loss"]
                     # ダミーMCDスコア
                     mcd_scores.append(5.0)  # 典型的なMCD値
                 # 前向き計算（学習時と同様）
-                elif 'xphonebert' in models:
-                    outputs['xphonebert'] = models['xphonebert'](
-                        batch['phoneme_ids'],
-                        batch['language_ids'],
+                elif "xphonebert" in models:
+                    outputs["xphonebert"] = models["xphonebert"](
+                        batch["phoneme_ids"],
+                        batch["language_ids"],
                     )
-                    losses['xphonebert'] = loss_fn.compute_bert_loss(
-                        outputs['xphonebert'],
-                        batch['phoneme_targets'],
+                    losses["xphonebert"] = loss_fn.compute_bert_loss(
+                        outputs["xphonebert"],
+                        batch["phoneme_targets"],
                     )
-                    
-                if 'f0_bert' in models:
-                    outputs['f0_bert'] = models['f0_bert'](
-                        batch['f0'],
-                        batch.get('f0_mask'),
+
+                if "f0_bert" in models:
+                    outputs["f0_bert"] = models["f0_bert"](
+                        batch["f0"],
+                        batch.get("f0_mask"),
                     )
-                    losses['f0_bert'] = loss_fn.compute_f0_loss(
-                        outputs['f0_bert'],
-                        batch['f0_targets'],
+                    losses["f0_bert"] = loss_fn.compute_f0_loss(
+                        outputs["f0_bert"],
+                        batch["f0_targets"],
                     )
-                    
-                if 'acoustic' in models and self.config.models.acoustic_model == "vits":
+
+                if "acoustic" in models and self.config.models.acoustic_model == "vits":
                     # VITSモデルの場合
-                    texts = batch['text']
+                    texts = batch["text"]
                     # テキストをカタカナに変換
                     katakana_texts = [simple_text_to_katakana(text) for text in texts]
                     text_encoding = self.text_tokenizer.batch_encode(
@@ -616,117 +699,122 @@ class TTSTrainer:
                         add_special_tokens=True,
                         max_length=None,  # 自動的に最大長を決定
                         padding=True,
-                        return_tensors=True
+                        return_tensors=True,
                     )
-                    text_tokens = text_encoding['input_ids'].to(batch['audio'].device)
-                    text_lengths = text_encoding['lengths'].to(batch['audio'].device)
-                    
-                    mel_spec = batch['mel_targets'].to(batch['audio'].device)
-                    mel_lengths = batch['mel_lengths'].to(batch['audio'].device)
-                    
-                    outputs['acoustic'] = models['acoustic'](
+                    text_tokens = text_encoding["input_ids"].to(batch["audio"].device)
+                    text_lengths = text_encoding["lengths"].to(batch["audio"].device)
+
+                    mel_spec = batch["mel_targets"].to(batch["audio"].device)
+                    mel_lengths = batch["mel_lengths"].to(batch["audio"].device)
+
+                    outputs["acoustic"] = models["acoustic"](
                         text=text_tokens,
                         text_lengths=text_lengths,
                         mel=mel_spec,
                         mel_lengths=mel_lengths,
-                        speaker_ids=batch['speaker_ids'],
+                        speaker_ids=batch["speaker_ids"],
                     )
-                elif 'acoustic' in models and self.config.models.acoustic_model != "dummy":
+                elif (
+                    "acoustic" in models
+                    and self.config.models.acoustic_model != "dummy"
+                ):
                     # 他のモデルの場合
                     encoder_outputs = []
-                    if 'xphonebert' in outputs:
-                        encoder_outputs.append(outputs['xphonebert']['hidden_states'])
-                    if 'f0_bert' in outputs:
-                        encoder_outputs.append(outputs['f0_bert']['hidden_states'])
-                        
-                    encoder_output = torch.cat(encoder_outputs, dim=-1) if encoder_outputs else None
-                    
-                    outputs['acoustic'] = models['acoustic'](
-                        batch['text'],
-                        batch['mel_targets'],
-                        batch['speaker_ids'],
+                    if "xphonebert" in outputs:
+                        encoder_outputs.append(outputs["xphonebert"]["hidden_states"])
+                    if "f0_bert" in outputs:
+                        encoder_outputs.append(outputs["f0_bert"]["hidden_states"])
+
+                    encoder_output = (
+                        torch.cat(encoder_outputs, dim=-1) if encoder_outputs else None
+                    )
+
+                    outputs["acoustic"] = models["acoustic"](
+                        batch["text"],
+                        batch["mel_targets"],
+                        batch["speaker_ids"],
                         encoder_output=encoder_output,
                     )
                     if self.config.models.acoustic_model == "vits":
                         # VITSは内部で損失を計算
-                        if 'loss' in outputs['acoustic']:
-                            losses['acoustic'] = outputs['acoustic']['loss']
+                        if "loss" in outputs["acoustic"]:
+                            losses["acoustic"] = outputs["acoustic"]["loss"]
                     else:
-                        losses['acoustic'] = loss_fn.compute_acoustic_loss(
-                            outputs['acoustic'],
-                            batch['mel_targets'],
+                        losses["acoustic"] = loss_fn.compute_acoustic_loss(
+                            outputs["acoustic"],
+                            batch["mel_targets"],
                         )
-                    
+
                     # MCD計算 - VITSの場合はmel_outputsを使用
-                    if 'mel_outputs' in outputs['acoustic']:
-                        mel_outputs = outputs['acoustic']['mel_outputs']
-                    elif 'mel' in outputs['acoustic']:
-                        mel_outputs = outputs['acoustic']['mel']
+                    if "mel_outputs" in outputs["acoustic"]:
+                        mel_outputs = outputs["acoustic"]["mel_outputs"]
+                    elif "mel" in outputs["acoustic"]:
+                        mel_outputs = outputs["acoustic"]["mel"]
                     else:
                         mel_outputs = None
-                        
-                    if mel_outputs is not None and 'mel_targets' in batch:
-                        for pred, target in zip(mel_outputs, batch['mel_targets']):
+
+                    if mel_outputs is not None and "mel_targets" in batch:
+                        for pred, target in zip(mel_outputs, batch["mel_targets"]):
                             mcd = mcd_evaluator.calculate(
                                 pred.cpu().numpy(),
                                 target.cpu().numpy(),
                             )
                             mcd_scores.append(mcd)
-                        
-                if 'vocoder' in models and 'acoustic' in outputs:
+
+                if "vocoder" in models and "acoustic" in outputs:
                     # VITSの場合はmel_outputsを使用
-                    if 'mel_outputs' in outputs['acoustic']:
-                        mel_outputs = outputs['acoustic']['mel_outputs']
-                    elif 'mel' in outputs['acoustic']:
-                        mel_outputs = outputs['acoustic']['mel']
+                    if "mel_outputs" in outputs["acoustic"]:
+                        mel_outputs = outputs["acoustic"]["mel_outputs"]
+                    elif "mel" in outputs["acoustic"]:
+                        mel_outputs = outputs["acoustic"]["mel"]
                     else:
                         # VITSは直接音声を生成するのでvocoderはスキップ
                         mel_outputs = None
-                        
+
                     if mel_outputs is not None:
-                        outputs['vocoder'] = models['vocoder'](mel_outputs)
+                        outputs["vocoder"] = models["vocoder"](mel_outputs)
                         # Vocoder loss is not implemented in validation for now
                         # losses['vocoder'] = loss_fn.compute_vocoder_loss(
                         #     outputs['vocoder'],
                         #     batch['audio_targets'],
                         # )
-                    
+
                 # 総損失
                 if losses:
                     total_loss = sum(losses.values())
-                    losses['total'] = total_loss
+                    losses["total"] = total_loss
                 else:
-                    losses['total'] = torch.tensor(0.0)
-                
+                    losses["total"] = torch.tensor(0.0)
+
                 # 損失の記録
                 for name, loss in losses.items():
                     val_losses[name] += loss.item()
-                    
+
                 # メトリクスの更新（ダミーモデルの場合はスキップ）
                 if self.config.models.acoustic_model != "dummy":
                     metrics.update(outputs, batch)
-                
+
         # 平均の計算
         num_batches = len(val_loader)
         for name in val_losses:
             val_losses[name] /= num_batches
-            
+
         # MCDスコアの平均
         if mcd_scores:
-            val_losses['mcd'] = np.mean(mcd_scores)
-            
+            val_losses["mcd"] = np.mean(mcd_scores)
+
         # TensorBoardへの記録
         if self.writer:
             for name, loss in val_losses.items():
-                self.writer.add_scalar(f'val/loss_{name}', loss, epoch)
-                
+                self.writer.add_scalar(f"val/loss_{name}", loss, epoch)
+
             # メトリクスの記録
             metric_values = metrics.compute()
             for name, value in metric_values.items():
-                self.writer.add_scalar(f'val/metric_{name}', value, epoch)
-                
+                self.writer.add_scalar(f"val/metric_{name}", value, epoch)
+
         return val_losses
-    
+
     def save_checkpoint(
         self,
         epoch: int,
@@ -739,36 +827,36 @@ class TTSTrainer:
         """チェックポイントの保存"""
         if not self.accelerator.is_main_process:
             return
-            
+
         checkpoint = {
-            'epoch': epoch,
-            'config': OmegaConf.to_container(self.config),
-            'val_losses': val_losses,
+            "epoch": epoch,
+            "config": OmegaConf.to_container(self.config),
+            "val_losses": val_losses,
         }
-        
+
         # モデルの状態
         for name, model in models.items():
-            checkpoint[f'model_{name}'] = model.state_dict()
-            
+            checkpoint[f"model_{name}"] = model.state_dict()
+
         # オプティマイザーの状態
         for name, optimizer in optimizers.items():
-            checkpoint[f'optimizer_{name}'] = optimizer.state_dict()
-            
+            checkpoint[f"optimizer_{name}"] = optimizer.state_dict()
+
         # スケジューラーの状態
         for name, scheduler in schedulers.items():
-            checkpoint[f'scheduler_{name}'] = scheduler.state_dict()
-            
+            checkpoint[f"scheduler_{name}"] = scheduler.state_dict()
+
         # 保存
-        checkpoint_path = self.checkpoint_dir / f'checkpoint_epoch_{epoch:04d}.pt'
+        checkpoint_path = self.checkpoint_dir / f"checkpoint_epoch_{epoch:04d}.pt"
         torch.save(checkpoint, checkpoint_path)
         logger.info(f"Saved checkpoint: {checkpoint_path}")
-        
+
         # ベストモデルの保存
         if is_best:
-            best_path = self.checkpoint_dir / 'best_model.pt'
+            best_path = self.checkpoint_dir / "best_model.pt"
             torch.save(checkpoint, best_path)
             logger.info(f"Saved best model: {best_path}")
-            
+
             # モデルレジストリへの登録（エラー回避のため一時的にコメントアウト）
             # TODO: ModelRegistryのメタデータ形式を修正
             # for name, model in models.items():
@@ -781,7 +869,7 @@ class TTSTrainer:
             #         model,
             #         metadata,
             #     )
-                
+
     def load_checkpoint(
         self,
         checkpoint_path: Path,
@@ -791,48 +879,50 @@ class TTSTrainer:
     ) -> int:
         """チェックポイントの読み込み"""
         checkpoint = torch.load(checkpoint_path, map_location=self.accelerator.device)
-        
+
         # モデルの状態を復元
         for name, model in models.items():
-            if f'model_{name}' in checkpoint:
-                model.load_state_dict(checkpoint[f'model_{name}'])
-                
+            if f"model_{name}" in checkpoint:
+                model.load_state_dict(checkpoint[f"model_{name}"])
+
         # オプティマイザーの状態を復元
         if optimizers:
             for name, optimizer in optimizers.items():
-                if f'optimizer_{name}' in checkpoint:
-                    optimizer.load_state_dict(checkpoint[f'optimizer_{name}'])
-                    
+                if f"optimizer_{name}" in checkpoint:
+                    optimizer.load_state_dict(checkpoint[f"optimizer_{name}"])
+
         # スケジューラーの状態を復元
         if schedulers:
             for name, scheduler in schedulers.items():
-                if f'scheduler_{name}' in checkpoint:
-                    scheduler.load_state_dict(checkpoint[f'scheduler_{name}'])
-                    
-        return checkpoint['epoch']
-    
+                if f"scheduler_{name}" in checkpoint:
+                    scheduler.load_state_dict(checkpoint[f"scheduler_{name}"])
+
+        return checkpoint["epoch"]
+
     def train(self):
         """学習のメインループ"""
         # データローダーの設定
         train_loader, val_loader = self.setup_data_loaders()
-        
+
         # モデルの設定
         models = self.setup_models()
-        
+
         # オプティマイザーとスケジューラーの設定
         optimizers = self.setup_optimizers(models)
         schedulers = self.setup_schedulers(optimizers)
-        
+
         # 損失関数とメトリクス
         loss_fn = MultiTaskLoss(self.config.training.loss_weights)
         metrics = TrainingMetrics()
-        
+
         # Acceleratorによる準備
         for name in models:
-            models[name], optimizers[name], train_loader, val_loader = self.accelerator.prepare(
-                models[name], optimizers[name], train_loader, val_loader
+            models[name], optimizers[name], train_loader, val_loader = (
+                self.accelerator.prepare(
+                    models[name], optimizers[name], train_loader, val_loader
+                )
             )
-            
+
         # チェックポイントの読み込み
         start_epoch = 0
         if self.config.training.resume_from:
@@ -845,14 +935,14 @@ class TTSTrainer:
                     schedulers,
                 )
                 logger.info(f"Resumed from epoch {start_epoch}")
-                
+
         # 学習ループ
-        best_val_loss = float('inf')
-        
+        best_val_loss = float("inf")
+
         for epoch in range(start_epoch, self.config.training.num_epochs):
             # エポックの開始
             logger.info(f"Starting epoch {epoch + 1}/{self.config.training.num_epochs}")
-            
+
             # 学習
             train_losses = self.train_epoch(
                 epoch,
@@ -863,7 +953,7 @@ class TTSTrainer:
                 loss_fn,
                 metrics,
             )
-            
+
             # 検証
             val_losses = self.validate(
                 epoch,
@@ -872,7 +962,7 @@ class TTSTrainer:
                 loss_fn,
                 metrics,
             )
-            
+
             # ログ出力
             logger.info(
                 f"Epoch {epoch + 1} - "
@@ -880,12 +970,12 @@ class TTSTrainer:
                 f"Val Loss: {val_losses['total']:.4f}, "
                 f"MCD: {val_losses.get('mcd', 0.0):.2f}"
             )
-            
+
             # チェックポイントの保存
-            is_best = val_losses['total'] < best_val_loss
+            is_best = val_losses["total"] < best_val_loss
             if is_best:
-                best_val_loss = val_losses['total']
-                
+                best_val_loss = val_losses["total"]
+
             if (epoch + 1) % self.config.training.save_interval == 0 or is_best:
                 self.save_checkpoint(
                     epoch + 1,
@@ -895,10 +985,10 @@ class TTSTrainer:
                     val_losses,
                     is_best=is_best,
                 )
-                
+
         # 学習終了
         logger.info("Training completed!")
-        
+
         # TensorBoardのクローズ
         if self.writer:
             self.writer.close()
@@ -908,36 +998,36 @@ def main():
     """メイン関数"""
     parser = argparse.ArgumentParser(description="Tsukuyomi TTS Training")
     parser.add_argument(
-        '--config',
+        "--config",
         type=str,
         required=True,
-        help='Path to configuration file',
+        help="Path to configuration file",
     )
     parser.add_argument(
-        '--resume',
+        "--resume",
         type=str,
-        help='Path to checkpoint to resume from',
+        help="Path to checkpoint to resume from",
     )
     parser.add_argument(
-        '--local_rank',
+        "--local_rank",
         type=int,
         default=-1,
-        help='Local rank for distributed training',
+        help="Local rank for distributed training",
     )
-    
+
     args = parser.parse_args()
-    
+
     # 設定ファイルの読み込み
     config = OmegaConf.load(args.config)
-    
+
     # 再開パスの設定
     if args.resume:
         config.training.resume_from = args.resume
-        
+
     # 分散学習の設定
     if args.local_rank >= 0:
         torch.cuda.set_device(args.local_rank)
-        
+
     # トレーナーの作成と学習の実行
     trainer = TTSTrainer(config)
     trainer.train()
@@ -945,4 +1035,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

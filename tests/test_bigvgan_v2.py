@@ -2,7 +2,6 @@
 Tests for BigVGAN-v2 vocoder
 """
 
-
 import numpy as np
 import pytest
 import torch

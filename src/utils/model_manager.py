@@ -124,7 +124,11 @@ class ModelRegistry:
             Path to saved model
         """
         # Validate version (metadataがdictの場合の対応)
-        version = metadata.get('version', '1.0.0') if isinstance(metadata, dict) else getattr(metadata, 'version', '1.0.0')
+        version = (
+            metadata.get("version", "1.0.0")
+            if isinstance(metadata, dict)
+            else getattr(metadata, "version", "1.0.0")
+        )
         if not self._is_valid_version(version):
             raise ValueError(f"Invalid version format: {version}")
 

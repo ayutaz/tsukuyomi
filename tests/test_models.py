@@ -1,6 +1,5 @@
 """モデルの包括的なユニットテスト"""
 
-
 import numpy as np
 import pytest
 import torch

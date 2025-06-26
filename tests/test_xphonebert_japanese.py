@@ -2,7 +2,6 @@
 Tests for XPhoneBERT Japanese optimization
 """
 
-
 import pytest
 import torch
 

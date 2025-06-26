@@ -13,6 +13,7 @@ try:
 except ImportError:
     pesq = None
     import warnings
+
     warnings.warn("PESQ not available. PESQ metric calculation will be disabled.")
 from pystoi import stoi
 from scipy.stats import pearsonr
@@ -61,9 +62,7 @@ class TrainingMetrics:
                     self.metrics[key].append(value)
 
         # Also support old interface with metrics_dict
-        if isinstance(outputs, dict) and all(
-            key in self.metrics for key in outputs
-        ):
+        if isinstance(outputs, dict) and all(key in self.metrics for key in outputs):
             for key, value in outputs.items():
                 if key in self.metrics:
                     if isinstance(value, torch.Tensor):

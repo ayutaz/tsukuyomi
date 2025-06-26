@@ -5,7 +5,6 @@ Tests the acoustic model architecture including Conformer blocks,
 attention mechanisms, and flow-based generation.
 """
 
-
 import pytest
 import torch
 import torch.nn as nn

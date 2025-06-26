@@ -777,12 +777,14 @@ def remove_weight_norm(module: nn.Module) -> None:
     """Remove weight normalization."""
     try:
         from torch.nn.utils.parametrize import remove_parametrizations
+
         # New API uses remove_parametrizations
         remove_parametrizations(module, "weight")
     except (ImportError, ValueError):
         # Fallback to old API or already removed
         try:
             from torch.nn.utils import remove_weight_norm as rwn
+
             rwn(module)
         except ValueError:
             # Already removed

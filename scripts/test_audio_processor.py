@@ -23,15 +23,15 @@ def main():
         hop_length=256,
         n_mels=80,
     )
-    
+
     print("AudioProcessor initialized:")
     print(f"  Sample rate: {audio_processor.sample_rate}")
     print(f"  Hop length: {audio_processor.hop_length}")
     print(f"  Mel bins: {audio_processor.n_mels}")
-    
+
     # データセットの読み込み
     data_root = Path("data/jvs_ljspeech")
-    
+
     # 適切なmetadataファイルを選択
     if (data_root / "metadata_multispeaker.csv").exists():
         metadata_file = "metadata_multispeaker.csv"
@@ -39,49 +39,49 @@ def main():
     else:
         metadata_file = "metadata.csv"
         print(f"\n使用するメタデータ: {metadata_file}")
-    
+
     dataset = TsukuyomiDataset(
         data_root=data_root,
         transcript_file=metadata_file,
         sample_rate=22050,
         cache_audio=False,
         max_duration=10.0,  # 10秒以下のサンプルのみ
-        min_duration=0.5,   # 0.5秒以上のサンプルのみ
+        min_duration=0.5,  # 0.5秒以上のサンプルのみ
     )
-    
+
     if len(dataset) > 0:
         # 単一サンプルのテスト
         sample = dataset[0]
         print("\n=== 単一サンプルのテスト ===")
         print(f"テキスト: {sample['text']}")
         print(f"音声shape: {sample['audio'].shape}")
-        
+
         # メルスペクトログラムに変換
-        mel = audio_processor.wav_to_mel(sample['audio'])
+        mel = audio_processor.wav_to_mel(sample["audio"])
         print(f"メルスペクトログラムshape: {mel.shape}")
-        
+
         # バッチテスト
         print("\n=== バッチ処理のテスト ===")
         batch_size = min(2, len(dataset))
         batch = [dataset[i] for i in range(batch_size)]
-        
+
         # collate関数でバッチ化
         collated = tts_collate_fn(batch, audio_processor=audio_processor)
-        
+
         print(f"バッチサイズ: {batch_size}")
         print(f"音声バッチshape: {collated['audio'].shape}")
         print(f"音声長: {collated['audio_lengths']}")
         print(f"メルバッチshape: {collated['mel_targets'].shape}")
         print(f"メル長: {collated['mel_lengths']}")
-        
+
         # 正規化の確認
         print("\n=== 正規化の確認 ===")
-        mel_min = collated['mel_targets'].min().item()
-        mel_max = collated['mel_targets'].max().item()
-        mel_mean = collated['mel_targets'].mean().item()
+        mel_min = collated["mel_targets"].min().item()
+        mel_max = collated["mel_targets"].max().item()
+        mel_mean = collated["mel_targets"].mean().item()
         print(f"メル値の範囲: [{mel_min:.3f}, {mel_max:.3f}]")
         print(f"メル値の平均: {mel_mean:.3f}")
-        
+
     else:
         print("データセットが空です")
 

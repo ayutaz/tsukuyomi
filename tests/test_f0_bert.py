@@ -2,7 +2,6 @@
 Tests for F0-BERT pitch prediction model
 """
 
-
 import pytest
 import torch
 

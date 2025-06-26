@@ -16,21 +16,21 @@ from src.utils.text_preprocessor import simple_text_to_katakana
 
 def debug_vits_forward():
     """VITSのforward処理をステップバイステップでデバッグ"""
-    
+
     # パラメータ
     batch_size = 16
     n_vocab = 93
     n_speakers = 100
     seq_len = 50
     mel_len = 200
-    
+
     print("=== VITS Forward Debug ===")
     print(f"Batch size: {batch_size}")
     print(f"Vocabulary size: {n_vocab}")
     print(f"Number of speakers: {n_speakers}")
     print(f"Text sequence length: {seq_len}")
     print(f"Mel sequence length: {mel_len}")
-    
+
     # VITSモデルを作成
     vits = VITS(
         n_vocab=n_vocab,
@@ -45,21 +45,21 @@ def debug_vits_forward():
         n_flows=4,
     )
     vits.eval()  # 評価モードに
-    
+
     # ダミー入力を作成
     text = torch.randint(0, n_vocab, (batch_size, seq_len))
     text_lengths = torch.full((batch_size,), seq_len, dtype=torch.long)
     mel = torch.randn(batch_size, 80, mel_len)
     mel_lengths = torch.full((batch_size,), mel_len, dtype=torch.long)
     speaker_ids = torch.randint(0, n_speakers, (batch_size,))
-    
+
     print("\nInput shapes:")
     print(f"  text: {text.shape}")
     print(f"  text_lengths: {text_lengths.shape}")
     print(f"  mel: {mel.shape}")
     print(f"  mel_lengths: {mel_lengths.shape}")
     print(f"  speaker_ids: {speaker_ids.shape}")
-    
+
     # フォワードパスを実行（トレーニングモード）
     print("\n=== Running forward pass (training mode) ===")
     try:
@@ -81,8 +81,9 @@ def debug_vits_forward():
     except Exception as e:
         print(f"✗ Forward pass failed: {e}")
         import traceback
+
         traceback.print_exc()
-        
+
     # 推論モードもテスト
     print("\n=== Running forward pass (inference mode) ===")
     try:
@@ -103,49 +104,54 @@ def debug_vits_forward():
 def test_specific_case():
     """実際のエラーケースを再現"""
     print("\n=== Testing specific error case ===")
-    
+
     # エラーが起きているケースのパラメータ
     batch_size = 16
     n_speakers = 100
-    
+
     # 実際のテキスト（最初の2つ）
-    texts = ['しかし、後悔することがふたつある。', '祭神は、ヴィシュヌ派の聖人、スワーミーナーラーヤン。']
-    
+    texts = [
+        "しかし、後悔することがふたつある。",
+        "祭神は、ヴィシュヌ派の聖人、スワーミーナーラーヤン。",
+    ]
+
     # カタカナに変換
     katakana_texts = [simple_text_to_katakana(text) for text in texts]
     print(f"Katakana texts: {katakana_texts}")
-    
+
     # トークナイザー
     tokenizer = JapaneseTextTokenizer()
-    
+
     # バッチ全体を作成（同じテキストを繰り返し）
     full_texts = katakana_texts * (batch_size // 2)
     if len(full_texts) < batch_size:
-        full_texts.extend(katakana_texts[:batch_size - len(full_texts)])
-    
+        full_texts.extend(katakana_texts[: batch_size - len(full_texts)])
+
     # エンコード
     encoding = tokenizer.batch_encode(
         full_texts,
         add_special_tokens=True,
         max_length=None,
         padding=True,
-        return_tensors=True
+        return_tensors=True,
     )
-    
-    text_tokens = encoding['input_ids']
-    text_lengths = encoding['lengths']
-    
+
+    text_tokens = encoding["input_ids"]
+    text_lengths = encoding["lengths"]
+
     print("\nToken shapes:")
     print(f"  text_tokens: {text_tokens.shape}")
     print(f"  text_lengths: {text_lengths}")
-    
+
     # スピーカーIDを作成（エラーログと同じ）
     speaker_ids = torch.tensor([12, 11] * (batch_size // 2))
     if len(speaker_ids) < batch_size:
-        speaker_ids = torch.cat([speaker_ids, speaker_ids[:batch_size - len(speaker_ids)]])
-    
+        speaker_ids = torch.cat(
+            [speaker_ids, speaker_ids[: batch_size - len(speaker_ids)]]
+        )
+
     print(f"  speaker_ids: {speaker_ids.shape}, first 2: {speaker_ids[:2].tolist()}")
-    
+
     # VITSモデルを作成
     vits = VITS(
         n_vocab=93,
@@ -160,11 +166,11 @@ def test_specific_case():
         n_flows=4,
     )
     vits.eval()
-    
+
     # ダミーのメルスペクトログラム
     mel = torch.randn(batch_size, 80, 500)
     mel_lengths = torch.randint(300, 500, (batch_size,))
-    
+
     print("\n=== Running specific case ===")
     try:
         with torch.no_grad():
@@ -179,6 +185,7 @@ def test_specific_case():
     except Exception as e:
         print(f"✗ Specific case failed: {e}")
         import traceback
+
         traceback.print_exc()
 
 
