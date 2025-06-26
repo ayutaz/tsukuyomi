@@ -167,8 +167,10 @@ jobs:
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install numpy scipy soundfile
           pip install pytest
-          # Install omegaconf for test_training_basic.py
-          pip install omegaconf>=2.3.0
+          # Install dependencies for test_training_basic.py
+          pip install omegaconf>=2.3.0 accelerate>=0.25.0
+          # Install project to resolve import paths
+          pip install -e .
       
       - name: Run dummy training test
         run: |
