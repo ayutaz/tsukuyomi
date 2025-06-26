@@ -3,11 +3,20 @@ Audio processing utilities for TTS
 """
 
 import logging
+import os
 from typing import Optional
 
 import torch
-import torchaudio
-import torchaudio.transforms as T
+
+# Handle torchaudio import with environment variable
+if os.environ.get("DISABLE_TORCHAUDIO", "false").lower() != "true":
+    import torchaudio
+    import torchaudio.transforms as T
+    TORCHAUDIO_AVAILABLE = True
+else:
+    TORCHAUDIO_AVAILABLE = False
+    logger = logging.getLogger(__name__)
+    logger.warning("torchaudio disabled by environment variable")
 
 logger = logging.getLogger(__name__)
 
@@ -75,20 +84,23 @@ class AudioProcessor:
         self.clip_norm = clip_norm
 
         # メルスペクトログラム変換
-        self.mel_transform = T.MelSpectrogram(
-            sample_rate=sample_rate,
-            n_fft=n_fft,
-            win_length=win_length,
-            hop_length=hop_length,
-            f_min=f_min,
-            f_max=self.f_max,
-            n_mels=n_mels,
-            center=center,
-            pad_mode=pad_mode,
-            power=power,
-            norm=norm,
-            mel_scale=mel_scale,
-        )
+        if TORCHAUDIO_AVAILABLE:
+            self.mel_transform = T.MelSpectrogram(
+                sample_rate=sample_rate,
+                n_fft=n_fft,
+                win_length=win_length,
+                hop_length=hop_length,
+                f_min=f_min,
+                f_max=self.f_max,
+                n_mels=n_mels,
+                center=center,
+                pad_mode=pad_mode,
+                power=power,
+                norm=norm,
+                mel_scale=mel_scale,
+            )
+        else:
+            self.mel_transform = None
 
         logger.info(
             f"Initialized AudioProcessor: sr={sample_rate}, "

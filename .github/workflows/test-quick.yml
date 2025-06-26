@@ -164,11 +164,12 @@ jobs:
       - name: Install minimal dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install torch --index-url https://download.pytorch.org/whl/cpu
-          pip install numpy scipy soundfile
+          # Install CPU-only torch and torchaudio
+          pip install torch==2.2.0+cpu torchaudio==2.2.0+cpu --index-url https://download.pytorch.org/whl/cpu
+          pip install numpy scipy soundfile librosa
           pip install pytest
           # Install dependencies for test_training_basic.py
-          pip install omegaconf>=2.3.0 accelerate>=0.25.0
+          pip install omegaconf>=2.3.0 accelerate>=0.25.0 tensorboard
           # Install project to resolve import paths
           pip install -e .
       
@@ -177,8 +178,9 @@ jobs:
           python scripts/train_dummy.py
       
       - name: Quick training test
+        env:
+          DISABLE_TORCHAUDIO: "true"
         run: |
-          # Use minimal test file to avoid heavy dependencies
           pytest tests/test_collate_minimal.py -v
 
   check-files:

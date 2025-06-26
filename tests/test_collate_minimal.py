@@ -1,6 +1,15 @@
 """Minimal test for collate function without heavy dependencies."""
 
+import os
+import sys
+
+# Set environment variable before imports
+os.environ["DISABLE_TORCHAUDIO"] = "true"
+
 import torch
+
+# Directly import the collate function
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.data.collate import tts_collate_fn
 
 
@@ -22,8 +31,8 @@ def test_collate_function():
         },
     ]
 
-    # Test collate function
-    collated = tts_collate_fn(batch)
+    # Test collate function without audio_processor
+    collated = tts_collate_fn(batch, audio_processor=None)
 
     assert "audio" in collated
     assert "audio_lengths" in collated
