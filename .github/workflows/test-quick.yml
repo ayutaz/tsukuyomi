@@ -41,11 +41,13 @@ jobs:
           pip install black ruff isort mypy
           # Install minimal dependencies to resolve import errors
           pip install numpy
+          # Install omegaconf early to ensure it's available
+          pip install omegaconf>=2.3.0
           # Explicitly install CPU-only versions
           pip install --no-cache-dir torch==2.2.0+cpu torchaudio==2.2.0+cpu --index-url https://download.pytorch.org/whl/cpu
           pip install transformers librosa soundfile
-          # Install project dependencies including omegaconf
-          pip install -r requirements.txt
+          # Install project dependencies
+          pip install -r requirements.txt --no-deps
           pip install -e .
       
       - name: Check code formatting
@@ -96,6 +98,8 @@ jobs:
           # Fix librosa compatibility
           pip install "librosa>=0.10.1" "numba>=0.57.0"
           pip install pytest pytest-cov pytest-benchmark
+          # Install omegaconf early to ensure it's available
+          pip install omegaconf>=2.3.0
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           # Install test dependencies
           pip install -r requirements-test.txt || true
